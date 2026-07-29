@@ -14,16 +14,18 @@
         <p>Beroligende lyde til de små</p>
     </header>
 
+    <!-- Faneblade (Nu 4 stk) -->
     <nav class="top-tabs">
         <button id="nav-player" class="tab-btn active">🎧 Afspiller</button>
         <button id="nav-history" class="tab-btn">🌙 Søvnmønster</button>
+        <button id="nav-sleep" class="tab-btn">👶 Barnets søvn</button>
+        <button id="nav-leaps" class="tab-btn">🐯 Tigerspring</button>
     </nav>
 
     <!-- START: AFSSPILLER-SIDEN -->
     <main id="view-player" class="view-section">
         <div class="layout-wrapper">
             
-            <!-- Venstre side (på pc) / Top (på mobil) -->
             <div class="main-content">
                 <section class="timer-section">
                     <div class="timer-controls">
@@ -142,36 +144,15 @@
                 </section>
             </div>
 
-            <!-- Højre side (på pc) / Mellem (på mobil) -->
             <aside class="sidebar">
                 <div class="today-log-box">
                     <h2>Dagens Søvn</h2>
                     <p class="date-subtitle" id="today-date-text">I dag</p>
-                    
-                    <ul class="log-list" id="today-log-list">
-                        <!-- Listen med tider kommer her -->
-                    </ul>
-
-                    <div class="log-total">
-                        Samlet sovetid: <span id="today-total-time">0 min</span>
-                    </div>
+                    <ul class="log-list" id="today-log-list"></ul>
+                    <div class="log-total">Samlet sovetid: <span id="today-total-time">0 min</span></div>
                 </div>
             </aside>
-
         </div>
-
-        <!-- Informationsbokse er nu flyttet HELT i bunden -->
-        <section class="info-section">
-            <div class="info-box">
-                <h2>Babys søvn: 0-3 måneder</h2>
-                <p>I denne alder kender babyen endnu ikke forskel på nat og dag. Deres søvncyklus er meget kort, og de tilbringer en stor del af tiden i "aktiv" REM-søvn. De grynter og spjætter ofte. White noise genskaber lydniveauet fra livmoderen og beroliger dem.</p>
-            </div>
-            
-            <div class="info-box highlight-box">
-                <h2>Tigerspring</h2>
-                <p>Under de 10 mentale tigerspring opdager babyen verden på en ny måde, hvilket ofte giver urolig søvn og tryghedssøgen. Monotone lyde som støvsuger blokerer for nye indtryk og skaber ro.</p>
-            </div>
-        </section>
     </main>
     <!-- SLUT: AFSSPILLER-SIDEN -->
 
@@ -179,16 +160,57 @@
     <main id="view-history" class="view-section" style="display: none;">
         <div class="history-wrapper">
             <h2>Søvnhistorik</h2>
-            <p>Her kan du følge med i barnets søvnmønster fra tidligere dage.</p>
-            
-            <div id="history-container">
-                <!-- Tidligere dage genereres her via Javascript -->
-            </div>
-            
+            <p>Følg med i barnets søvnmønster fra tidligere dage.</p>
+            <div id="history-container"></div>
             <button id="clear-history-btn" class="reset-btn" style="margin-top: 30px;">Slet al historik</button>
         </div>
     </main>
     <!-- SLUT: SØVNMØNSTER-SIDEN -->
+
+    <!-- START: BARNETS SØVN-SIDEN -->
+    <main id="view-sleep" class="view-section" style="display: none;">
+        <div class="info-section">
+            <div class="info-box">
+                <h2>Babys søvn: 0-3 måneder</h2>
+                <p>I denne alder kender babyen endnu ikke forskel på nat og dag. Deres søvncyklus er meget kort, typisk omkring 45 minutter, og de tilbringer en stor del af tiden i "aktiv" REM-søvn. De grynter, græder i søvne og spjætter ofte uden at være rigtigt vågne.</p> 
+                <p><strong>Hvorfor lyd hjælper:</strong> White noise genskaber lydniveauet fra livmoderen (som er konstant højt på grund af moderens blodgennemstrømning) og skaber øjeblikkelig tryghed.</p>
+            </div>
+            
+            <div class="info-box">
+                <h2>Babys søvn: 3-6 måneder</h2>
+                <p>Her begynder melatonin-produktionen for alvor, og en reel døgnrytme etableres. Omkring de 4 måneder rammer mange den berømte søvnregression, fordi søvnen ændrer sig til at ligne voksnes mere (med dybe og lette stadier).</p>
+                <p><strong>Hvorfor lyd hjælper:</strong> Babyen vågner nemmere op mellem de lette søvncyklusser. Konstant baggrundsstøj fungerer som en bro, der hjælper babyen med at glide videre til næste cyklus uden at kræve hjælp.</p>
+            </div>
+
+            <div class="info-box">
+                <h2>Babys søvn: 6-12 måneder</h2>
+                <p>Søvnen bliver mere forudsigelig, men den store motoriske udvikling (kravle, rejse sig) gør, at hjernen har svært ved at slukke. Mange oplever at baby "øver sig" i søvne.</p>
+                <p><strong>Hvorfor lyd hjælper:</strong> Når lyden (f.eks. brown noise) tændes til hver lur, fungerer det nu som et stærkt søvnsignal (en betinget refleks). Hjernen lærer, at denne specifikke lyd betyder afslapning og sovetid.</p>
+            </div>
+        </div>
+    </main>
+    <!-- SLUT: BARNETS SØVN-SIDEN -->
+
+    <!-- START: TIGERSPRING-SIDEN -->
+    <main id="view-leaps" class="view-section" style="display: none;">
+        <div class="info-section">
+            <div class="info-box highlight-box" style="grid-column: 1 / -1;">
+                <h2>Hvad er et Tigerspring?</h2>
+                <p>Udover fysisk vækst går alle babyer igennem 10 store mentale "tigerspring" i løbet af deres første 20 måneder (ifølge bogen "Vidunderlige Uger"). Under et tigerspring opdager babyen verden på en helt ny måde – hjernen vokser simpelthen. Selvom det er fantastisk, er det også enormt utrygt for barnet, da verden pludselig virker ukendt og skræmmende.</p>
+                
+                <h3 style="margin-top: 20px; margin-bottom: 10px;">Typiske tegn på et tigerspring:</h3>
+                <ul style="list-style-position: inside; margin-bottom: 15px;">
+                    <li>Baby er ekstra pylret og grædende.</li>
+                    <li>Ekstrem tryghedssøgende (vil bæres konstant).</li>
+                    <li>Søvnen bliver markant dårligere.</li>
+                    <li>Spisemønstre ændres (spiser mere eller mindre).</li>
+                </ul>
+
+                <p><strong>Hvordan bruges lyden her?</strong> I disse urolige perioder er babyens sanseapparat på overarbejde. Monotone, brummende lyde som en tændt støvsuger, en vaskemaskine eller brown noise er geniale til at lægge en "dyne" over omgivelserne. Lyden blokerer for nye indtryk og lader babyens hjerne få en tiltrængt pause fra verden.</p>
+            </div>
+        </div>
+    </main>
+    <!-- SLUT: TIGERSPRING-SIDEN -->
 
     <audio id="global-audio-player" loop></audio>
     <script src="script.js"></script>
