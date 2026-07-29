@@ -38,7 +38,7 @@
     <!-- START: AFSSPILLER-SIDEN (Forsiden) -->
     <main id="view-player" class="view-section active-view">
         
-        <!-- TOP: SØVNURET (Fylder 100% bredde) -->
+        <!-- TOPPEN: SØVNURET (Fylder hele bredden) -->
         <section class="control-center">
             <p class="timer-label"><span class="b-name">Baby</span>s Søvnur</p>
             <div id="time-elapsed" class="time-display">00:00:00</div>
@@ -62,11 +62,11 @@
             </div>
         </section>
 
-        <!-- BUNDEN: Delt i venstre (Lyde) og højre (Log) -->
-        <div class="layout-wrapper">
+        <!-- BUNDEN: Delt op i to (Lyde til venstre, Log til højre) -->
+        <div class="layout-split">
             
-            <!-- Venstre side (Lydene) -->
-            <div class="main-content">
+            <!-- Venstre side (Lydene i 4 rækker á 2) -->
+            <div class="left-sounds">
                 <section class="sound-grid">
                     <div class="sound-card">
                         <div class="card-icon">💨</div>
@@ -155,15 +155,15 @@
                 </div>
             </div>
 
-            <!-- Højre side (Dagens Log) -->
-            <aside class="sidebar">
+            <!-- Højre side (Dagens Log - gjort bredere) -->
+            <div class="right-log">
                 <div class="today-log-box">
                     <h2><span class="b-name">Baby</span>s søvn i dag</h2>
                     <p class="date-subtitle" id="today-date-text">I dag</p>
                     <ul class="log-list" id="today-log-list"></ul>
                     <div class="log-total">Samlet sovetid: <span id="today-total-time">0:00 min</span></div>
                 </div>
-            </aside>
+            </div>
             
         </div>
     </main>
@@ -173,16 +173,11 @@
     <main id="view-history" class="view-section" style="display: none;">
         <div class="page-header">
             <h2>Søvnlog</h2>
-            <p>Følg med i mønsteret fra dag til dag.</p>
-        </div>
-
-        <div id="guest-warning" class="warning-box">
-            <strong>⚠️ Kun gemt på denne telefon</strong><br>
-            Du er ikke logget ind. Dine data kan gå tabt. Gå til Profil-fanen for at logge ind og gemme sikkert i skyen.
+            <p>Her samles alt <span class="b-name">Baby</span>s søvn, dag for dag.</p>
         </div>
 
         <div class="log-container" id="history-container">
-            <div class="empty-state">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>
+            <!-- Historikken indlæses her automatisk via JavaScript -->
         </div>
     </main>
 
@@ -252,8 +247,11 @@
 
         <div id="profile-guest-section" class="profile-card" style="margin-top: 20px;">
             <h3>Sikkerhedskopiér dine data</h3>
-            <p style="margin-bottom: 15px; color: var(--text-light);">Log ind med din Google-konto for at gemme søvnloggen og barnets navn sikkert i skyen. Så kan både du og din partner få adgang fra jeres egne telefoner!</p>
-            <button id="btn-google-login" class="google-btn">
+            <div id="guest-warning" class="warning-box" style="margin-top: 15px;">
+                <strong>⚠️ Kun gemt på denne telefon</strong><br>
+                Lige nu kan din data gå tabt. Log ind med Google for at gemme søvnloggen sikkert i skyen!
+            </div>
+            <button id="btn-google-login" class="google-btn" style="margin-top: 15px;">
                 <span class="btn-icon">G</span> Log ind med Google
             </button>
         </div>
