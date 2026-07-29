@@ -3,16 +3,11 @@
     --card-bg: #ffffff;
     --text-main: #4a4a4a;
     --accent-color: #a4b5a8; 
-    --accent-hover: #8d9e91;
     --btn-stop: #d69f9f;
-    --btn-save: #8faec2; /* Blød babyblå til Gem-knap */
+    --btn-save: #8faec2; 
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'Quicksand', sans-serif;
@@ -23,118 +18,53 @@ body {
     padding-bottom: 60px;
 }
 
-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-header h1 {
-    font-size: 2.5rem;
-    color: var(--accent-color);
-    font-weight: 600;
-}
+header { text-align: center; margin-bottom: 20px; }
+header h1 { font-size: 2.5rem; color: var(--accent-color); font-weight: 600; }
 
 /* Faneblade (Tabs) */
-.top-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
+.top-tabs { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
 .tab-btn {
-    background: #e5e0d5;
-    color: var(--text-main);
-    border: none;
-    padding: 10px 25px;
-    border-radius: 20px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: 0.3s;
+    background: #e5e0d5; color: var(--text-main); border: none;
+    padding: 10px 25px; border-radius: 20px; font-size: 1.1rem; cursor: pointer;
 }
+.tab-btn.active { background: var(--accent-color); color: white; }
 
-.tab-btn.active {
-    background: var(--accent-color);
-    color: white;
-}
-
-/* Layout for Player og Sidebar */
+/* Layout Grid - Styrer PC vs Mobil */
 .layout-wrapper {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column; /* På mobil stables alt ovenpå hinanden */
     gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.main-content {
-    flex: 3;
-    min-width: 320px;
+@media (min-width: 900px) {
+    .layout-wrapper {
+        flex-direction: row; /* På pc/tablet er de side-om-side */
+        align-items: flex-start;
+    }
+    .main-content { flex: 2.5; }
+    .sidebar { flex: 1; }
 }
 
-.sidebar {
-    flex: 1;
-    min-width: 280px;
-}
-
-/* Timer og stopur */
+/* Timer */
 .timer-section {
-    background: var(--card-bg);
-    padding: 20px;
-    border-radius: 15px;
-    margin-bottom: 30px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    text-align: center;
+    background: var(--card-bg); padding: 20px; border-radius: 15px;
+    margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;
 }
+.timer-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 20px; align-items: center; }
+select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
 
-.timer-controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
-    align-items: center;
-}
-
-select {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: 1rem;
-}
-
-.time-display-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
+.time-display-wrapper { display: flex; flex-direction: column; align-items: center; gap: 15px; }
 .time-display {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--accent-color);
-    background: #fdfdfd;
-    padding: 10px 30px;
-    border-radius: 10px;
-    border: 2px dashed var(--accent-color);
-    letter-spacing: 1px;
+    font-size: 1.8rem; font-weight: 600; color: var(--accent-color);
+    background: #fdfdfd; padding: 10px 30px; border-radius: 10px; border: 2px dashed var(--accent-color);
 }
-
-.time-actions {
-    display: flex;
-    gap: 10px;
-}
+.time-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;}
 
 button {
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
+    font-family: inherit; font-size: 1rem; font-weight: 600;
+    padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;
 }
 
 .play-btn { background-color: var(--accent-color); color: white; width: 100%; margin-top: 15px; }
@@ -143,86 +73,35 @@ button {
 .save-btn { background-color: var(--btn-save); color: white; }
 .reset-btn { background-color: #e5e0d5; color: var(--text-main); }
 
-/* Lydkort */
+/* Lydkort Grid */
 .sound-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
 }
+.sound-card { background-color: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); text-align: center; }
+.sound-variant { width: 100%; margin: 10px 0; }
 
-.sound-card {
-    background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-}
-
-.sound-variant { width: 100%; margin: 10px 0; flex-grow: 1; }
-
-/* Sidebar: Dagens Søvn */
+/* Søvnlog Box */
 .today-log-box {
-    background-color: var(--card-bg);
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-    border-top: 5px solid var(--btn-save);
+    background-color: var(--card-bg); padding: 25px; border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-top: 5px solid var(--btn-save);
 }
-
 .today-log-box h2 { font-size: 1.4rem; color: var(--btn-save); }
 .date-subtitle { color: #888; margin-bottom: 15px; font-size: 0.9rem; }
+.log-list { list-style: none; margin-bottom: 20px; max-height: 400px; overflow-y: auto; }
+.log-list li { background: var(--bg-color); padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; font-size: 0.95rem; display: flex; justify-content: space-between; }
+.log-total { font-weight: 600; font-size: 1.1rem; border-top: 2px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; }
 
-.log-list {
-    list-style: none;
-    margin-bottom: 20px;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.log-list li {
-    background: var(--bg-color);
-    padding: 10px 15px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    display: flex;
-    justify-content: space-between;
-}
-
-.log-total {
-    font-weight: 600;
-    font-size: 1.1rem;
-    border-top: 2px solid #eee;
-    padding-top: 15px;
-    display: flex;
-    justify-content: space-between;
-}
-
-/* Søvnhistorik Siden */
-.history-wrapper {
-    max-width: 800px;
-    margin: 0 auto;
-    background: var(--card-bg);
-    padding: 30px;
-    border-radius: 20px;
-}
-
-.history-day-card {
-    border-left: 4px solid var(--accent-color);
-    background: var(--bg-color);
-    padding: 20px;
-    border-radius: 0 10px 10px 0;
-    margin-top: 20px;
-}
-
+/* Historik Siden */
+.history-wrapper { max-width: 800px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 20px; }
+.history-day-card { border-left: 4px solid var(--accent-color); background: var(--bg-color); padding: 20px; border-radius: 0 10px 10px 0; margin-top: 20px; }
 .history-day-card h3 { margin-bottom: 10px; }
 .history-day-card ul { list-style: none; margin-bottom: 15px; }
 .history-day-card li { padding: 5px 0; border-bottom: 1px dashed #ccc; }
 .history-day-card .day-total { font-weight: bold; color: var(--accent-color); }
 
-/* Info bokse */
-.info-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 40px; }
+/* Info Bokse nederst */
+.info-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 40px auto; max-width: 1200px;}
 .info-box { background: var(--card-bg); padding: 25px; border-radius: 15px; border-left: 4px solid var(--accent-color); }
 .highlight-box { border-left-color: #f7ca72; background: #fffcf5; }
