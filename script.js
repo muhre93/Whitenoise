@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectElement = document.getElementById(`variant-${category}`);
             const audioSrc = selectElement.value;
 
-            // Stop lyden hvis man klikker på knappen der allerede spiller
+            // Stop lyden hvis man klikker på den knap, der allerede spiller
             if (currentlyPlayingBtn === this) {
                 audioPlayer.pause();
                 resetAllButtons();
@@ -63,14 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             resetAllButtons();
             audioPlayer.src = audioSrc;
-            
-            // Vi ændrer knappen og starter uret MED DET SAMME (så du kan teste)
             this.textContent = 'Pause';
             this.classList.add('playing');
+            
+            // TJEKKER OM EN ANDEN LYD ALLEREDE SPILLEDE
+            // Hvis currentlyPlayingBtn er null, betyder det at siden var helt stille.
+            // Så skal stopuret og timeren starte forfra.
+            // Hvis den IKKE er null, fortsætter uret bare med at tælle!
+            if (currentlyPlayingBtn === null) {
+                resetStopwatch();
+                startStopwatch();
+                setupTimer(); 
+            }
+            
             currentlyPlayingBtn = this;
-            resetStopwatch();
-            startStopwatch();
-            setupTimer(); 
             
             // Forsøger at afspille lyden i baggrunden
             audioPlayer.play().catch(error => {
