@@ -3,11 +3,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const playButtons = document.querySelectorAll('.play-btn');
     const stopButton = document.getElementById('stop-all');
     const timerSelect = document.getElementById('timer-select');
+    const timeDisplay = document.getElementById('time-elapsed');
     
-    let timerId = null;
+    let timeoutId = null;
     let currentlyPlayingBtn = null;
+    
+    // Variabler til at holde styr på spilletid
+    let elapsedSeconds = 0;
+    let intervalId = null;
 
-    // Funktion til at nulstille alle knapper til "Afspil"
     function resetAllButtons() {
         playButtons.forEach(btn => {
             btn.textContent = 'Afspil';
@@ -15,75 +19,106 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Lyt efter klik på alle "Afspil"-knapper
+    // --- Stopur funktioner ---
+    function startStopwatch() {
+        clearInterval(intervalId); // Sørg for at slette gamle tællere
+        intervalId = setInterval(() => {
+            elapsedSeconds++;
+            updateDisplay();
+        }, 1000); // Kører hvert sekund
+    }
+
+    function stopStopwatch() {
+        clearInterval(intervalId);
+    }
+
+    function resetStopwatch() {
+        clearInterval(intervalId);
+        elapsedSeconds = 0;
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        // Omregner sekunder til Timer:Minutter:Sekunder format
+        const h = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(elapsedSeconds % 60).padStart(2, '0');
+        timeDisplay.textContent = `Spilletid: ${h}:${m}:${s}`;
+    }
+    // --------------------------
+
     playButtons.forEach(button => {
         button.addEventListener('click', function() {
             const category = this.getAttribute('data-category');
             const selectElement = document.getElementById(`variant-${category}`);
             const audioSrc = selectElement.value;
 
-            // Hvis man klikker på knappen der allerede spiller, så stop lyden
+            // Stop lyden hvis man klikker på knappen igen
             if (currentlyPlayingBtn === this && !audioPlayer.paused) {
                 audioPlayer.pause();
                 resetAllButtons();
                 clearTimer();
+                stopStopwatch();
                 currentlyPlayingBtn = null;
                 return;
             }
 
-            // Stop tidligere lyd og opdater kilde
+            // Start forfra med ny lyd
             resetAllButtons();
             audioPlayer.src = audioSrc;
             
-            // Forsøg at afspille
             audioPlayer.play().then(() => {
                 this.textContent = 'Pause';
                 this.classList.add('playing');
                 currentlyPlayingBtn = this;
-                setupTimer(); // Start timer, hvis en er valgt
+                
+                resetStopwatch();
+                startStopwatch();
+                setupTimer(); 
             }).catch(error => {
-                console.error("Lyden kunne ikke afspilles (kræver måske filer):", error);
-                alert("Lyden kunne ikke afspilles. Tjek at lydfilerne ligger i 'lyde'-mappen.");
+                console.error("Lyden kunne ikke afspilles:", error);
+                alert("Lyden kunne ikke afspilles. Tjek at lydfilerne ligger i 'lyde'-mappen og er navngivet korrekt.");
             });
         });
     });
 
-    // Lyt efter klik på "Stop alt"
     stopButton.addEventListener('click', () => {
         audioPlayer.pause();
-        audioPlayer.currentTime = 0; // Spol tilbage
+        audioPlayer.currentTime = 0;
         resetAllButtons();
         clearTimer();
+        resetStopwatch();
         currentlyPlayingBtn = null;
     });
 
-    // Håndtering af Timer
+    // --- Nedtælling Timer funktion ---
     function setupTimer() {
-        clearTimer(); // Fjern gamle timere
+        clearTimer();
         
-        const hours = parseFloat(timerSelect.value);
+        // Henter værdien i minutter (fra vores HTML)
+        const minutes = parseInt(timerSelect.value);
         
-        // Hvis 0, så kører den bare for evigt (ingen timer sættes)
-        if (hours > 0) {
-            const milliseconds = hours * 60 * 60 * 1000;
+        // Hvis værdien er større end 0, starter vi en nedtælling
+        if (minutes > 0) {
+            const milliseconds = minutes * 60 * 1000; // Omregner minutter til millisekunder
             
-            timerId = setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 audioPlayer.pause();
                 resetAllButtons();
+                stopStopwatch();
                 currentlyPlayingBtn = null;
-                console.log("Timeren slukkede for lyden.");
+                console.log("Timeren slukkede automatisk for lyden.");
             }, milliseconds);
         }
     }
 
     function clearTimer() {
-        if (timerId !== null) {
-            clearTimeout(timerId);
-            timerId = null;
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
         }
     }
 
-    // Hvis man ændrer timeren mens lyden spiller, opdaterer vi den
     timerSelect.addEventListener('change', () => {
         if (!audioPlayer.paused) {
             setupTimer();
