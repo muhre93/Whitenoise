@@ -1,24 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// ==========================================
-// 🔴 INDSÆT DINE FIREBASE NØGLER HER
-// ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSyAiev2iHG8I31LSe-oBL7yjQMiDtVYEQHM",
-  authDomain: "babyro-b320c.firebaseapp.com",
-  projectId: "babyro-b320c",
-  storageBucket: "babyro-b320c.firebasestorage.app",
-  messagingSenderId: "260945437474",
-  appId: "1:260945437474:web:f670ae0502e1843125fb7b",
-  measurementId: "G-9HT4SHH5BR"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
 // GLOBALE VARIABLER
 let currentUserId = null;
 let isGuest = true; 
@@ -33,9 +12,10 @@ const btnLogout = document.getElementById('btn-logout');
 const btnSaveName = document.getElementById('btn-save-name');
 const babyNameInput = document.getElementById('baby-name-input');
 const guestWarning = document.getElementById('guest-warning');
+const nameSetupOverlay = document.getElementById('name-setup-overlay');
 
 // ==========================================
-// 1. TEMA (NATTILSTAND) I PROFIL
+// 1. TEMA (NATTILSTAND)
 // ==========================================
 const btnThemeToggle = document.getElementById('btn-theme-toggle');
 
@@ -55,76 +35,14 @@ btnThemeToggle.addEventListener('click', () => {
     }
 });
 
-// ==========================================
-// 2. LOGIN LOGIK (I PROFIL FANEN)
-// ==========================================
-btnGoogleLogin.addEventListener('click', () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(err => alert("Login fejl: " + err.message));
-});
-
-btnLogout.addEventListener('click', () => {
-    if(confirm("Er du sikker på, at du vil logge ud?")) signOut(auth);
-});
-
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        isGuest = false;
-        currentUserId = user.uid;
-        
-        guestSection.style.display = 'none';
-        loggedInSection.style.display = 'block';
-        guestWarning.style.display = 'none';
-        
-        const userDocRef = doc(db, "users", currentUserId);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists() && userDoc.data().babyName) {
-            babyName = userDoc.data().babyName;
-            babyNameInput.value = babyName;
-            updateBabyNameInUI();
-            
-            if(userDoc.data().sleepLogs) {
-                localSleepLogs = userDoc.data().sleepLogs;
-                localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
-            }
-        }
-        renderTodayLog();
-        renderHistory();
-    } else {
-        isGuest = true;
-        currentUserId = null;
-        babyName = "Baby";
-        babyNameInput.value = "";
-        updateBabyNameInUI();
-        
-        guestSection.style.display = 'block';
-        loggedInSection.style.display = 'none';
-        guestWarning.style.display = 'block';
-        
-        localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
-        renderTodayLog();
-        renderHistory();
-    }
-});
-
-btnSaveName.addEventListener('click', async () => {
-    const inputName = babyNameInput.value.trim();
-    if (inputName.length > 0) {
-        babyName = inputName;
-        await setDoc(doc(db, "users", currentUserId), { babyName: babyName }, { merge: true });
-        updateBabyNameInUI();
-        alert("Barnets navn er opdateret! 🎉");
-    }
-});
-
 function updateBabyNameInUI() {
     document.querySelectorAll('.b-name').forEach(span => span.textContent = babyName);
 }
 
 // ==========================================
-// 3. APP NAVIGATION (FANEBLADE)
+// 2. APP NAVIGATION (FANEBLADE)
 // ==========================================
+// Dette er koden der SKAL virke for at knapperne skifter
 const tabs = [
     { id: 'nav-player', viewId: 'view-player' },
     { id: 'nav-history', viewId: 'view-history' },
@@ -137,19 +55,24 @@ tabs.forEach(tab => {
     const btn = document.getElementById(tab.id);
     const view = document.getElementById(tab.viewId);
     
-    btn.addEventListener('click', () => {
-        tabs.forEach(t => {
-            document.getElementById(t.viewId).classList.remove('active-view');
-            document.getElementById(t.id).classList.remove('active');
+    // Sikkerhedstjek at knappen overhovedet findes i HTML'en
+    if(btn && view) {
+        btn.addEventListener('click', () => {
+            // Fjerner først 'active' fra alle
+            tabs.forEach(t => {
+                document.getElementById(t.viewId).classList.remove('active-view');
+                document.getElementById(t.id).classList.remove('active');
+            });
+            // Giver 'active' til den man klikkede på
+            view.classList.add('active-view');
+            btn.classList.add('active');
+            window.scrollTo(0, 0); 
         });
-        view.classList.add('active-view');
-        btn.classList.add('active');
-        window.scrollTo(0, 0); 
-    });
+    }
 });
 
 // ==========================================
-// 4. SØVNUR LOGIK
+// 3. SØVNUR LOGIK
 // ==========================================
 const timeDisplay = document.getElementById('time-elapsed');
 const btnPauseTime = document.getElementById('btn-pause-time');
@@ -189,7 +112,7 @@ btnPauseTime.addEventListener('click', () => {
 });
 
 // ==========================================
-// 5. LYDAFSPILLER & 5-MINUTTERS FADE OUT
+// 4. LYDAFSPILLER & 5-MINUTTERS FADE OUT
 // ==========================================
 const audioPlayer = document.getElementById('global-audio-player');
 const playButtons = document.querySelectorAll('.play-btn');
@@ -207,7 +130,7 @@ playButtons.forEach(button => {
         const audioSrc = document.getElementById(`variant-${category}`).value;
 
         if (currentlyPlayingBtn === this) {
-            clearTimer(); // Stopper også en evt. igangværende fade
+            clearTimer(); 
             audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null; return;
         }
 
@@ -220,7 +143,7 @@ playButtons.forEach(button => {
         }
 
         startStopwatch(); setupTimer(); 
-        audioPlayer.play().catch(() => console.log("Lyd spiller"));
+        audioPlayer.play().catch(() => console.log("Lyd spiller ikke under test uden filer."));
     });
 });
 
@@ -234,28 +157,24 @@ function setupTimer() {
     const minutes = parseInt(timerSelect.value);
     if (minutes > 0) {
         const totalMs = minutes * 60 * 1000;
-        
-        // Sætter fade til 5 min (300.000 ms). Er det 2-min testen, fader den kun over 30 sek (30.000 ms).
         const fadeDurationMs = (minutes <= 2) ? 30000 : 300000; 
 
-        // Start Fade-Out før tiden rinder ud
         timeoutId = setTimeout(() => {
             fadeOutAudio(fadeDurationMs);
         }, totalMs - fadeDurationMs); 
     }
 }
 
-// Fade Out skruer langsomt ned over f.eks. 5 minutter
 function fadeOutAudio(durationMs) {
     let volume = 1.0;
-    const steps = 100; // Deler fadet op i 100 små ryk for at gøre det umærkeligt
+    const steps = 100; 
     const stepTimeMs = durationMs / steps;
     const volumeDrop = 1.0 / steps;
 
     fadeInterval = setInterval(() => {
         volume -= volumeDrop;
         if (volume <= 0.05) {
-            clearTimer(); // Rydder interval og sætter volume tilbage til 1.0
+            clearTimer(); 
             audioPlayer.pause();
             resetAllButtons();
             currentlyPlayingBtn = null;
@@ -268,18 +187,13 @@ function fadeOutAudio(durationMs) {
 function clearTimer() { 
     if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; } 
     if (fadeInterval !== null) { clearInterval(fadeInterval); fadeInterval = null; }
-    audioPlayer.volume = 1.0; // Vigtigt at lyden altid nulstilles til max efter et fade
+    audioPlayer.volume = 1.0; 
 }
 timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null) setupTimer(); });
 
 // ==========================================
-// 6. DATABASE (GEM OG VIS LOG FOR ALLE)
+// 5. DATABASE (LOKAL)
 // ==========================================
-async function saveLogsToFirebase() {
-    if (currentUserId && !isGuest) {
-        await setDoc(doc(db, "users", currentUserId), { sleepLogs: localSleepLogs }, { merge: true });
-    }
-}
 
 function formatTimeText(totalSecs) {
     if (totalSecs === 0) return `0:00 min`;
@@ -314,7 +228,6 @@ document.getElementById('btn-save-log').addEventListener('click', () => {
     localSleepLogs[datoStreng].total += elapsedSeconds;
     
     localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
-    saveLogsToFirebase();
     
     clearTimer();
     audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null;
@@ -335,8 +248,6 @@ window.deleteLogEntry = function(dateStr, index) {
             if(localSleepLogs[dateStr].sessions.length === 0) delete localSleepLogs[dateStr];
             
             localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
-            saveLogsToFirebase(); 
-            
             renderTodayLog();
             renderHistory();
         }
@@ -412,3 +323,7 @@ function renderHistory() {
 document.getElementById('btn-reset-time').addEventListener('click', () => {
     if(confirm("Vil du nulstille uret uden at gemme?")) resetStopwatch();
 });
+
+// START
+renderTodayLog();
+renderHistory();
