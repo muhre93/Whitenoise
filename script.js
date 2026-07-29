@@ -25,81 +25,82 @@ let isGuest = true;
 let babyName = "Baby";
 let localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {}; 
 
-const btnAuthNav = document.getElementById('btn-auth-nav');
-const nameSetupOverlay = document.getElementById('name-setup-overlay');
+// Profil UI Elementer
+const guestSection = document.getElementById('profile-guest-section');
+const loggedInSection = document.getElementById('profile-logged-in-section');
+const btnGoogleLogin = document.getElementById('btn-google-login');
+const btnLogout = document.getElementById('btn-logout');
 const btnSaveName = document.getElementById('btn-save-name');
 const babyNameInput = document.getElementById('baby-name-input');
 const guestWarning = document.getElementById('guest-warning');
 
 // ==========================================
-// 0. NATTILSTAND (Dark Mode)
+// 1. TEMA (NATTILSTAND) I PROFIL
 // ==========================================
 const btnThemeToggle = document.getElementById('btn-theme-toggle');
 
-// Tjekker om brugeren tidligere har valgt dark mode
 if(localStorage.getItem('babyRoTheme') === 'dark') {
     document.body.classList.add('dark-theme');
-    btnThemeToggle.textContent = '☀️';
+    btnThemeToggle.textContent = 'Skift til Dagstilstand ☀️';
 }
 
 btnThemeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     if (document.body.classList.contains('dark-theme')) {
         localStorage.setItem('babyRoTheme', 'dark');
-        btnThemeToggle.textContent = '☀️';
+        btnThemeToggle.textContent = 'Skift til Dagstilstand ☀️';
     } else {
         localStorage.setItem('babyRoTheme', 'light');
-        btnThemeToggle.textContent = '🌙';
+        btnThemeToggle.textContent = 'Skift til Nattilstand 🌙';
     }
 });
 
+// ==========================================
+// 2. LOGIN LOGIK (I PROFIL FANEN)
+// ==========================================
+btnGoogleLogin.addEventListener('click', () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider).catch(err => alert("Login fejl: " + err.message));
+});
 
-// ==========================================
-// 1. LOGIN LOGIK (Via Menu Knap)
-// ==========================================
-btnAuthNav.addEventListener('click', () => {
-    if (isGuest) {
-        // Hvis man ikke er logget ind, start Google login
-        const provider = new GoogleAuthProvider();
-        signInWithPopup(auth, provider).catch(err => alert("Login fejl: " + err.message));
-    } else {
-        // Hvis man allerede ER logget ind, spørg om man vil logge ud
-        if(confirm(`Du er logget ind og gemmer ${babyName}s søvn i skyen. Vil du logge ud?`)) {
-            signOut(auth);
-        }
-    }
+btnLogout.addEventListener('click', () => {
+    if(confirm("Er du sikker på, at du vil logge ud?")) signOut(auth);
 });
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         isGuest = false;
         currentUserId = user.uid;
-        btnAuthNav.textContent = '👤 Profil'; // Skifter navn på menu-knappen
-        guestWarning.style.display = 'none';  // Skjuler advarsel
+        
+        guestSection.style.display = 'none';
+        loggedInSection.style.display = 'block';
+        guestWarning.style.display = 'none';
         
         const userDocRef = doc(db, "users", currentUserId);
         const userDoc = await getDoc(userDocRef);
         
         if (userDoc.exists() && userDoc.data().babyName) {
             babyName = userDoc.data().babyName;
+            babyNameInput.value = babyName;
             updateBabyNameInUI();
             
             if(userDoc.data().sleepLogs) {
                 localSleepLogs = userDoc.data().sleepLogs;
                 localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
             }
-            renderTodayLog();
-            renderHistory();
-        } else {
-            nameSetupOverlay.style.display = 'flex';
         }
+        renderTodayLog();
+        renderHistory();
     } else {
         isGuest = true;
         currentUserId = null;
         babyName = "Baby";
+        babyNameInput.value = "";
         updateBabyNameInUI();
-        btnAuthNav.textContent = '👤 Log ind'; 
-        guestWarning.style.display = 'block'; 
+        
+        guestSection.style.display = 'block';
+        loggedInSection.style.display = 'none';
+        guestWarning.style.display = 'block';
         
         localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
         renderTodayLog();
@@ -111,9 +112,9 @@ btnSaveName.addEventListener('click', async () => {
     const inputName = babyNameInput.value.trim();
     if (inputName.length > 0) {
         babyName = inputName;
-        await setDoc(doc(db, "users", currentUserId), { babyName: babyName, sleepLogs: localSleepLogs }, { merge: true });
-        nameSetupOverlay.style.display = 'none';
+        await setDoc(doc(db, "users", currentUserId), { babyName: babyName }, { merge: true });
         updateBabyNameInUI();
+        alert("Barnets navn er opdateret! 🎉");
     }
 });
 
@@ -122,13 +123,14 @@ function updateBabyNameInUI() {
 }
 
 // ==========================================
-// 2. APP NAVIGATION
+// 3. APP NAVIGATION (FANEBLADE)
 // ==========================================
 const tabs = [
     { id: 'nav-player', viewId: 'view-player' },
     { id: 'nav-history', viewId: 'view-history' },
     { id: 'nav-sleep', viewId: 'view-sleep' },
-    { id: 'nav-leaps', viewId: 'view-leaps' }
+    { id: 'nav-leaps', viewId: 'view-leaps' },
+    { id: 'nav-profile', viewId: 'view-profile' }
 ];
 
 tabs.forEach(tab => {
@@ -140,16 +142,14 @@ tabs.forEach(tab => {
             document.getElementById(t.viewId).classList.remove('active-view');
             document.getElementById(t.id).classList.remove('active');
         });
-        // Fjerner også active class fra auth-knappen for en sikkerheds skyld
-        btnAuthNav.classList.remove('active'); 
-        
         view.classList.add('active-view');
         btn.classList.add('active');
+        window.scrollTo(0, 0); 
     });
 });
 
 // ==========================================
-// 3. SØVNUR LOGIK
+// 4. SØVNUR LOGIK
 // ==========================================
 const timeDisplay = document.getElementById('time-elapsed');
 const btnPauseTime = document.getElementById('btn-pause-time');
@@ -189,7 +189,7 @@ btnPauseTime.addEventListener('click', () => {
 });
 
 // ==========================================
-// 4. LYDAFSPILLER
+// 5. LYDAFSPILLER & 5-MINUTTERS FADE OUT
 // ==========================================
 const audioPlayer = document.getElementById('global-audio-player');
 const playButtons = document.querySelectorAll('.play-btn');
@@ -197,6 +197,7 @@ const stopButton = document.getElementById('stop-all');
 const timerSelect = document.getElementById('timer-select');
 let currentlyPlayingBtn = null;
 let timeoutId = null;
+let fadeInterval = null;
 
 function resetAllButtons() { playButtons.forEach(btn => { btn.textContent = 'Afspil'; btn.classList.remove('playing'); }); }
 
@@ -206,9 +207,11 @@ playButtons.forEach(button => {
         const audioSrc = document.getElementById(`variant-${category}`).value;
 
         if (currentlyPlayingBtn === this) {
-            audioPlayer.pause(); resetAllButtons(); clearTimer(); currentlyPlayingBtn = null; return;
+            clearTimer(); // Stopper også en evt. igangværende fade
+            audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null; return;
         }
 
+        clearTimer();
         resetAllButtons(); audioPlayer.src = audioSrc;
         this.textContent = 'Pause lyd'; this.classList.add('playing'); currentlyPlayingBtn = this;
         
@@ -222,25 +225,56 @@ playButtons.forEach(button => {
 });
 
 stopButton.addEventListener('click', () => {
-    audioPlayer.pause(); resetAllButtons(); clearTimer(); currentlyPlayingBtn = null;
+    clearTimer();
+    audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null;
 });
 
 function setupTimer() {
     clearTimer();
     const minutes = parseInt(timerSelect.value);
     if (minutes > 0) {
+        const totalMs = minutes * 60 * 1000;
+        
+        // Sætter fade til 5 min (300.000 ms). Er det 2-min testen, fader den kun over 30 sek (30.000 ms).
+        const fadeDurationMs = (minutes <= 2) ? 30000 : 300000; 
+
+        // Start Fade-Out før tiden rinder ud
         timeoutId = setTimeout(() => {
-            audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null;
-        }, minutes * 60 * 1000);
+            fadeOutAudio(fadeDurationMs);
+        }, totalMs - fadeDurationMs); 
     }
 }
-function clearTimer() { if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; } }
+
+// Fade Out skruer langsomt ned over f.eks. 5 minutter
+function fadeOutAudio(durationMs) {
+    let volume = 1.0;
+    const steps = 100; // Deler fadet op i 100 små ryk for at gøre det umærkeligt
+    const stepTimeMs = durationMs / steps;
+    const volumeDrop = 1.0 / steps;
+
+    fadeInterval = setInterval(() => {
+        volume -= volumeDrop;
+        if (volume <= 0.05) {
+            clearTimer(); // Rydder interval og sætter volume tilbage til 1.0
+            audioPlayer.pause();
+            resetAllButtons();
+            currentlyPlayingBtn = null;
+        } else {
+            audioPlayer.volume = volume;
+        }
+    }, stepTimeMs); 
+}
+
+function clearTimer() { 
+    if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; } 
+    if (fadeInterval !== null) { clearInterval(fadeInterval); fadeInterval = null; }
+    audioPlayer.volume = 1.0; // Vigtigt at lyden altid nulstilles til max efter et fade
+}
 timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null) setupTimer(); });
 
 // ==========================================
-// 5. DATABASE (GEM OG VIS LOG FOR ALLE)
+// 6. DATABASE (GEM OG VIS LOG FOR ALLE)
 // ==========================================
-
 async function saveLogsToFirebase() {
     if (currentUserId && !isGuest) {
         await setDoc(doc(db, "users", currentUserId), { sleepLogs: localSleepLogs }, { merge: true });
@@ -282,7 +316,8 @@ document.getElementById('btn-save-log').addEventListener('click', () => {
     localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
     saveLogsToFirebase();
     
-    audioPlayer.pause(); resetAllButtons(); clearTimer(); currentlyPlayingBtn = null;
+    clearTimer();
+    audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null;
     resetStopwatch();
     
     renderTodayLog();
