@@ -1,15 +1,32 @@
 :root {
-    --bg-main: #F7F5F0;       
+    --bg-main: #F7F5F0;
     --card-bg: #FFFFFF;
     --text-dark: #3A3A3A;
     --text-light: #7A7A7A;
-    --accent-green: #8DA399;  
-    --btn-stop: #E8C5C5;      
-    --btn-pause: #EED690;     
-    --btn-save: #A4C3D2;   
-    --nav-bg: #e5e0d5;   
+    --accent-green: #8DA399;
+    --btn-stop: #E8C5C5;
+    --btn-pause: #EED690;
+    --btn-save: #A4C3D2;
+    --nav-bg: #e5e0d5;
 }
 
+/* ===== KØNS-TEMAER ===== */
+body.theme-dreng {
+    --bg-main: #EFF5FA;
+    --card-bg: #FFFFFF;
+    --accent-green: #6E9FC5;
+    --btn-save: #8FB8D6;
+    --nav-bg: #DBE7F1;
+}
+body.theme-pige {
+    --bg-main: #FBF2F5;
+    --card-bg: #FFFFFF;
+    --accent-green: #D2879F;
+    --btn-save: #DFA6B9;
+    --nav-bg: #F2DEE6;
+}
+
+/* ===== NATTILSTAND ===== */
 body.dark-theme {
     --bg-main: #121212;
     --card-bg: #1E1E1E;
@@ -21,11 +38,25 @@ body.dark-theme {
     --btn-save: #60889c;
     --nav-bg: #2C2C2C;
 }
+body.dark-theme.theme-dreng {
+    --bg-main: #0F141A;
+    --card-bg: #1A222B;
+    --accent-green: #5C87A8;
+    --btn-save: #4D7691;
+    --nav-bg: #253240;
+}
+body.dark-theme.theme-pige {
+    --bg-main: #1A1216;
+    --card-bg: #251B20;
+    --accent-green: #A86C80;
+    --btn-save: #96687A;
+    --nav-bg: #382831;
+}
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; }
 
-body { 
-    background-color: var(--bg-main); color: var(--text-dark); 
+body {
+    background-color: var(--bg-main); color: var(--text-dark);
     line-height: 1.6; padding: 15px; padding-top: 0;
     transition: background-color 0.3s, color 0.3s;
 }
@@ -37,11 +68,11 @@ body {
 
 /* Navigation */
 .app-nav {
-    display: flex; justify-content: center; gap: 8px; margin-bottom: 30px; 
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 30px;
     flex-wrap: wrap; max-width: 900px; margin-left: auto; margin-right: auto;
 }
 .nav-item {
-    background: var(--nav-bg); color: var(--text-dark); border: none; 
+    background: var(--nav-bg); color: var(--text-dark); border: none;
     padding: 12px 15px; border-radius: 12px; font-size: 0.9rem; cursor: pointer;
     font-weight: 700; text-align: center; transition: 0.3s; flex-grow: 1; max-width: 130px;
 }
@@ -68,7 +99,7 @@ body {
 
 body.dark-theme .pause-btn { color: #fff; }
 
-.auto-stop-box { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--bg-main); padding: 12px 20px; border-radius: 12px; display: inline-flex;}
+.auto-stop-box { align-items: center; justify-content: center; gap: 10px; background: var(--bg-main); padding: 12px 20px; border-radius: 12px; display: inline-flex;}
 .auto-stop-box label { font-size: 0.95rem; font-weight: 600; color: var(--text-light); }
 .auto-stop-box select { border: none; background: transparent; font-weight: 700; color: var(--text-dark); font-size: 1rem; outline: none; cursor: pointer;}
 body.dark-theme .auto-stop-box select option { background: var(--card-bg); color: var(--text-dark); }
@@ -76,7 +107,7 @@ body.dark-theme .auto-stop-box select option { background: var(--card-bg); color
 /* BUNDEN: Delt Layout */
 .layout-split { display: flex; flex-direction: column; gap: 30px; }
 
-/* Venstre: Sound Grid - Mobil = 2 kolonner, PC = 3 kolonner */
+/* Venstre: Sound Grid */
 .sound-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
 .sound-card { background: var(--card-bg); border-radius: 20px; padding: 20px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; display: flex; flex-direction: column; }
 .card-icon { font-size: 2.2rem; margin-bottom: 10px; }
@@ -88,6 +119,24 @@ body.dark-theme .play-btn.playing { color: #fff; }
 
 .global-stop-wrapper { text-align: center; margin: 30px 0; }
 .stop-btn { background: var(--btn-stop); color: white; border: none; border-radius: 12px; padding: 15px 40px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer;}
+
+/* SMART-LYT (Baby monitor) */
+.smart-listen-box {
+    background: var(--card-bg); border-radius: 20px; padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid var(--accent-green);
+    margin-bottom: 30px;
+}
+.smart-listen-box h2 { font-size: 1.3rem; margin-bottom: 8px; color: var(--accent-green); }
+.smart-desc { color: var(--text-light); font-size: 0.95rem; margin-bottom: 18px; }
+.smart-row { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; }
+.smart-row label { font-weight: 700; font-size: 0.95rem; }
+.smart-row select { border: 1px solid var(--bg-main); background: var(--bg-main); color: var(--text-dark); border-radius: 8px; padding: 8px 12px; font-weight: 700; outline: none; cursor: pointer; flex: 1; min-width: 150px;}
+.smart-row input[type="range"] { flex: 1; min-width: 150px; accent-color: var(--accent-green); }
+.mic-meter { height: 12px; background: var(--bg-main); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+.mic-level { height: 100%; width: 0%; background: var(--accent-green); border-radius: 6px; transition: width 0.1s linear; }
+.smart-status { font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px; font-weight: 600; min-height: 1.4em; }
+.smart-listen-box.listening { border-left-color: var(--btn-pause); }
+.smart-listen-box.listening h2::after { content: " • lytter"; color: var(--btn-pause); font-size: 0.9rem; }
 
 /* Højre: Dagens Log Sidebar */
 .today-log-box { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid var(--btn-save);}
@@ -106,6 +155,18 @@ body.dark-theme .play-btn.playing { color: #fff; }
 .history-day-card h3 { font-size: 1.3rem; margin-bottom: 10px; color: var(--text-dark); }
 .history-day-card ul { list-style: none; }
 .history-day-card li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--bg-main); font-size: 0.95rem;}
+.day-total { margin-top: 12px; font-weight: 700; color: var(--btn-save); text-align: right; }
+
+/* STATISTIK */
+.stats-card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; }
+.stats-card h3 { color: var(--accent-green); margin-bottom: 15px; font-size: 1.2rem; text-align: center;}
+.stats-bars { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 150px; }
+.stats-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 5px;}
+.stats-value { font-size: 0.7rem; font-weight: 700; color: var(--text-light); }
+.stats-bar { width: 100%; max-width: 45px; background: var(--btn-save); border-radius: 8px 8px 4px 4px; min-height: 4px; transition: height 0.4s ease;}
+.stats-day { font-size: 0.75rem; font-weight: 700; color: var(--text-light); }
+.stats-col.today .stats-bar { background: var(--accent-green); }
+.stats-col.today .stats-day { color: var(--accent-green); }
 
 .delete-btn { background: #ffeeee; border: none; color: #d69f9f; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center;}
 body.dark-theme .delete-btn { background: #4a2c2c; color: #ff8a8a; }
@@ -116,24 +177,44 @@ body.dark-theme .warning-box { background: #4a3e14; color: #f5e4a4; border-left-
 .info-section { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto;}
 .info-card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
 .info-card h3 { color: var(--accent-green); margin-bottom: 10px; font-size: 1.2rem; }
+.info-card p { margin-bottom: 10px; }
 .highlight-card { border: 2px solid var(--btn-pause); }
 .highlight-card h3 { color: var(--btn-pause); filter: brightness(0.9); }
 .leap-list { padding-left: 20px; margin: 15px 0; color: var(--text-dark); }
 .leap-list li { margin-bottom: 5px; border-bottom: none; display: list-item; list-style-type: disc;}
+
+/* TIGERSPRING */
+.leap-badge { display: inline-block; background: var(--accent-green); color: white; font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; margin-right: 8px; vertical-align: middle; letter-spacing: 0.5px;}
+.leap-card.active-leap { border: 3px solid var(--accent-green); box-shadow: 0 8px 30px rgba(0,0,0,0.08); position: relative; }
+.leap-card.active-leap::before { content: "⭐ Lige nu"; position: absolute; top: -14px; right: 20px; background: var(--accent-green); color: white; font-size: 0.8rem; font-weight: 700; padding: 4px 14px; border-radius: 20px; }
+.leap-status-card { border-left: 5px solid var(--accent-green); }
+
+/* VÅGETIDER-TABEL */
+.wake-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+.wake-table th { text-align: left; color: var(--accent-green); padding: 8px 6px; border-bottom: 2px solid var(--bg-main); }
+.wake-table td { padding: 8px 6px; border-bottom: 1px dashed var(--bg-main); }
 
 /* Profil Siden */
 .profile-card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); max-width: 600px; margin: 0 auto 20px auto; text-align: center;}
 .profile-card h3 { color: var(--accent-green); margin-bottom: 5px; font-size: 1.3rem; }
 .google-btn { background: #4285F4; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;}
 .btn-icon { background: white; color: #4285F4; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;}
-#baby-name-input, #profile-name-input { width: 100%; padding: 15px; border: 2px solid var(--bg-main); border-radius: 12px; font-size: 1.2rem; text-align: center; margin-bottom: 20px; outline: none; background: var(--bg-main); color: var(--text-dark); font-weight: bold;}
+#baby-name-input, #profile-name-input, #profile-duedate-input { width: 100%; padding: 15px; border: 2px solid var(--bg-main); border-radius: 12px; font-size: 1.1rem; text-align: center; margin-bottom: 20px; outline: none; background: var(--bg-main); color: var(--text-dark); font-weight: bold; font-family: 'Quicksand', sans-serif;}
+
+/* KØNSVALG-KNAPPER */
+.gender-picker { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;}
+.gender-btn { background: var(--bg-main); color: var(--text-dark); border: 2px solid transparent; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; flex: 1; min-width: 90px;}
+.gender-btn.selected { border-color: var(--accent-green); background: var(--accent-green); color: white; }
 
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000;}
 .login-box { background: var(--card-bg); padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; max-width: 90%; width: 380px;}
+.login-box p { margin-bottom: 15px; }
+
+.empty-state { text-align: center; padding: 20px; color: var(--text-light); }
 
 @media (min-width: 900px) {
     .layout-split { display: flex; flex-direction: row; align-items: flex-start; gap: 40px;}
-    .left-sounds { flex: 1.8; } /* Gør plads til 3 kolonner */
-    .sound-grid { grid-template-columns: repeat(3, 1fr); } /* 3x3 PÅ PC! */
-    .right-log { flex: 1; min-width: 320px; } 
+    .left-sounds { flex: 1.8; }
+    .sound-grid { grid-template-columns: repeat(3, 1fr); }
+    .right-log { flex: 1; min-width: 320px; }
 }
