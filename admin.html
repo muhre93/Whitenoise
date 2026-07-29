@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BabyRo — Admin</title>
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ============ LOGIN-PORT ============ -->
+<div id="gate" class="gate">
+    <div class="gate-box">
+        <h1>BabyRo Admin</h1>
+        <p id="gate-text">Log ind med din administrator-konto for at redigere appen.</p>
+        <button id="btn-admin-login" class="btn btn-primary">Log ind med Google</button>
+        <button id="btn-gate-logout" class="btn btn-ghost" style="display:none;">Log ud og prøv en anden konto</button>
+    </div>
+</div>
+
+<!-- ============ ADMIN ============ -->
+<div id="admin" style="display:none;">
+
+    <header class="admin-header">
+        <div>
+            <h1>BabyRo Admin</h1>
+            <p id="admin-user" class="muted"></p>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" target="_blank" class="btn btn-ghost">Se appen ↗</a>
+            <button id="btn-logout" class="btn btn-ghost">Log ud</button>
+        </div>
+    </header>
+
+    <nav class="admin-nav">
+        <button class="tab-btn active" data-tab="tab-sounds">🎵 Lyde</button>
+        <button class="tab-btn" data-tab="tab-general">✏️ Generelle tekster</button>
+        <button class="tab-btn" data-tab="tab-sleep">👶 Søvn-artikler</button>
+        <button class="tab-btn" data-tab="tab-leaps">🐯 Tigerspring</button>
+        <button class="tab-btn" data-tab="tab-files">📁 Filer</button>
+        <button class="tab-btn" data-tab="tab-backup">💾 Backup</button>
+    </nav>
+
+    <div id="save-bar" class="save-bar">
+        <span id="save-status">Alt er gemt.</span>
+        <button id="btn-save-all" class="btn btn-primary">Gem og udgiv ændringer</button>
+    </div>
+
+    <!-- ---------- LYDE ---------- -->
+    <section id="tab-sounds" class="tab-panel active">
+        <div class="section-intro">
+            <h2>Lyde</h2>
+            <p class="muted">Tilføj lydkort, upload mp3-filer og omdøb varianter. Rækkefølgen her er også rækkefølgen i appen.</p>
+        </div>
+        <div id="sounds-list"></div>
+        <button id="btn-add-category" class="btn btn-add">+ Tilføj nyt lydkort</button>
+    </section>
+
+    <!-- ---------- GENERELLE TEKSTER ---------- -->
+    <section id="tab-general" class="tab-panel">
+        <div class="section-intro">
+            <h2>Generelle tekster</h2>
+            <p class="muted">Skriv <code>{navn}</code> et sted i teksten, så indsætter appen automatisk barnets navn. Felter markeret med HTML må gerne indeholde tags som &lt;strong&gt; og &lt;br&gt;.</p>
+        </div>
+        <div id="general-list"></div>
+    </section>
+
+    <!-- ---------- SØVN ---------- -->
+    <section id="tab-sleep" class="tab-panel">
+        <div class="section-intro">
+            <h2>Søvn-artikler</h2>
+            <p class="muted">Kortene vises i denne rækkefølge under fanen "Søvn". Brødteksten er HTML — brug &lt;p&gt;afsnit&lt;/p&gt; og &lt;ul class="leap-list"&gt;&lt;li&gt;punkt&lt;/li&gt;&lt;/ul&gt;.</p>
+        </div>
+        <label class="field">
+            <span>Sidens overskrift</span>
+            <input type="text" data-key="sleepTitle" class="general-input">
+        </label>
+        <label class="field">
+            <span>Sidens underoverskrift</span>
+            <input type="text" data-key="sleepSub" class="general-input">
+        </label>
+        <div id="sleep-list"></div>
+        <button id="btn-add-sleep" class="btn btn-add">+ Tilføj nyt søvn-kort</button>
+    </section>
+
+    <!-- ---------- TIGERSPRING ---------- -->
+    <section id="tab-leaps" class="tab-panel">
+        <div class="section-intro">
+            <h2>Tigerspring</h2>
+            <p class="muted">Uge-tallene styrer beregneren i appen: Den fremhæver automatisk det spring, barnet er i, ud fra terminsdatoen.</p>
+        </div>
+        <label class="field">
+            <span>Sidens overskrift</span>
+            <input type="text" data-key="leapTitle" class="general-input">
+        </label>
+        <label class="field">
+            <span>Sidens underoverskrift</span>
+            <input type="text" data-key="leapSub" class="general-input">
+        </label>
+        <label class="field">
+            <span>Intro-kort: overskrift</span>
+            <input type="text" data-key="leapIntroTitle" class="general-input">
+        </label>
+        <label class="field">
+            <span>Intro-kort: tekst (HTML)</span>
+            <textarea rows="8" data-key="leapIntroBody" class="general-input"></textarea>
+        </label>
+        <div id="leaps-list"></div>
+        <button id="btn-add-leap" class="btn btn-add">+ Tilføj nyt spring</button>
+        <label class="field" style="margin-top:25px;">
+            <span>Afsluttende kort: overskrift</span>
+            <input type="text" data-key="leapOutroTitle" class="general-input">
+        </label>
+        <label class="field">
+            <span>Afsluttende kort: tekst (HTML)</span>
+            <textarea rows="6" data-key="leapOutroBody" class="general-input"></textarea>
+        </label>
+    </section>
+
+    <!-- ---------- FILER ---------- -->
+    <section id="tab-files" class="tab-panel">
+        <div class="section-intro">
+            <h2>Filer på Cloudflare</h2>
+            <p class="muted">Alle lydfiler du uploader, ligger her. Kopiér en adresse og indsæt den i en variant under fanen Lyde.</p>
+        </div>
+
+        <div class="card">
+            <h3>Adgangsnøgle</h3>
+            <p class="muted">Nøglen fra din Worker (ADMIN_TOKEN). Den gemmes kun i denne fane og forsvinder, når du lukker browseren.</p>
+            <label class="field" style="margin-top:12px;">
+                <span>Cloudflare adgangsnøgle</span>
+                <input type="password" id="worker-token" placeholder="Indsæt din ADMIN_TOKEN">
+            </label>
+            <button id="btn-save-token" class="btn btn-primary">Gem nøgle for denne session</button>
+            <span id="token-status" class="upload-info" style="margin-left:10px;"></span>
+        </div>
+
+        <div class="card">
+            <h3>Uploadede filer</h3>
+            <button id="btn-refresh-files" class="btn btn-ghost" style="margin-bottom:15px;">Opdatér listen</button>
+            <div id="files-list"><p class="muted">Gem din nøgle og tryk "Opdatér listen".</p></div>
+        </div>
+    </section>
+
+    <!-- ---------- BACKUP ---------- -->
+    <section id="tab-backup" class="tab-panel">
+        <div class="section-intro">
+            <h2>Backup & nulstilling</h2>
+            <p class="muted">Hent alt indhold som en fil, før du laver store ændringer. Så kan du altid lægge det tilbage.</p>
+        </div>
+        <div class="card">
+            <h3>Download backup</h3>
+            <p class="muted">Gemmer lyde og tekster som én JSON-fil på din computer.</p>
+            <button id="btn-export" class="btn btn-primary">Download backup-fil</button>
+        </div>
+        <div class="card">
+            <h3>Gendan fra backup</h3>
+            <p class="muted">Indlæser en tidligere backup. Husk at trykke "Gem og udgiv" bagefter.</p>
+            <input type="file" id="import-file" accept="application/json">
+        </div>
+        <div class="card danger">
+            <h3>Nulstil til standardindhold</h3>
+            <p class="muted">Sætter alle tekster og lyde tilbage til det, appen blev leveret med. Dine uploadede lydfiler slettes ikke.</p>
+            <button id="btn-reset" class="btn btn-danger">Nulstil alt indhold</button>
+        </div>
+    </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="cloudflare-config.js"></script>
+<script src="defaults.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
