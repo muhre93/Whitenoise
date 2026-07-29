@@ -3,18 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BabyRo - White & Brown Noise</title>
+    <title>BabyRo - Beroligende Lyde</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- START: LOGIN SKÆRM -->
+    <!-- START: LOGIN SKÆRM (APP START) -->
     <div id="login-overlay" class="overlay">
         <div class="login-box">
-            <h1>BabyRo</h1>
-            <p>Beroligende lyde & søvnlog</p>
-            <button id="btn-google-login" class="google-btn">Log ind med Google</button>
+            <h1 class="brand-title">BabyRo</h1>
+            <p class="brand-subtitle">Beroligende lyde & søvnlog til de små</p>
+            
+            <div class="login-actions">
+                <button id="btn-google-login" class="google-btn">
+                    <span class="btn-icon">G</span> Log ind med Google
+                </button>
+                <div class="divider"><span>eller</span></div>
+                <button id="btn-guest-login" class="guest-btn">Fortsæt uden login</button>
+            </div>
+            <p class="small-text">Login kræves for at gemme søvnlog og tilpasse barnets navn.</p>
         </div>
     </div>
     
@@ -23,134 +31,201 @@
             <h2>Velkommen! 👋</h2>
             <p>Hvad hedder dit barn?</p>
             <input type="text" id="baby-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
-            <button id="btn-save-name" class="play-btn">Gem navn og fortsæt</button>
+            <button id="btn-save-name" class="play-btn">Gem navn og start</button>
         </div>
     </div>
     <!-- SLUT: LOGIN SKÆRM -->
 
 
-    <!-- TOP HEADER NÅR MAN ER LOGGET IND -->
-    <header>
+    <!-- TOP HEADER -->
+    <header class="top-header">
         <h1>BabyRo</h1>
-        <p>Beroligende lyde til <span class="b-name">baby</span></p>
-        <button id="btn-logout" class="logout-btn">Log ud</button>
+        <button id="btn-logout" class="header-btn" style="display: none;">Log ud</button>
+        <button id="btn-force-login" class="header-btn" style="display: none;">Log ind</button>
     </header>
 
-    <nav class="top-tabs">
-        <button id="nav-player" class="tab-btn active">🎧 Afspiller</button>
-        <button id="nav-history" class="tab-btn">🌙 <span class="b-name">Baby</span>s Søvnlog</button>
-        <button id="nav-sleep" class="tab-btn">👶 <span class="b-name">Baby</span>s søvn</button>
-        <button id="nav-leaps" class="tab-btn">🐯 Tigerspring</button>
-    </nav>
-
-    <!-- START: AFSSPILLER-SIDEN -->
-    <main id="view-player" class="view-section">
+    <!-- START: AFSSPILLER-SIDEN (Forsiden) -->
+    <main id="view-player" class="view-section active-view">
         <div class="layout-wrapper">
             
-            <div class="main-content">
-                <section class="timer-section">
-                    <div class="timer-controls">
-                        <label for="timer-select">Automatisk sluk (Lyd):</label>
-                        <select id="timer-select">
-                            <option value="0">Kør hele tiden</option>
-                            <option value="2">2 minutter (Test)</option>
-                            <option value="60">1 time</option>
-                            <option value="120">2 timer</option>
-                            <option value="240">4 timer</option>
-                        </select>
-                        <button id="stop-all" class="stop-btn">Stop alt lyd</button>
-                    </div>
-                    
-                    <div class="time-display-wrapper">
-                        <div id="time-elapsed" class="time-display">Søvnur: 00:00:00</div>
-                        <div class="time-actions">
-                            <button id="btn-save-log" class="save-btn">Gem</button>
-                            <button id="btn-pause-time" class="pause-btn">Pause</button>
-                            <button id="btn-reset-time" class="reset-btn">Nulstil</button>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="sound-grid">
-                    <div class="sound-card">
-                        <h3>💨 Støvsuger</h3>
-                        <select class="sound-variant" id="variant-stovsuger">
-                            <option value="lyde/stovsuger-1.mp3">Standard støvsuger</option>
-                            <option value="lyde/stovsuger-2.mp3">Dyb støvsuger</option>
-                            <option value="lyde/stovsuger-3.mp3">Let støvsuger</option>
-                        </select>
-                        <button class="play-btn" data-category="stovsuger">Afspil</button>
-                    </div>
-                    <div class="sound-card">
-                        <h3>💇‍♀️ Hårtørrer</h3>
-                        <select class="sound-variant" id="variant-hartorrer">
-                            <option value="lyde/hartorrer-1.mp3">Mild hårtørrer</option>
-                            <option value="lyde/hartorrer-2.mp3">Kraftig hårtørrer</option>
-                            <option value="lyde/hartorrer-3.mp3">Fjern hårtørrer</option>
-                        </select>
-                        <button class="play-btn" data-category="hartorrer">Afspil</button>
-                    </div>
-                    <div class="sound-card">
-                        <h3>❤️ Hjerterytme</h3>
-                        <select class="sound-variant" id="variant-hjerte">
-                            <option value="lyde/hjerte-1.mp3">Rolig puls (Mors mave)</option>
-                            <option value="lyde/hjerte-2.mp3">Puls med sus</option>
-                            <option value="lyde/hjerte-3.mp3">Dyb hjerterytme</option>
-                        </select>
-                        <button class="play-btn" data-category="hjerte">Afspil</button>
-                    </div>
-                    <!-- (Her kan du tilføje regnvejr, vaskemaskine osv. ligesom du plejer!) -->
-                </section>
-            </div>
-
-            <aside class="sidebar">
-                <div class="today-log-box">
-                    <h2><span class="b-name">Baby</span>s søvn i dag</h2>
-                    <p class="date-subtitle" id="today-date-text">I dag</p>
-                    <ul class="log-list" id="today-log-list"></ul>
-                    <div class="log-total">Samlet sovetid: <span id="today-total-time">0:00 min</span></div>
+            <!-- Det nye, smukke kontrolpanel -->
+            <section class="control-center">
+                <div class="time-display-wrapper">
+                    <p class="timer-label"><span class="b-name">Baby</span>s Søvnur</p>
+                    <div id="time-elapsed" class="time-display">00:00:00</div>
                 </div>
-            </aside>
+                
+                <div class="time-actions">
+                    <button id="btn-pause-time" class="action-btn pause-btn">Pause ur</button>
+                    <button id="btn-save-log" class="action-btn save-btn">Gem lur</button>
+                    <button id="btn-reset-time" class="action-btn reset-btn">Nulstil</button>
+                </div>
+
+                <div class="auto-stop-box">
+                    <label for="timer-select">Sluk lyden efter:</label>
+                    <select id="timer-select">
+                        <option value="0">Kør hele tiden</option>
+                        <option value="2">2 min (Test)</option>
+                        <option value="60">1 time</option>
+                        <option value="120">2 timer</option>
+                        <option value="240">4 timer</option>
+                        <option value="720">12 timer</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Lydkortene (App-grid) -->
+            <section class="sound-grid">
+                <div class="sound-card">
+                    <div class="card-icon">💨</div>
+                    <h3>Støvsuger</h3>
+                    <select class="sound-variant" id="variant-stovsuger">
+                        <option value="lyde/stovsuger-1.mp3">Standard</option>
+                        <option value="lyde/stovsuger-2.mp3">Dyb</option>
+                        <option value="lyde/stovsuger-3.mp3">Let</option>
+                    </select>
+                    <button class="play-btn" data-category="stovsuger">Afspil</button>
+                </div>
+
+                <div class="sound-card">
+                    <div class="card-icon">💇‍♀️</div>
+                    <h3>Hårtørrer</h3>
+                    <select class="sound-variant" id="variant-hartorrer">
+                        <option value="lyde/hartorrer-1.mp3">Mild</option>
+                        <option value="lyde/hartorrer-2.mp3">Kraftig</option>
+                        <option value="lyde/hartorrer-3.mp3">Fjern</option>
+                    </select>
+                    <button class="play-btn" data-category="hartorrer">Afspil</button>
+                </div>
+
+                <div class="sound-card">
+                    <div class="card-icon">❤️</div>
+                    <h3>Hjerte</h3>
+                    <select class="sound-variant" id="variant-hjerte">
+                        <option value="lyde/hjerte-1.mp3">Rolig (Mave)</option>
+                        <option value="lyde/hjerte-2.mp3">Med sus</option>
+                        <option value="lyde/hjerte-3.mp3">Dyb puls</option>
+                    </select>
+                    <button class="play-btn" data-category="hjerte">Afspil</button>
+                </div>
+
+                <div class="sound-card">
+                    <div class="card-icon">🌧️</div>
+                    <h3>Regnvejr</h3>
+                    <select class="sound-variant" id="variant-regn">
+                        <option value="lyde/regn-1.mp3">Let regn</option>
+                        <option value="lyde/regn-2.mp3">Tung regn</option>
+                        <option value="lyde/regn-3.mp3">Med torden</option>
+                    </select>
+                    <button class="play-btn" data-category="regn">Afspil</button>
+                </div>
+
+                <div class="sound-card">
+                    <div class="card-icon">🌊</div>
+                    <h3>Havet</h3>
+                    <select class="sound-variant" id="variant-hav">
+                        <option value="lyde/hav-1.mp3">Milde bølger</option>
+                        <option value="lyde/hav-2.mp3">Dyb havbund</option>
+                        <option value="lyde/hav-3.mp3">Stenstrand</option>
+                    </select>
+                    <button class="play-btn" data-category="hav">Afspil</button>
+                </div>
+
+                <div class="sound-card">
+                    <div class="card-icon">📻</div>
+                    <h3>Støj</h3>
+                    <select class="sound-variant" id="variant-noise">
+                        <option value="lyde/noise-1.mp3">White Noise</option>
+                        <option value="lyde/noise-2.mp3">Pink Noise</option>
+                        <option value="lyde/noise-3.mp3">Brown Noise</option>
+                    </select>
+                    <button class="play-btn" data-category="noise">Afspil</button>
+                </div>
+            </section>
+            
+            <!-- Global Stop knap i bunden af playeren -->
+            <div class="global-stop-wrapper">
+                <button id="stop-all" class="stop-btn">Sluk alt lyd</button>
+            </div>
+            
         </div>
     </main>
+    <!-- SLUT: AFSSPILLER-SIDEN -->
 
     <!-- START: SØVNLOG-SIDEN -->
     <main id="view-history" class="view-section" style="display: none;">
-        <div class="history-wrapper">
-            <h2>Søvnhistorik</h2>
-            <p>Følg med i <span class="b-name">baby</span>s søvnmønster fra tidligere dage.</p>
-            <div id="history-container">
-                <p>Indlæser data fra skyen...</p>
-            </div>
+        <div class="page-header">
+            <h2><span class="b-name">Baby</span>s Søvnlog</h2>
+            <p>Følg med i søvnmønsteret fra dag til dag.</p>
+        </div>
+
+        <div class="log-container" id="history-container">
+            <div class="empty-state">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>
         </div>
     </main>
+    <!-- SLUT: SØVNLOG-SIDEN -->
 
     <!-- START: BARNETS SØVN-SIDEN -->
     <main id="view-sleep" class="view-section" style="display: none;">
+        <div class="page-header">
+            <h2>Viden om Søvn</h2>
+            <p>Forstå <span class="b-name">baby</span>s udvikling.</p>
+        </div>
+
         <div class="info-section">
-            <div class="info-box">
-                <h2><span class="b-name">Baby</span>s søvn: 0-3 måneder</h2>
-                <p>I denne alder kender <span class="b-name">baby</span> endnu ikke forskel på nat og dag. Søvncyklussen er meget kort, typisk omkring 45 minutter.</p>
+            <div class="info-card">
+                <h3>0-3 måneder</h3>
+                <p>I denne alder kender <span class="b-name">baby</span> endnu ikke forskel på nat og dag. Søvncyklussen er meget kort, typisk omkring 45 minutter, og meget af tiden er "aktiv" REM-søvn, hvor de grynter og spjætter.</p>
             </div>
-            <div class="info-box">
-                <h2><span class="b-name">Baby</span>s søvn: 3-6 måneder</h2>
-                <p>Omkring de 4 måneder rammer mange den berømte søvnregression, fordi søvnen ændrer sig til at ligne voksnes mere.</p>
+            <div class="info-card">
+                <h3>3-6 måneder</h3>
+                <p>Omkring de 4 måneder rammer mange søvnregressionen, fordi søvnen begynder at ligne voksnes med dybe og lette stadier. <span class="b-name">Baby</span> vågner lettere op mellem cyklusserne.</p>
             </div>
         </div>
     </main>
 
     <!-- START: TIGERSPRING-SIDEN -->
     <main id="view-leaps" class="view-section" style="display: none;">
+        <div class="page-header">
+            <h2>Tigerspring</h2>
+            <p>Mentale udviklingsspring.</p>
+        </div>
+        
         <div class="info-section">
-            <div class="info-box highlight-box" style="grid-column: 1 / -1;">
-                <h2>Er <span class="b-name">baby</span> i et tigerspring?</h2>
-                <p>Udover fysisk vækst går <span class="b-name">baby</span> igennem 10 store mentale "tigerspring". Det kan give enormt urolig søvn.</p>
+            <div class="info-card highlight-card">
+                <h3>Er <span class="b-name">baby</span> i et spring?</h3>
+                <p>Udover fysisk vækst går <span class="b-name">baby</span> igennem 10 store mentale tigerspring. Verden opdages på en ny måde, hvilket kan være utrygt.</p>
+                <ul class="leap-list">
+                    <li>Ekstra pylret og grædende</li>
+                    <li>Søger mere tryghed (vil bæres)</li>
+                    <li>Urolig søvn og svær at putte</li>
+                </ul>
+                <p><strong>Tip:</strong> Monotone lyde (som støvsuger eller brown noise) blokerer for nye indtryk og giver <span class="b-name">baby</span>s hjerne en pause.</p>
             </div>
         </div>
     </main>
 
+    <!-- BUND-MENU (App Navigation) -->
+    <nav class="app-nav">
+        <button id="nav-player" class="nav-item active">
+            <span class="nav-icon">🎧</span>
+            <span>Lyde</span>
+        </button>
+        <button id="nav-history" class="nav-item">
+            <span class="nav-icon">🌙</span>
+            <span>Log</span>
+        </button>
+        <button id="nav-sleep" class="nav-item">
+            <span class="nav-icon">👶</span>
+            <span>Søvn</span>
+        </button>
+        <button id="nav-leaps" class="nav-item">
+            <span class="nav-icon">🐯</span>
+            <span>Spring</span>
+        </button>
+    </nav>
+
     <audio id="global-audio-player" loop></audio>
-    <!-- VIGTIGT: type="module" tillader os at hente Firebase ind via internettet -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
