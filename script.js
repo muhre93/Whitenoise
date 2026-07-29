@@ -34,11 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentlyPlayingBtn = null;
     let elapsedSeconds = 0;
     let intervalId = null;
-    let sessionStartTime = null; // NY: Holder styr på, hvornår lyden startede
+    let sessionStartTime = null; 
 
     // --- 3. STOPUR (TÆLLER OP) ---
     function startStopwatch() {
-        // Hvis sessionStartTime er null, betyder det at det er en ny lur
         if (sessionStartTime === null) {
             sessionStartTime = new Date();
         }
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetStopwatch() {
         stopStopwatch();
         elapsedSeconds = 0;
-        sessionStartTime = null; // Nulstiller også starttidspunktet
+        sessionStartTime = null; 
         updateDisplay();
     }
 
@@ -154,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const endTime = new Date();
-        // Hvis sessionStartTime af en eller anden grund mangler, regner den baglæns
         const startTime = sessionStartTime || new Date(endTime.getTime() - (elapsedSeconds * 1000));
 
         const datoStreng = endTime.toLocaleDateString('da-DK'); 
@@ -165,12 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!logs[datoStreng]) { logs[datoStreng] = { sessions: [], total: 0 }; }
 
         logs[datoStreng].sessions.push({
-            timeDisplay: `Kl. ${startStreng} - ${slutStreng}`, // Gemmer formatet "Kl. 12:15 - 13:45"
+            timeDisplay: `Kl. ${startStreng} - ${slutStreng}`, 
             durationText: formatTimeText(elapsedSeconds)
         });
         
         logs[datoStreng].total += elapsedSeconds;
         localStorage.setItem('babyRoLogs', JSON.stringify(logs));
+        
+        // NYT: Her stopper vi lyden automatisk, når loggen gemmes!
+        audioPlayer.pause();
+        resetAllButtons();
+        clearTimer();
+        currentlyPlayingBtn = null;
         
         renderTodayLog();
         resetStopwatch();
@@ -196,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         todayData.sessions.forEach(session => {
             const li = document.createElement('li');
-            // Tjekker for bagudkompatibilitet hvis der er gemt gamle data
             const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
             li.innerHTML = `<span>${displayText}</span> <span>${session.durationText}</span>`;
             listEl.appendChild(li);
