@@ -77,7 +77,7 @@ body.dark-theme .auto-stop-box select option { background: var(--card-bg); color
 /* BUNDEN: Delt Layout */
 .layout-split { display: flex; flex-direction: column; gap: 30px; }
 
-/* Venstre: Sound Grid - Altid 2 kolonner (4 rækker) */
+/* Venstre: Sound Grid - Altid 2 kolonner (så det giver 4 rækker nedad) */
 .sound-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
 .sound-card { background: var(--card-bg); border-radius: 20px; padding: 20px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; display: flex; flex-direction: column; }
 .card-icon { font-size: 2.2rem; margin-bottom: 10px; }
@@ -94,7 +94,7 @@ body.dark-theme .play-btn.playing { color: #fff; }
 .today-log-box { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid var(--btn-save);}
 .today-log-box h2 { font-size: 1.4rem; margin-bottom: 10px; color: var(--text-dark); }
 .date-subtitle { color: var(--text-light); margin-bottom: 15px; font-size: 0.95rem; border-bottom: 1px solid var(--bg-main); padding-bottom: 10px;}
-.log-list { list-style: none; max-height: 450px; overflow-y: auto; padding-right: 5px;}
+.log-list { list-style: none; max-height: 550px; overflow-y: auto; padding-right: 5px;}
 .log-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--bg-main); font-size: 0.95rem;}
 .log-total { margin-top: 15px; font-weight: 700; color: var(--btn-save); text-align: right; font-size: 1.1rem;}
 
@@ -134,6 +134,7 @@ body.dark-theme .warning-box { background: #4a3e14; color: #f5e4a4; border-left-
 
 @media (min-width: 900px) {
     .layout-split { display: flex; flex-direction: row; align-items: flex-start; gap: 40px;}
-    .left-sounds { flex: 1.2; } /* Gør at de 2 kolonner med lyd ikke bliver gigantiske */
-    .right-log { flex: 1; min-width: 350px; } /* Gør Dagens Log markant bredere! */
+    .left-sounds { flex: 1; max-width: 480px;} /* Begrænser lyd-kasserne, så loggen får resten af pladsen */
+    .sound-grid { grid-template-columns: repeat(2, 1fr); } /* 2 KOLONNER PÅ PC (Giver 4 rækker nedad!) */
+    .right-log { flex: 2; } /* Loggen bliver meget bredere! */
 }
