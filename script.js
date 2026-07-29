@@ -1,9 +1,41 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// ==========================================
+// 1. SIKKER TAB NAVIGATION (Starter altid først)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const tabs = [
+        { id: 'nav-player', viewId: 'view-player' },
+        { id: 'nav-history', viewId: 'view-history' },
+        { id: 'nav-sleep', viewId: 'view-sleep' },
+        { id: 'nav-leaps', viewId: 'view-leaps' },
+        { id: 'nav-profile', viewId: 'view-profile' }
+    ];
+
+    tabs.forEach(tab => {
+        const btn = document.getElementById(tab.id);
+        const view = document.getElementById(tab.viewId);
+        
+        if(btn && view) {
+            btn.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    document.getElementById(t.viewId)?.classList.remove('active-view');
+                    document.getElementById(t.id)?.classList.remove('active');
+                });
+                view.classList.add('active-view');
+                btn.classList.add('active');
+                window.scrollTo(0, 0); 
+            });
+        }
+    });
+});
+
+// GLOBALE VARIABLER
+let currentUserId = null;
+let isGuest = true; 
+let babyName = "Baby";
+let localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {}; 
 
 // ==========================================
-// 🔴 INDSÆT DINE FIREBASE NØGLER HER
+// 2. FIREBASE OPSÆTNING
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAiev2iHG8I31LSe-oBL7yjQMiDtVYEQHM",
@@ -15,34 +47,22 @@ const firebaseConfig = {
   measurementId: "G-9HT4SHH5BR"
 };
 
-// Skudsikker start af Firebase
-let app, auth, db;
-try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} catch (error) {
-    console.log("Firebase venter på korrekt opsætning.");
+let auth = null;
+let db = null;
+
+// Tjekker om Firebase er loadet fra HTML'en
+if (typeof firebase !== 'undefined') {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase fejl. Appen kører bare videre i offline-tilstand.");
+    }
 }
 
-// GLOBALE VARIABLER
-let currentUserId = null;
-let isGuest = true; 
-let babyName = "Baby";
-let localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {}; 
-
-// Profil UI Elementer
-const guestSection = document.getElementById('profile-guest-section');
-const loggedInSection = document.getElementById('profile-logged-in-section');
-const btnGoogleLogin = document.getElementById('btn-google-login');
-const btnLogout = document.getElementById('btn-logout');
-const btnSaveName = document.getElementById('btn-save-name');
-const babyNameInput = document.getElementById('baby-name-input');
-const guestWarning = document.getElementById('guest-warning');
-const nameSetupOverlay = document.getElementById('name-setup-overlay');
-
 // ==========================================
-// 1. TEMA (NATTILSTAND)
+// 3. TEMA (NATTILSTAND)
 // ==========================================
 const btnThemeToggle = document.getElementById('btn-theme-toggle');
 if(btnThemeToggle) {
@@ -68,36 +88,7 @@ function updateBabyNameInUI() {
 }
 
 // ==========================================
-// 2. APP NAVIGATION (FANEBLADE)
-// ==========================================
-const tabs = [
-    { id: 'nav-player', viewId: 'view-player' },
-    { id: 'nav-history', viewId: 'view-history' },
-    { id: 'nav-sleep', viewId: 'view-sleep' },
-    { id: 'nav-leaps', viewId: 'view-leaps' },
-    { id: 'nav-profile', viewId: 'view-profile' }
-];
-
-tabs.forEach(tab => {
-    const btn = document.getElementById(tab.id);
-    const view = document.getElementById(tab.viewId);
-    
-    // Sikkerhedstjek at elementerne findes, før vi gør noget
-    if(btn && view) {
-        btn.addEventListener('click', () => {
-            tabs.forEach(t => {
-                document.getElementById(t.viewId)?.classList.remove('active-view');
-                document.getElementById(t.id)?.classList.remove('active');
-            });
-            view.classList.add('active-view');
-            btn.classList.add('active');
-            window.scrollTo(0, 0); 
-        });
-    }
-});
-
-// ==========================================
-// 3. SØVNUR LOGIK
+// 4. SØVNUR LOGIK
 // ==========================================
 const timeDisplay = document.getElementById('time-elapsed');
 const btnPauseTime = document.getElementById('btn-pause-time');
@@ -143,7 +134,7 @@ if(btnPauseTime) {
 }
 
 // ==========================================
-// 4. LYDAFSPILLER & FADE OUT
+// 5. LYDAFSPILLER & 5-MIN FADE OUT
 // ==========================================
 const audioPlayer = document.getElementById('global-audio-player');
 const playButtons = document.querySelectorAll('.play-btn');
@@ -175,7 +166,7 @@ playButtons.forEach(button => {
         }
 
         startStopwatch(); setupTimer(); 
-        audioPlayer.play().catch(e => console.log("Lyd tester: ", e));
+        audioPlayer.play().catch(e => console.log("Lyd tester"));
     });
 });
 
@@ -229,24 +220,36 @@ function clearTimer() {
 if(timerSelect) timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null) setupTimer(); });
 
 // ==========================================
-// 5. DATABASE (FIREBASE & LOKAL LOG)
+// 6. PROFIL & FIREBASE LOGIK
 // ==========================================
+const btnGoogleLogin = document.getElementById('btn-google-login');
+const btnLogout = document.getElementById('btn-logout');
+const guestSection = document.getElementById('profile-guest-section');
+const loggedInSection = document.getElementById('profile-logged-in-section');
+const btnUpdateName = document.getElementById('btn-update-name');
+const profileNameInput = document.getElementById('profile-name-input');
+const guestWarning = document.getElementById('guest-warning');
+
+// Setup vinduet ved første besøg
+const nameSetupOverlay = document.getElementById('name-setup-overlay');
+const btnSaveName = document.getElementById('btn-save-name');
+const babyNameInput = document.getElementById('baby-name-input');
 
 if (auth) {
     if(btnGoogleLogin) {
         btnGoogleLogin.addEventListener('click', () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch(err => alert("Login fejl: " + err.message));
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => alert("Login fejl: " + err.message));
         });
     }
 
     if(btnLogout) {
         btnLogout.addEventListener('click', () => {
-            if(confirm("Er du sikker på, at du vil logge ud?")) signOut(auth);
+            if(confirm("Er du sikker på, at du vil logge ud?")) auth.signOut();
         });
     }
 
-    onAuthStateChanged(auth, async (user) => {
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
             isGuest = false;
             currentUserId = user.uid;
@@ -255,12 +258,12 @@ if (auth) {
             if(loggedInSection) loggedInSection.style.display = 'block';
             if(guestWarning) guestWarning.style.display = 'none';
             
-            const userDocRef = doc(db, "users", currentUserId);
-            const userDoc = await getDoc(userDocRef);
+            const userDocRef = db.collection("users").doc(currentUserId);
+            const userDoc = await userDocRef.get();
             
-            if (userDoc.exists() && userDoc.data().babyName) {
+            if (userDoc.exists && userDoc.data().babyName) {
                 babyName = userDoc.data().babyName;
-                if(babyNameInput) babyNameInput.value = babyName;
+                if(profileNameInput) profileNameInput.value = babyName;
                 updateBabyNameInUI();
                 
                 if(userDoc.data().sleepLogs) {
@@ -276,7 +279,7 @@ if (auth) {
             isGuest = true;
             currentUserId = null;
             babyName = "Baby";
-            if(babyNameInput) babyNameInput.value = "";
+            if(profileNameInput) profileNameInput.value = "";
             updateBabyNameInUI();
             
             if(guestSection) guestSection.style.display = 'block';
@@ -294,10 +297,22 @@ if (auth) {
             const inputName = babyNameInput.value.trim();
             if (inputName.length > 0) {
                 babyName = inputName;
-                await setDoc(doc(db, "users", currentUserId), { babyName: babyName }, { merge: true });
+                await db.collection("users").doc(currentUserId).set({ babyName: babyName }, { merge: true });
                 if(nameSetupOverlay) nameSetupOverlay.style.display = 'none';
+                if(profileNameInput) profileNameInput.value = babyName;
                 updateBabyNameInUI();
-                alert("Navn er opdateret! 🎉");
+            }
+        });
+    }
+
+    if(btnUpdateName) {
+        btnUpdateName.addEventListener('click', async () => {
+            const inputName = profileNameInput.value.trim();
+            if (inputName.length > 0) {
+                babyName = inputName;
+                await db.collection("users").doc(currentUserId).set({ babyName: babyName }, { merge: true });
+                updateBabyNameInUI();
+                alert("Oplysninger er gemt!");
             }
         });
     }
@@ -305,10 +320,13 @@ if (auth) {
 
 async function saveLogsToFirebase() {
     if (currentUserId && !isGuest && db) {
-        await setDoc(doc(db, "users", currentUserId), { sleepLogs: localSleepLogs }, { merge: true });
+        await db.collection("users").doc(currentUserId).set({ sleepLogs: localSleepLogs }, { merge: true });
     }
 }
 
+// ==========================================
+// 7. LOKAL LOG & SLETNING
+// ==========================================
 function formatTimeText(totalSecs) {
     if (totalSecs === 0) return `0:00 min`;
     const h = Math.floor(totalSecs / 3600);
@@ -353,7 +371,7 @@ if(btnSaveLog) {
         
         renderTodayLog();
         renderHistory();
-        document.getElementById('nav-history').click();
+        document.getElementById('nav-history')?.click();
     });
 }
 
@@ -452,5 +470,8 @@ if(btnResetTime) {
     });
 }
 
-renderTodayLog();
-renderHistory();
+// Sørger for loggen indlæses med det samme på skærmen
+document.addEventListener('DOMContentLoaded', () => {
+    renderTodayLog();
+    renderHistory();
+});
