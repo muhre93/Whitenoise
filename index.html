@@ -3,41 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Min Hjemmeside</title>
+    <title>BabyRo - White & Brown Noise</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Henter en pæn, blød skrifttype -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <header class="hero">
-        <div class="container">
-            <h1>Velkommen til min hjemmeside</h1>
-            <p class="subtitle">En moderne og enkel side hostet direkte på GitHub Pages.</p>
-            <a href="#about" class="btn">Læs mere</a>
-        </div>
+    <header>
+        <h1>BabyRo</h1>
+        <p>Beroligende lyde til de små</p>
     </header>
 
-    <main class="container">
-        <section id="about" class="card-grid">
-            <article class="card">
-                <h3>⚡ Hurtig & Stabil</h3>
-                <p>Siden er bygget op i ren HTML og CSS, hvilket gør den lynhurtig at indlæse på alle enheder.</p>
-            </article>
+    <main>
+        <!-- Kontrolpanel til Timer -->
+        <section class="timer-section">
+            <label for="timer-select">Vælg spilletid:</label>
+            <select id="timer-select">
+                <option value="0">Kør hele tiden</option>
+                <option value="1">1 time</option>
+                <option value="2">2 timer</option>
+                <option value="4">4 timer</option>
+                <option value="8">8 timer</option>
+                <option value="12">12 timer</option>
+            </select>
+            <button id="stop-all" class="stop-btn">Stop alt lyd</button>
+        </section>
 
-            <article class="card">
-                <h3>🎨 Moderne Design</h3>
-                <p>Et stilrent udtryk med afdæmpede farver, skarpe kort-layouts og god læsbarhed.</p>
-            </article>
+        <!-- Lydkortene (8 stk) -->
+        <section class="sound-grid">
+            
+            <!-- Kort 1 -->
+            <div class="sound-card">
+                <h3>💨 Støvsuger</h3>
+                <select class="sound-variant" id="variant-stovsuger">
+                    <option value="lyde/stovsuger-1.mp3">Standard støvsuger</option>
+                    <option value="lyde/stovsuger-2.mp3">Dyb støvsuger (Brown noise)</option>
+                    <option value="lyde/stovsuger-3.mp3">Let støvsuger (White noise)</option>
+                </select>
+                <button class="play-btn" data-category="stovsuger">Afspil</button>
+            </div>
 
-            <article class="card">
-                <h3>🚀 GitHub Pages</h3>
-                <p>Hostet helt gratis og automatisk opdateret, hver gang der lægges ny kode op.</p>
-            </article>
+            <!-- Kort 2 -->
+            <div class="sound-card">
+                <h3>💇‍♀️ Hårtørrer</h3>
+                <select class="sound-variant" id="variant-hartorrer">
+                    <option value="lyde/hartorrer-1.mp3">Mild hårtørrer</option>
+                    <option value="lyde/hartorrer-2.mp3">Kraftig hårtørrer</option>
+                    <option value="lyde/hartorrer-3.mp3">Fjern hårtørrer (dæmpet)</option>
+                </select>
+                <button class="play-btn" data-category="hartorrer">Afspil</button>
+            </div>
+
+            <!-- Kort 3 -->
+            <div class="sound-card">
+                <h3>❤️ Hjerterytme</h3>
+                <select class="sound-variant" id="variant-hjerte">
+                    <option value="lyde/hjerte-1.mp3">Rolig puls (Mors mave)</option>
+                    <option value="lyde/hjerte-2.mp3">Puls med sus (Fostervand)</option>
+                    <option value="lyde/hjerte-3.mp3">Dyb hjerterytme</option>
+                </select>
+                <button class="play-btn" data-category="hjerte">Afspil</button>
+            </div>
+
+            <!-- Kort 4 -->
+            <div class="sound-card">
+                <h3>🌧️ Regnvejr</h3>
+                <select class="sound-variant" id="variant-regn">
+                    <option value="lyde/regn-1.mp3">Let sommerregn</option>
+                    <option value="lyde/regn-2.mp3">Tung regn mod rude</option>
+                    <option value="lyde/regn-3.mp3">Torden og regn i baggrunden</option>
+                </select>
+                <button class="play-btn" data-category="regn">Afspil</button>
+            </div>
+
+            <!-- Kort 5 -->
+            <div class="sound-card">
+                <h3>🌊 Havets brusen</h3>
+                <select class="sound-variant" id="variant-hav">
+                    <option value="lyde/hav-1.mp3">Milde bølger</option>
+                    <option value="lyde/hav-2.mp3">Dyb havbund</option>
+                    <option value="lyde/hav-3.mp3">Rullende stenstrand</option>
+                </select>
+                <button class="play-btn" data-category="hav">Afspil</button>
+            </div>
+
+            <!-- Kort 6 -->
+            <div class="sound-card">
+                <h3>🧺 Vaskemaskine</h3>
+                <select class="sound-variant" id="variant-vask">
+                    <option value="lyde/vask-1.mp3">Tromle der kører rundt</option>
+                    <option value="lyde/vask-2.mp3">Centrifugering (dæmpet)</option>
+                    <option value="lyde/vask-3.mp3">Gammeldags maskine (rumlende)</option>
+                </select>
+                <button class="play-btn" data-category="vask">Afspil</button>
+            </div>
+
+            <!-- Kort 7 -->
+            <div class="sound-card">
+                <h3>🚗 Bilkørsel</h3>
+                <select class="sound-variant" id="variant-bil">
+                    <option value="lyde/bil-1.mp3">Motorvej i regn</option>
+                    <option value="lyde/bil-2.mp3">Summende motor (bagsædet)</option>
+                    <option value="lyde/bil-3.mp3">Natkørsel (konstant rumlen)</option>
+                </select>
+                <button class="play-btn" data-category="bil">Afspil</button>
+            </div>
+
+            <!-- Kort 8 -->
+            <div class="sound-card">
+                <h3>📻 Ren White/Brown Noise</h3>
+                <select class="sound-variant" id="variant-noise">
+                    <option value="lyde/noise-1.mp3">Ren White Noise (Lys)</option>
+                    <option value="lyde/noise-2.mp3">Ren Pink Noise (Mellem)</option>
+                    <option value="lyde/noise-3.mp3">Ren Brown Noise (Dyb)</option>
+                </select>
+                <button class="play-btn" data-category="noise">Afspil</button>
+            </div>
+
+        </section>
+
+        <!-- Informationsbokse -->
+        <section class="info-section">
+            <div class="info-box">
+                <h2>Hvorfor virker disse lyde?</h2>
+                <p>Når en baby ligger inde i livmoderen, er der aldrig stille. De lytter konstant til moderens hjerteslag, blodets susen og lyde udefra. Det svarer til lyden af en konstant støvsuger! White og brown noise genskaber denne trygge, velkendte "larm", hvilket får babyens nervesystem til at slappe af og blokerer for pludselige lyde (som f.eks. en dør, der smækker), der ellers ville vække dem.</p>
+            </div>
+            
+            <div class="info-box">
+                <h2>Babys søvnstadier</h2>
+                <p>Babys søvncyklusser er kortere end voksnes og varer typisk 45-50 minutter. De veksler mellem <strong>Aktiv søvn</strong> (hvor de kan smile, spjætte, klynke og virke vågne) og <strong>Stille søvn</strong> (hvor de ligger helt tungt). Mange forældre kommer til at vække babyen under den aktive søvn, fordi de tror, den er vågen. Konstant baggrundslyd hjælper babyen med at binde disse søvncyklusser sammen og sove videre selv.</p>
+            </div>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2026 Min Hjemmeside. Bygget med HTML & CSS.</p>
-    </footer>
+    <!-- Usynlig lydafspiller -->
+    <audio id="global-audio-player" loop></audio>
 
+    <script src="script.js"></script>
 </body>
 </html>
