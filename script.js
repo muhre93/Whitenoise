@@ -14,55 +14,39 @@ const firebaseConfig = {
   appId: "1:260945437474:web:f670ae0502e1843125fb7b",
   measurementId: "G-9HT4SHH5BR"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 // GLOBALE VARIABLER
 let currentUserId = null;
-let isGuest = false;
+let isGuest = true; // Nu er man gæst som standard!
 let babyName = "Baby";
 let localSleepLogs = {}; 
 
-// ELEMENTER
-const loginOverlay = document.getElementById('login-overlay');
 const btnGoogleLogin = document.getElementById('btn-google-login');
-const btnGuestLogin = document.getElementById('btn-guest-login');
+const btnLogout = document.getElementById('btn-logout');
 const nameSetupOverlay = document.getElementById('name-setup-overlay');
 const btnSaveName = document.getElementById('btn-save-name');
 const babyNameInput = document.getElementById('baby-name-input');
-const btnLogout = document.getElementById('btn-logout');
-const btnForceLogin = document.getElementById('btn-force-login');
 
 // ==========================================
-// 1. LOGIN & GÆSTETILSTAND
+// 1. LOGIN LOGIK (Ingen tvang!)
 // ==========================================
 btnGoogleLogin.addEventListener('click', () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).catch(err => alert("Login fejl: " + err.message));
 });
 
-btnGuestLogin.addEventListener('click', () => {
-    isGuest = true;
-    currentUserId = null;
-    babyName = "Baby"; // Standard navn i gæstetilstand
-    updateBabyNameInUI();
-    loginOverlay.style.display = 'none';
-    btnLogout.style.display = 'none';
-    btnForceLogin.style.display = 'block'; // Vis en knap til at logge ind senere
-    renderHistory();
-});
-
 btnLogout.addEventListener('click', () => signOut(auth));
-btnForceLogin.addEventListener('click', () => location.reload()); // Genindlæser siden for at vise login-skærm
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         isGuest = false;
         currentUserId = user.uid;
-        loginOverlay.style.display = 'none';
+        btnGoogleLogin.style.display = 'none';
         btnLogout.style.display = 'block';
-        btnForceLogin.style.display = 'none';
         
         const userDocRef = doc(db, "users", currentUserId);
         const userDoc = await getDoc(userDocRef);
@@ -75,9 +59,15 @@ onAuthStateChanged(auth, async (user) => {
             nameSetupOverlay.style.display = 'flex';
         }
     } else {
-        if (!isGuest) {
-            loginOverlay.style.display = 'flex';
-        }
+        // Logget ud / Gæst
+        isGuest = true;
+        currentUserId = null;
+        babyName = "Baby";
+        updateBabyNameInUI();
+        btnGoogleLogin.style.display = 'block';
+        btnLogout.style.display = 'none';
+        localSleepLogs = {}; // Rydder skærmen for tidligere data
+        renderHistory();
     }
 });
 
@@ -97,7 +87,7 @@ function updateBabyNameInUI() {
 }
 
 // ==========================================
-// 2. APP NAVIGATION (Bottom Menu)
+// 2. APP NAVIGATION
 // ==========================================
 const tabs = [
     { id: 'nav-player', viewId: 'view-player' },
@@ -117,7 +107,6 @@ tabs.forEach(tab => {
         });
         view.classList.add('active-view');
         btn.classList.add('active');
-        window.scrollTo(0, 0); // Scroll til toppen ved sideskift
     });
 });
 
@@ -214,7 +203,7 @@ timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null)
 // 5. DATABASE (GEM OG VIS LOG)
 // ==========================================
 async function loadLogsFromFirebase() {
-    if(isGuest) return; // Gæster henter ikke data
+    if(isGuest) return;
     const userDocRef = doc(db, "users", currentUserId);
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists() && userDoc.data().sleepLogs) {
@@ -243,9 +232,8 @@ function formatTimeText(totalSecs) {
 }
 
 document.getElementById('btn-save-log').addEventListener('click', () => {
-    // Tjek om man er gæst!
     if(isGuest) {
-        alert("Opret en gratis profil ved at logge ind med Google for at gemme søvntider!");
+        alert("Opret en profil (Log ind i toppen) for at gemme sovetider i skyen!");
         return;
     }
 
@@ -275,7 +263,6 @@ document.getElementById('btn-save-log').addEventListener('click', () => {
     audioPlayer.pause(); resetAllButtons(); clearTimer(); currentlyPlayingBtn = null;
     resetStopwatch();
     
-    // Vis loggen med det samme, så brugeren kan se at den er gemt
     document.getElementById('nav-history').click();
 });
 
@@ -299,8 +286,8 @@ function renderHistory() {
     if(isGuest) {
         container.innerHTML = `
             <div style="text-align:center; padding: 40px 20px;">
-                <h3 style="color:#a4b5a8; margin-bottom:10px;">Gæstetilstand</h3>
-                <p style="color:#7a7a7a;">Du er ikke logget ind. Log ind med Google for at gemme ${babyName}s sovetider.</p>
+                <h3 style="color:#a4b5a8; margin-bottom:10px;">Du er ikke logget ind</h3>
+                <p style="color:#7a7a7a;">Log ind med Google i toppen for at gemme sovetider.</p>
             </div>
         `;
         return;
