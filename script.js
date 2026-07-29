@@ -1,329 +1,139 @@
-// GLOBALE VARIABLER
-let currentUserId = null;
-let isGuest = true; 
-let babyName = "Baby";
-let localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {}; 
-
-// Profil UI Elementer
-const guestSection = document.getElementById('profile-guest-section');
-const loggedInSection = document.getElementById('profile-logged-in-section');
-const btnGoogleLogin = document.getElementById('btn-google-login');
-const btnLogout = document.getElementById('btn-logout');
-const btnSaveName = document.getElementById('btn-save-name');
-const babyNameInput = document.getElementById('baby-name-input');
-const guestWarning = document.getElementById('guest-warning');
-const nameSetupOverlay = document.getElementById('name-setup-overlay');
-
-// ==========================================
-// 1. TEMA (NATTILSTAND)
-// ==========================================
-const btnThemeToggle = document.getElementById('btn-theme-toggle');
-
-if(localStorage.getItem('babyRoTheme') === 'dark') {
-    document.body.classList.add('dark-theme');
-    btnThemeToggle.textContent = 'Skift til Dagstilstand ☀️';
+:root {
+    --bg-main: #F7F5F0;       
+    --card-bg: #FFFFFF;
+    --text-dark: #3A3A3A;
+    --text-light: #7A7A7A;
+    --accent-green: #8DA399;  
+    --btn-stop: #E8C5C5;      
+    --btn-pause: #EED690;     
+    --btn-save: #A4C3D2;   
+    --nav-bg: #e5e0d5;   
 }
 
-btnThemeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-theme');
-    if (document.body.classList.contains('dark-theme')) {
-        localStorage.setItem('babyRoTheme', 'dark');
-        btnThemeToggle.textContent = 'Skift til Dagstilstand ☀️';
-    } else {
-        localStorage.setItem('babyRoTheme', 'light');
-        btnThemeToggle.textContent = 'Skift til Nattilstand 🌙';
-    }
-});
-
-function updateBabyNameInUI() {
-    document.querySelectorAll('.b-name').forEach(span => span.textContent = babyName);
+body.dark-theme {
+    --bg-main: #121212;
+    --card-bg: #1E1E1E;
+    --text-dark: #E0E0E0;
+    --text-light: #A0A0A0;
+    --accent-green: #688579;
+    --btn-stop: #9e6464;
+    --btn-pause: #c4aa5a;
+    --btn-save: #60889c;
+    --nav-bg: #2C2C2C;
 }
 
-// ==========================================
-// 2. APP NAVIGATION (FANEBLADE)
-// ==========================================
-// Dette er koden der SKAL virke for at knapperne skifter
-const tabs = [
-    { id: 'nav-player', viewId: 'view-player' },
-    { id: 'nav-history', viewId: 'view-history' },
-    { id: 'nav-sleep', viewId: 'view-sleep' },
-    { id: 'nav-leaps', viewId: 'view-leaps' },
-    { id: 'nav-profile', viewId: 'view-profile' }
-];
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; }
 
-tabs.forEach(tab => {
-    const btn = document.getElementById(tab.id);
-    const view = document.getElementById(tab.viewId);
-    
-    // Sikkerhedstjek at knappen overhovedet findes i HTML'en
-    if(btn && view) {
-        btn.addEventListener('click', () => {
-            // Fjerner først 'active' fra alle
-            tabs.forEach(t => {
-                document.getElementById(t.viewId).classList.remove('active-view');
-                document.getElementById(t.id).classList.remove('active');
-            });
-            // Giver 'active' til den man klikkede på
-            view.classList.add('active-view');
-            btn.classList.add('active');
-            window.scrollTo(0, 0); 
-        });
-    }
-});
-
-// ==========================================
-// 3. SØVNUR LOGIK
-// ==========================================
-const timeDisplay = document.getElementById('time-elapsed');
-const btnPauseTime = document.getElementById('btn-pause-time');
-let elapsedSeconds = 0;
-let intervalId = null;
-let sessionStartTime = null; 
-let isUrPaused = false; 
-
-function startStopwatch() {
-    if (sessionStartTime === null) sessionStartTime = new Date();
-    clearInterval(intervalId);
-    intervalId = setInterval(() => { elapsedSeconds++; updateDisplay(); }, 1000); 
-}
-function stopStopwatch() { clearInterval(intervalId); }
-function resetStopwatch() {
-    stopStopwatch(); elapsedSeconds = 0; sessionStartTime = null; 
-    isUrPaused = false; btnPauseTime.textContent = 'Pause ur'; 
-    btnPauseTime.style.background = ''; btnPauseTime.style.color = '';
-    updateDisplay();
-}
-function updateDisplay() {
-    const h = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
-    const m = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
-    const s = String(elapsedSeconds % 60).padStart(2, '0');
-    timeDisplay.textContent = `${h}:${m}:${s}`;
+body { 
+    background-color: var(--bg-main); color: var(--text-dark); 
+    line-height: 1.6; padding: 15px; padding-top: 0;
+    transition: background-color 0.3s, color 0.3s;
+    -webkit-tap-highlight-color: transparent;
 }
 
-btnPauseTime.addEventListener('click', () => {
-    if (elapsedSeconds === 0 && sessionStartTime === null) return;
-    if (!isUrPaused) {
-        stopStopwatch(); isUrPaused = true;
-        btnPauseTime.textContent = 'Start ur'; btnPauseTime.style.background = '#8DA399'; btnPauseTime.style.color = 'white';
-    } else {
-        startStopwatch(); isUrPaused = false;
-        btnPauseTime.textContent = 'Pause ur'; btnPauseTime.style.background = ''; btnPauseTime.style.color = '';
-    }
-});
+/* Header */
+.top-header { text-align: center; padding: 25px 0 15px 0; }
+.top-header h1 { font-size: 2.5rem; color: var(--accent-green); font-weight: 700; margin: 0; letter-spacing: 1px;}
+.subtitle { color: var(--text-light); font-size: 1rem; margin-top: -5px;}
 
-// ==========================================
-// 4. LYDAFSPILLER & 5-MINUTTERS FADE OUT
-// ==========================================
-const audioPlayer = document.getElementById('global-audio-player');
-const playButtons = document.querySelectorAll('.play-btn');
-const stopButton = document.getElementById('stop-all');
-const timerSelect = document.getElementById('timer-select');
-let currentlyPlayingBtn = null;
-let timeoutId = null;
-let fadeInterval = null;
-
-function resetAllButtons() { playButtons.forEach(btn => { btn.textContent = 'Afspil'; btn.classList.remove('playing'); }); }
-
-playButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        const category = this.getAttribute('data-category');
-        const audioSrc = document.getElementById(`variant-${category}`).value;
-
-        if (currentlyPlayingBtn === this) {
-            clearTimer(); 
-            audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null; return;
-        }
-
-        clearTimer();
-        resetAllButtons(); audioPlayer.src = audioSrc;
-        this.textContent = 'Pause lyd'; this.classList.add('playing'); currentlyPlayingBtn = this;
-        
-        if (isUrPaused) {
-            isUrPaused = false; btnPauseTime.textContent = 'Pause ur'; btnPauseTime.style.background = ''; btnPauseTime.style.color = '';
-        }
-
-        startStopwatch(); setupTimer(); 
-        audioPlayer.play().catch(() => console.log("Lyd spiller ikke under test uden filer."));
-    });
-});
-
-stopButton.addEventListener('click', () => {
-    clearTimer();
-    audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null;
-});
-
-function setupTimer() {
-    clearTimer();
-    const minutes = parseInt(timerSelect.value);
-    if (minutes > 0) {
-        const totalMs = minutes * 60 * 1000;
-        const fadeDurationMs = (minutes <= 2) ? 30000 : 300000; 
-
-        timeoutId = setTimeout(() => {
-            fadeOutAudio(fadeDurationMs);
-        }, totalMs - fadeDurationMs); 
-    }
+/* Navigation */
+.app-nav {
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 30px; 
+    flex-wrap: wrap; max-width: 900px; margin-left: auto; margin-right: auto;
 }
-
-function fadeOutAudio(durationMs) {
-    let volume = 1.0;
-    const steps = 100; 
-    const stepTimeMs = durationMs / steps;
-    const volumeDrop = 1.0 / steps;
-
-    fadeInterval = setInterval(() => {
-        volume -= volumeDrop;
-        if (volume <= 0.05) {
-            clearTimer(); 
-            audioPlayer.pause();
-            resetAllButtons();
-            currentlyPlayingBtn = null;
-        } else {
-            audioPlayer.volume = volume;
-        }
-    }, stepTimeMs); 
+.nav-item {
+    background: var(--nav-bg); color: var(--text-dark); border: none; 
+    padding: 12px 15px; border-radius: 12px; font-size: 0.9rem; cursor: pointer;
+    font-weight: 700; text-align: center; transition: 0.3s; flex-grow: 1; max-width: 130px;
 }
+.nav-item.active { background: var(--accent-green); color: white; }
 
-function clearTimer() { 
-    if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; } 
-    if (fadeInterval !== null) { clearInterval(fadeInterval); fadeInterval = null; }
-    audioPlayer.volume = 1.0; 
+/* Views */
+.view-section { display: none; max-width: 1000px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+.view-section.active-view { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* TOP: Control Center (Søvnur fylder 100%) */
+.control-center {
+    background: var(--card-bg); border-radius: 24px; padding: 30px 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.04); margin-bottom: 30px; text-align: center;
+    width: 100%; display: block;
 }
-timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null) setupTimer(); });
+.timer-label { color: var(--text-light); font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;}
+.time-display { font-size: 3.5rem; font-weight: 700; color: var(--accent-green); margin-bottom: 25px; font-variant-numeric: tabular-nums;}
+.time-actions { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;}
+.action-btn { padding: 15px 20px; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; color: white; transition: 0.2s;}
+.pause-btn { background: var(--btn-pause); color: #4a4a4a; flex: 1; max-width: 180px;}
+.save-btn { background: var(--btn-save); color: white; flex: 1; max-width: 180px;}
+.reset-btn { background: var(--nav-bg); color: var(--text-dark); flex: 1; max-width: 180px;}
 
-// ==========================================
-// 5. DATABASE (LOKAL)
-// ==========================================
+body.dark-theme .pause-btn { color: #fff; }
 
-function formatTimeText(totalSecs) {
-    if (totalSecs === 0) return `0:00 min`;
-    const h = Math.floor(totalSecs / 3600);
-    const m = Math.floor((totalSecs % 3600) / 60);
-    const s = totalSecs % 60;
-    const secString = String(s).padStart(2, '0');
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${secString} t`;
-    return `${m}:${secString} min`; 
+.auto-stop-box { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--bg-main); padding: 12px 20px; border-radius: 12px; display: inline-flex;}
+.auto-stop-box label { font-size: 0.95rem; font-weight: 600; color: var(--text-light); }
+.auto-stop-box select { border: none; background: transparent; font-weight: 700; color: var(--text-dark); font-size: 1rem; outline: none; cursor: pointer;}
+body.dark-theme .auto-stop-box select option { background: var(--card-bg); color: var(--text-dark); }
+
+/* BUNDEN: Delt Layout */
+.layout-split { display: flex; flex-direction: column; gap: 30px; }
+
+/* Venstre: Sound Grid - Altid 2 kolonner (4 rækker) */
+.sound-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+.sound-card { background: var(--card-bg); border-radius: 20px; padding: 20px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; display: flex; flex-direction: column; }
+.card-icon { font-size: 2.2rem; margin-bottom: 10px; }
+.sound-card h3 { font-size: 1rem; margin-bottom: 10px; }
+.sound-variant { width: 100%; border: 1px solid var(--bg-main); border-radius: 8px; padding: 8px; font-size: 0.85rem; margin-bottom: 15px; background: var(--bg-main); color: var(--text-dark); flex-grow: 1; outline:none; }
+.play-btn { background: var(--accent-green); color: white; border: none; border-radius: 10px; padding: 10px; font-weight: 700; cursor: pointer; transition: 0.3s;}
+.play-btn.playing { background: var(--btn-pause); color: #4a4a4a; }
+body.dark-theme .play-btn.playing { color: #fff; }
+
+.global-stop-wrapper { text-align: center; margin: 30px 0; }
+.stop-btn { background: var(--btn-stop); color: white; border: none; border-radius: 12px; padding: 15px 40px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer;}
+
+/* Højre: Dagens Log Sidebar */
+.today-log-box { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid var(--btn-save);}
+.today-log-box h2 { font-size: 1.4rem; margin-bottom: 10px; color: var(--text-dark); }
+.date-subtitle { color: var(--text-light); margin-bottom: 15px; font-size: 0.95rem; border-bottom: 1px solid var(--bg-main); padding-bottom: 10px;}
+.log-list { list-style: none; max-height: 450px; overflow-y: auto; padding-right: 5px;}
+.log-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--bg-main); font-size: 0.95rem;}
+.log-total { margin-top: 15px; font-weight: 700; color: var(--btn-save); text-align: right; font-size: 1.1rem;}
+
+/* Historik, Info & Profil */
+.page-header { text-align: center; margin-bottom: 25px; }
+.page-header h2 { font-size: 1.8rem; color: var(--accent-green); }
+.page-header p { color: var(--text-light); font-size: 1rem; }
+
+.history-day-card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid var(--btn-save); margin-bottom: 20px;}
+.history-day-card h3 { font-size: 1.3rem; margin-bottom: 10px; color: var(--text-dark); }
+.history-day-card ul { list-style: none; }
+.history-day-card li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--bg-main); font-size: 0.95rem;}
+.day-total { margin-top: 15px; font-weight: 700; color: var(--btn-save); text-align: right; font-size: 1.1rem;}
+
+.delete-btn { background: #ffeeee; border: none; color: #d69f9f; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center;}
+body.dark-theme .delete-btn { background: #4a2c2c; color: #ff8a8a; }
+
+.warning-box { background: #FFF3CD; color: #856404; padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 0.95rem; border-left: 5px solid #ffeeba; line-height: 1.5; text-align: left;}
+body.dark-theme .warning-box { background: #4a3e14; color: #f5e4a4; border-left-color: #8a7322;}
+
+.info-section { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto;}
+.info-card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+.info-card h3 { color: var(--accent-green); margin-bottom: 10px; font-size: 1.2rem; }
+.highlight-card { border: 2px solid var(--btn-pause); }
+.highlight-card h3 { color: var(--btn-pause); filter: brightness(0.9); }
+.leap-list { padding-left: 20px; margin: 15px 0; color: var(--text-dark); }
+.leap-list li { margin-bottom: 5px; border-bottom: none; display: list-item; list-style-type: disc;}
+
+.profile-card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); max-width: 600px; margin: 0 auto 20px auto; text-align: center;}
+.profile-card h3 { color: var(--accent-green); margin-bottom: 5px; font-size: 1.3rem; }
+.google-btn { background: #4285F4; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;}
+.btn-icon { background: white; color: #4285F4; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;}
+#baby-name-input { width: 100%; padding: 15px; border: 2px solid var(--bg-main); border-radius: 12px; font-size: 1.2rem; text-align: center; margin-bottom: 20px; outline: none; background: var(--bg-main); color: var(--text-dark); font-weight: bold;}
+
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000;}
+.login-box { background: var(--card-bg); padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; max-width: 90%; width: 380px;}
+
+@media (min-width: 900px) {
+    .layout-split { display: flex; flex-direction: row; align-items: flex-start; gap: 40px;}
+    .left-sounds { flex: 1.2; } /* Gør at de 2 kolonner med lyd ikke bliver gigantiske */
+    .right-log { flex: 1; min-width: 350px; } /* Gør Dagens Log markant bredere! */
 }
-
-document.getElementById('btn-save-log').addEventListener('click', () => {
-    if (elapsedSeconds === 0) {
-        alert("Søvnuret er på nul. Start uret først.");
-        return;
-    }
-
-    const endTime = new Date();
-    const startTime = sessionStartTime || new Date(endTime.getTime() - (elapsedSeconds * 1000));
-    const datoStreng = endTime.toLocaleDateString('da-DK'); 
-    const startStreng = startTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
-    const slutStreng = endTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
-
-    if (!localSleepLogs[datoStreng]) { localSleepLogs[datoStreng] = { sessions: [], total: 0 }; }
-
-    localSleepLogs[datoStreng].sessions.push({
-        timeDisplay: `Kl. ${startStreng} - ${slutStreng}`, 
-        durationText: formatTimeText(elapsedSeconds),
-        durationSec: elapsedSeconds 
-    });
-    
-    localSleepLogs[datoStreng].total += elapsedSeconds;
-    
-    localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
-    
-    clearTimer();
-    audioPlayer.pause(); resetAllButtons(); currentlyPlayingBtn = null;
-    resetStopwatch();
-    
-    renderTodayLog();
-    renderHistory();
-    document.getElementById('nav-history').click();
-});
-
-window.deleteLogEntry = function(dateStr, index) {
-    if(confirm(`Er du sikker på, du vil slette denne søvntid for ${babyName}?`)) {
-        if(localSleepLogs[dateStr]) {
-            const sessionSecs = localSleepLogs[dateStr].sessions[index].durationSec || 0; 
-            localSleepLogs[dateStr].total -= sessionSecs;
-            if(localSleepLogs[dateStr].total < 0) localSleepLogs[dateStr].total = 0;
-            localSleepLogs[dateStr].sessions.splice(index, 1);
-            if(localSleepLogs[dateStr].sessions.length === 0) delete localSleepLogs[dateStr];
-            
-            localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
-            renderTodayLog();
-            renderHistory();
-        }
-    }
-};
-
-function renderTodayLog() {
-    const nu = new Date();
-    const datoStreng = nu.toLocaleDateString('da-DK');
-    document.getElementById('today-date-text').textContent = `Dato: ${datoStreng}`;
-
-    const todayData = localSleepLogs[datoStreng];
-    const listEl = document.getElementById('today-log-list');
-    const totalEl = document.getElementById('today-total-time');
-
-    listEl.innerHTML = "";
-
-    if (!todayData || todayData.sessions.length === 0) {
-        listEl.innerHTML = `<li>Ingen lure gemt endnu i dag.</li>`;
-        totalEl.textContent = "0:00 min";
-        return;
-    }
-
-    todayData.sessions.forEach((session, index) => {
-        listEl.innerHTML += `
-            <li>
-                <span>${session.timeDisplay}</span> 
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span>${session.durationText}</span>
-                    <button class="delete-btn" onclick="deleteLogEntry('${datoStreng}', ${index})">❌</button>
-                </div>
-            </li>
-        `;
-    });
-    totalEl.textContent = formatTimeText(todayData.total);
-}
-
-function renderHistory() {
-    const container = document.getElementById('history-container');
-    container.innerHTML = "";
-
-    const dates = Object.keys(localSleepLogs).reverse(); 
-    if (dates.length === 0) {
-        container.innerHTML = `<div class="empty-state" style="text-align:center; padding: 20px;">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>`;
-        return;
-    }
-
-    dates.forEach(date => {
-        const dayData = localSleepLogs[date];
-        let listHtml = "";
-        dayData.sessions.forEach((session, index) => {
-            listHtml += `
-                <li>
-                    <span>${session.timeDisplay}</span>
-                    <div style="display:flex; align-items:center; gap: 10px;">
-                        <strong>${session.durationText}</strong>
-                        <button class="delete-btn" onclick="deleteLogEntry('${date}', ${index})">❌</button>
-                    </div>
-                </li>
-            `;
-        });
-        
-        container.innerHTML += `
-            <div class="history-day-card">
-                <h3>${date}</h3>
-                <ul>${listHtml}</ul>
-                <div class="day-total">Dagens total: ${formatTimeText(dayData.total)}</div>
-            </div>
-        `;
-    });
-}
-
-document.getElementById('btn-reset-time').addEventListener('click', () => {
-    if(confirm("Vil du nulstille uret uden at gemme?")) resetStopwatch();
-});
-
-// START
-renderTodayLog();
-renderHistory();
