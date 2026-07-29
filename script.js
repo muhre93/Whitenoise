@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Faneblad logik
+    
+    // --- 1. HÅNDTERING AF FANEBLADE ---
     const tabPlayer = document.getElementById('nav-player');
     const tabHistory = document.getElementById('nav-history');
     const viewPlayer = document.getElementById('view-player');
@@ -17,10 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
         viewHistory.style.display = 'block';
         tabHistory.classList.add('active');
         tabPlayer.classList.remove('active');
-        renderHistory(); // Opdaterer listen når fanen åbnes
+        renderHistory(); 
     });
 
-    // Lydafspiller og Timer variabler
+    // --- 2. VARIABLER TIL LYD OG TID ---
     const audioPlayer = document.getElementById('global-audio-player');
     const playButtons = document.querySelectorAll('.play-btn');
     const stopButton = document.getElementById('stop-all');
@@ -32,17 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let elapsedSeconds = 0;
     let intervalId = null;
 
-    // --- Stopur Funktioner ---
+    // --- 3. STOPUR (TÆLLER OP) ---
     function startStopwatch() {
-        clearInterval(intervalId);
+        clearInterval(intervalId); // Sørg for at den ikke tæller dobbelt
         intervalId = setInterval(() => {
             elapsedSeconds++;
             updateDisplay();
         }, 1000); 
     }
 
-    function stopStopwatch() { clearInterval(intervalId); }
+    function stopStopwatch() { 
+        clearInterval(intervalId); 
+    }
 
+    // DENNE FUNKTION ER DET ENESTE STED TIDEN NULSTILLES
     function resetStopwatch() {
         stopStopwatch();
         elapsedSeconds = 0;
@@ -56,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timeDisplay.textContent = `Spilletid: ${h}:${m}:${s}`;
     }
 
-    // --- Lydkontrol Funktioner ---
+    // --- 4. LYDAFSPILLER ---
     function resetAllButtons() {
         playButtons.forEach(btn => {
             btn.textContent = 'Afspil';
@@ -70,28 +74,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectElement = document.getElementById(`variant-${category}`);
             const audioSrc = selectElement.value;
 
-            // Hvis vi trykker pause på den lyd, der allerede kører
+            // Hvis man trykker på Pause
             if (currentlyPlayingBtn === this) {
                 audioPlayer.pause();
                 resetAllButtons();
                 clearTimer();
-                stopStopwatch(); // Vi pauser uret, men nulstiller det IKKE!
+                stopStopwatch(); // Vi pauser tiden, DEN NULSTILLER IKKE!
                 currentlyPlayingBtn = null;
                 return;
             }
 
-            // Start eller skift lyd
+            // Hvis man trykker Afspil (enten fra stilhed, eller skifter lyd)
             resetAllButtons();
             audioPlayer.src = audioSrc;
+            
             this.textContent = 'Pause';
             this.classList.add('playing');
             currentlyPlayingBtn = this;
             
-            // Hvis vi skifter lyd eller starter efter pause, tæller uret bare videre
-            startStopwatch();
+            startStopwatch(); // Tiden kører videre fra hvor den var
             setupTimer(); 
             
-            audioPlayer.play().catch(() => console.log("Lyd tester uden filer."));
+            audioPlayer.play().catch(() => console.log("Lyd tester"));
         });
     });
 
@@ -99,11 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         audioPlayer.pause();
         resetAllButtons();
         clearTimer();
-        stopStopwatch();
+        stopStopwatch(); // Pauser bare tiden
         currentlyPlayingBtn = null;
     });
 
-    // --- Nedtælling (Auto-sluk) ---
+    // --- 5. AUTOMATISK SLUK TIMER ---
     function setupTimer() {
         clearTimer();
         const minutes = parseInt(timerSelect.value);
@@ -111,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timeoutId = setTimeout(() => {
                 audioPlayer.pause();
                 resetAllButtons();
-                stopStopwatch(); // Stopper tiden, så det ikke tæller videre, mens baby vågner
+                stopStopwatch(); 
                 currentlyPlayingBtn = null;
             }, minutes * 60 * 1000);
         }
@@ -125,48 +129,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentlyPlayingBtn !== null) setupTimer();
     });
 
-    // --- SØVNLOG & HISTORIK FUNKTIONER ---
-    
-    // Formatér sekunder til pæn tekst (f.eks. "1 t 15 min")
-    function formatTimeText(totalSeconds) {
-        if (totalSeconds < 60) return `${totalSeconds} sek`;
-        const h = Math.floor(totalSeconds / 3600);
-        const m = Math.floor((totalSeconds % 3600) / 60);
+    // --- 6. SØVNLOG & HISTORIK ---
+    function formatTimeText(totalSecs) {
+        if (totalSecs === 0) return `0 sek`;
+        if (totalSecs < 60) return `${totalSecs} sek`;
+        const h = Math.floor(totalSecs / 3600);
+        const m = Math.floor((totalSecs % 3600) / 60);
         let text = "";
         if (h > 0) text += `${h} t `;
         if (m > 0 || h > 0) text += `${m} min`;
         return text.trim();
     }
 
-    // Gem i browserens LocalStorage
     function saveSleepSession() {
-        if (elapsedSeconds < 10) return alert("Tiden er for kort til at gemme (under 10 sek).");
+        // Bemærk: Ingen grænse på sekunder mere! Du kan gemme med det samme.
+        if (elapsedSeconds === 0) {
+            alert("Uret er på nul. Start lyden først for at gemme en tid.");
+            return;
+        }
 
         const nu = new Date();
-        const datoStreng = nu.toLocaleDateString('da-DK'); // F.eks. 29.07.2026
+        const datoStreng = nu.toLocaleDateString('da-DK'); 
         const tidStreng = nu.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
 
         let logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
-
-        if (!logs[datoStreng]) {
-            logs[datoStreng] = { sessions: [], total: 0 };
-        }
+        if (!logs[datoStreng]) { logs[datoStreng] = { sessions: [], total: 0 }; }
 
         logs[datoStreng].sessions.push({
             time: tidStreng,
-            durationSec: elapsedSeconds,
             durationText: formatTimeText(elapsedSeconds)
         });
         
         logs[datoStreng].total += elapsedSeconds;
-
         localStorage.setItem('babyRoLogs', JSON.stringify(logs));
         
         renderTodayLog();
-        resetStopwatch(); // Nulstil klokken efter vi har gemt
+        resetStopwatch(); // Nu nulstilles uret automatisk til næste lur
     }
 
-    // Opdater sidebar-boksen "Dagens Søvn"
     function renderTodayLog() {
         const nu = new Date();
         const datoStreng = nu.toLocaleDateString('da-DK');
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const listEl = document.getElementById('today-log-list');
         const totalEl = document.getElementById('today-total-time');
 
-        listEl.innerHTML = ""; // Ryd listen
+        listEl.innerHTML = "";
 
         if (!todayData || todayData.sessions.length === 0) {
             listEl.innerHTML = "<li>Ingen lure gemt endnu i dag.</li>";
@@ -194,13 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
         totalEl.textContent = formatTimeText(todayData.total);
     }
 
-    // Opdater "Søvnmønster" fanen med alle tidligere dage
     function renderHistory() {
         const container = document.getElementById('history-container');
         const logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
         
         container.innerHTML = "";
-        const dates = Object.keys(logs).reverse(); // Nyeste dage øverst
+        const dates = Object.keys(logs).reverse(); 
 
         if (dates.length === 0) {
             container.innerHTML = "<p>Du har ikke gemt noget søvnhistorik endnu.</p>";
@@ -210,11 +209,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dates.forEach(date => {
             const dayData = logs[date];
             let listHtml = "";
-            
             dayData.sessions.forEach(session => {
                 listHtml += `<li>Kl. ${session.time} - Spilletid: ${session.durationText}</li>`;
             });
-
             const cardHtml = `
                 <div class="history-day-card">
                     <h3>Dato: ${date}</h3>
@@ -226,23 +223,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Knapper til loggen
+    // --- KNAPPER TIL TID OG LOG ---
     document.getElementById('btn-save-log').addEventListener('click', saveSleepSession);
     
     document.getElementById('btn-reset-time').addEventListener('click', () => {
-        if(confirm("Er du sikker på, du vil nulstille uret uden at gemme?")) {
+        if(confirm("Vil du nulstille uret uden at gemme?")) {
             resetStopwatch();
         }
     });
 
     document.getElementById('clear-history-btn').addEventListener('click', () => {
-        if(confirm("Er du helt sikker på, du vil slette ALLE tidligere gemte dage? Dette kan ikke fortrydes.")) {
+        if(confirm("Vil du slette al tidligere historik permanent?")) {
             localStorage.removeItem('babyRoLogs');
             renderHistory();
             renderTodayLog();
         }
     });
 
-    // Start med at vise dagens log i sidebaren
+    // Indlæser loggen første gang siden åbnes
     renderTodayLog();
 });
