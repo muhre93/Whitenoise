@@ -1,19 +1,41 @@
 // ==================================================
-// BabyRo v2 — script.js
+// BabyRo v3 — script.js
+// Indhold (lyde + tekster) hentes fra Firestore, hvis du
+// har gemt noget via admin.html. Ellers bruges defaults.js.
 // ==================================================
 
 // ==========================================
-// 1. GLOBALE VARIABLER & LOKAL PROFIL
+// 1. GLOBALE VARIABLER
 // ==========================================
+let SOUNDS = JSON.parse(JSON.stringify(DEFAULT_SOUNDS));
+let TEXTS = JSON.parse(JSON.stringify(DEFAULT_TEXTS));
+
 let currentUserId = null;
 let isGuest = true;
 let babyName = localStorage.getItem('babyRoName') || "Baby";
-let babyGender = localStorage.getItem('babyRoGender') || "neutral"; // 'dreng' | 'pige' | 'neutral'
-let babyDueDate = localStorage.getItem('babyRoDueDate') || "";      // "YYYY-MM-DD"
+let babyGender = localStorage.getItem('babyRoGender') || "neutral";
+let babyDueDate = localStorage.getItem('babyRoDueDate') || "";
 let localSleepLogs = loadLocalLogs();
 
-// ---------- Dato-hjælpere ----------
-// Loggen gemmes med ISO-nøgler (YYYY-MM-DD), så den altid kan sorteres korrekt.
+// ==========================================
+// 2. FIREBASE
+// ==========================================
+let auth = null;
+let db = null;
+
+if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+    } catch (e) {
+        console.log("Firebase kunne ikke starte. Appen kører videre offline.", e);
+    }
+}
+
+// ==========================================
+// 3. DATO-HJÆLPERE
+// ==========================================
 function todayKey() {
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -34,7 +56,6 @@ function weekdayShort(isoKey) {
     return new Date(y, m - 1, d).toLocaleDateString('da-DK', { weekday: 'short' }).replace('.', '');
 }
 
-// Indlæser loggen og konverterer gamle danske dato-nøgler ("29.7.2026") til ISO
 function loadLocalLogs() {
     let logs = {};
     try { logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {}; } catch (e) { logs = {}; }
@@ -43,94 +64,135 @@ function loadLocalLogs() {
         let newKey = key;
         if (key.includes('.')) {
             const parts = key.split('.');
-            if (parts.length === 3) {
-                newKey = `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
-            }
+            if (parts.length === 3) newKey = `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
         }
-        if (!out[newKey]) {
-            out[newKey] = logs[key];
-        } else {
+        if (!out[newKey]) out[newKey] = logs[key];
+        else {
             out[newKey].sessions = (out[newKey].sessions || []).concat(logs[key].sessions || []);
             out[newKey].total = (out[newKey].total || 0) + (logs[key].total || 0);
         }
     });
     return out;
 }
+function saveLogsLocally() { localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs)); }
 
-function saveLogsLocally() {
-    localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
+// ==========================================
+// 4. INDHOLD: HENT FRA ADMIN & TEGN OP
+// ==========================================
+function t(key) {
+    const raw = TEXTS[key];
+    if (typeof raw !== 'string') return '';
+    return raw.replaceAll('{navn}', babyName);
+}
+function fill(id, key) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = t(key);
 }
 
-// ==========================================
-// 2. FIREBASE OPSÆTNING
-// ==========================================
-// VIGTIGT: Indsæt din egen config herunder. ALLE værdier skal stå i "anførselstegn"!
-// (En manglende " her får HELE appen til at gå i stå.)
-const firebaseConfig = {
-  apiKey: "AIzaSyAiev2iHG8I31LSe-oBL7yjQMiDtVYEQHM",
-  authDomain: "babyro-b320c.firebaseapp.com",
-  projectId: "babyro-b320c",
-  storageBucket: "babyro-b320c.firebasestorage.app",
-  messagingSenderId: "260945437474",
-  appId: "1:260945437474:web:f670ae0502e1843125fb7b",
-  measurementId: "G-9HT4SHH5BR"
-  };
-
-let auth = null;
-let db = null;
-
-if (typeof firebase !== 'undefined') {
+async function loadContentFromCloud() {
+    if (!db) return;
     try {
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
-    } catch (e) {
-        console.log("Firebase kunne ikke starte. Appen kører videre i offline-tilstand.", e);
-    }
-}
-
-// ==========================================
-// 3. PROFIL: NAVN, KØN, TERMIN & TEMA
-// ==========================================
-function updateBabyNameInUI() {
-    document.querySelectorAll('.b-name').forEach(span => span.textContent = babyName);
-}
-
-function applyGenderTheme() {
-    document.body.classList.remove('theme-dreng', 'theme-pige');
-    if (babyGender === 'dreng') document.body.classList.add('theme-dreng');
-    if (babyGender === 'pige') document.body.classList.add('theme-pige');
-    // Marker de rigtige knapper som valgt (både i overlay og på profil-siden)
-    document.querySelectorAll('.gender-btn').forEach(btn => {
-        btn.classList.toggle('selected', btn.getAttribute('data-gender') === babyGender);
-    });
-}
-
-// Gemmer ALTID lokalt — og i skyen, hvis man er logget ind
-async function persistProfile() {
-    localStorage.setItem('babyRoName', babyName);
-    localStorage.setItem('babyRoGender', babyGender);
-    localStorage.setItem('babyRoDueDate', babyDueDate);
-
-    if (!isGuest && currentUserId && db) {
-        try {
-            await db.collection("users").doc(currentUserId).set({
-                babyName: babyName,
-                babyGender: babyGender,
-                babyDueDate: babyDueDate
-            }, { merge: true });
-        } catch (e) {
-            console.log("Kunne ikke gemme profil i skyen:", e);
+        const [soundDoc, textDoc] = await Promise.all([
+            db.collection("content").doc("sounds").get(),
+            db.collection("content").doc("texts").get()
+        ]);
+        if (soundDoc.exists && Array.isArray(soundDoc.data().categories) && soundDoc.data().categories.length) {
+            SOUNDS = soundDoc.data().categories;
         }
+        if (textDoc.exists && textDoc.data()) {
+            TEXTS = Object.assign({}, DEFAULT_TEXTS, textDoc.data());
+        }
+    } catch (e) {
+        console.log("Kunne ikke hente indhold fra admin — bruger standardindhold.", e);
+    }
+    renderSounds();
+    renderTexts();
+}
+
+function renderSounds() {
+    const grid = document.getElementById('sound-grid');
+    const smartSelect = document.getElementById('smart-sound-select');
+    if (!grid) return;
+
+    grid.innerHTML = SOUNDS.map(cat => `
+        <div class="sound-card">
+            <div class="card-icon">${cat.icon || '🔊'}</div>
+            <h3>${cat.title || ''}</h3>
+            <select class="sound-variant" id="variant-${cat.id}">
+                ${(cat.variants || []).map(v => `<option value="${v.url}">${v.label}</option>`).join('')}
+            </select>
+            <button class="play-btn" data-category="${cat.id}">Afspil</button>
+        </div>
+    `).join('');
+
+    if (smartSelect) {
+        const prev = smartSelect.value;
+        smartSelect.innerHTML = SOUNDS.map(cat => `<option value="${cat.id}">${cat.icon || ''} ${cat.title}</option>`).join('');
+        if (prev && SOUNDS.some(c => c.id === prev)) smartSelect.value = prev;
+    }
+    currentlyPlayingId = null;
+}
+
+function renderTexts() {
+    document.title = TEXTS.appTitle + " - Beroligende Lyde";
+    fill('txt-app-title', 'appTitle');
+    fill('txt-app-subtitle', 'appSubtitle');
+
+    const navMap = { 'nav-player': 'navPlayer', 'nav-history': 'navHistory', 'nav-sleep': 'navSleep', 'nav-leaps': 'navLeaps', 'nav-profile': 'navProfile' };
+    Object.keys(navMap).forEach(id => { const el = document.getElementById(id); if (el) el.textContent = t(navMap[id]); });
+
+    fill('txt-timer-label', 'timerLabel');
+    fill('txt-autostop-label', 'autoStopLabel');
+    const stopBtn = document.getElementById('stop-all');
+    if (stopBtn) stopBtn.textContent = t('stopAllLabel');
+    fill('txt-today-title', 'todayBoxTitle');
+
+    fill('txt-smart-title', 'smartTitle');
+    fill('txt-smart-desc', 'smartDesc');
+    fill('txt-smart-sound-label', 'smartSoundLabel');
+    fill('txt-smart-sens-label', 'smartSensitivityLabel');
+
+    fill('txt-history-title', 'historyTitle');
+    fill('txt-history-sub', 'historySub');
+    fill('txt-stats-title', 'statsTitle');
+    fill('guest-warning', 'guestWarning');
+
+    fill('txt-sleep-title', 'sleepTitle');
+    fill('txt-sleep-sub', 'sleepSub');
+    const sleepEl = document.getElementById('sleep-cards');
+    if (sleepEl) {
+        sleepEl.innerHTML = (TEXTS.sleepCards || []).map(c => `
+            <div class="info-card">
+                <h3>${(c.title || '').replaceAll('{navn}', babyName)}</h3>
+                ${(c.body || '').replaceAll('{navn}', babyName)}
+            </div>
+        `).join('');
     }
 
-    updateBabyNameInUI();
-    applyGenderTheme();
+    fill('txt-leap-title', 'leapTitle');
+    fill('txt-leap-sub', 'leapSub');
+    fill('txt-leap-status-title', 'leapStatusTitle');
+    fill('txt-leap-intro-title', 'leapIntroTitle');
+    fill('txt-leap-intro-body', 'leapIntroBody');
+    fill('txt-leap-outro-title', 'leapOutroTitle');
+    fill('txt-leap-outro-body', 'leapOutroBody');
+
+    const leapEl = document.getElementById('leap-cards');
+    if (leapEl) {
+        leapEl.innerHTML = (TEXTS.leapCards || []).map(c => `
+            <div class="info-card leap-card" id="leap-${c.nr}">
+                <h3><span class="leap-badge">Spring ${c.nr}</span> Uge ${c.from}-${c.to}: ${(c.title || '').replaceAll('{navn}', babyName)}</h3>
+                ${(c.body || '').replaceAll('{navn}', babyName)}
+            </div>
+        `).join('');
+    }
+
+    fill('txt-profile-title', 'profileTitle');
     renderLeapStatus();
 }
 
 // ==========================================
-// 4. SØVNUR LOGIK
+// 5. SØVNUR
 // ==========================================
 let elapsedSeconds = 0;
 let intervalId = null;
@@ -147,12 +209,8 @@ function startStopwatch() {
 }
 function stopStopwatch() { clearInterval(intervalId); }
 function resetStopwatch() {
-    stopStopwatch(); elapsedSeconds = 0; sessionStartTime = null;
-    isUrPaused = false;
-    if (btnPauseTime) {
-        btnPauseTime.textContent = 'Pause ur';
-        btnPauseTime.style.background = ''; btnPauseTime.style.color = '';
-    }
+    stopStopwatch(); elapsedSeconds = 0; sessionStartTime = null; isUrPaused = false;
+    if (btnPauseTime) { btnPauseTime.textContent = 'Pause ur'; btnPauseTime.style.background = ''; btnPauseTime.style.color = ''; }
     updateDisplay();
 }
 function updateDisplay() {
@@ -162,7 +220,6 @@ function updateDisplay() {
     const s = String(elapsedSeconds % 60).padStart(2, '0');
     timeDisplay.textContent = `${h}:${m}:${s}`;
 }
-
 if (btnPauseTime) {
     btnPauseTime.addEventListener('click', () => {
         if (elapsedSeconds === 0 && sessionStartTime === null) return;
@@ -177,49 +234,61 @@ if (btnPauseTime) {
 }
 
 // ==========================================
-// 5. LYDAFSPILLER & BLØD FADE OUT
+// 6. LYDAFSPILLER
 // ==========================================
 const audioPlayer = document.getElementById('global-audio-player');
-const playButtons = document.querySelectorAll('.play-btn[data-category]');
+const soundGrid = document.getElementById('sound-grid');
 const stopButton = document.getElementById('stop-all');
 const timerSelect = document.getElementById('timer-select');
-let currentlyPlayingBtn = null;
+let currentlyPlayingId = null;
 let timeoutId = null;
 let fadeInterval = null;
 
-function resetAllButtons() { playButtons.forEach(btn => { btn.textContent = 'Afspil'; btn.classList.remove('playing'); }); }
-
+function resetAllButtons() {
+    document.querySelectorAll('.play-btn[data-category]').forEach(btn => { btn.textContent = 'Afspil'; btn.classList.remove('playing'); });
+}
 function stopAllSound() {
     clearTimer();
     if (audioPlayer) audioPlayer.pause();
     resetAllButtons();
-    currentlyPlayingBtn = null;
+    currentlyPlayingId = null;
 }
 
-playButtons.forEach(button => {
-    button.addEventListener('click', function () {
-        const category = this.getAttribute('data-category');
+// Klik håndteres på hele grid'et, så det også virker for lyde tilføjet i admin
+if (soundGrid) {
+    soundGrid.addEventListener('click', (e) => {
+        const button = e.target.closest('.play-btn[data-category]');
+        if (!button) return;
+        const category = button.getAttribute('data-category');
         const selectBox = document.getElementById(`variant-${category}`);
         if (!selectBox || !audioPlayer) return;
 
-        if (currentlyPlayingBtn === this) {
-            stopAllSound();
-            return;
-        }
+        if (currentlyPlayingId === category) { stopAllSound(); return; }
 
         clearTimer();
         resetAllButtons();
         audioPlayer.src = selectBox.value;
-        this.textContent = 'Pause lyd'; this.classList.add('playing'); currentlyPlayingBtn = this;
+        button.textContent = 'Pause lyd';
+        button.classList.add('playing');
+        currentlyPlayingId = category;
 
         if (isUrPaused && btnPauseTime) {
             isUrPaused = false; btnPauseTime.textContent = 'Pause ur'; btnPauseTime.style.background = ''; btnPauseTime.style.color = '';
         }
-
         startStopwatch(); setupTimer();
-        audioPlayer.play().catch(e => console.log("Lyden kunne ikke afspilles (mangler filen?):", selectBox.value));
+        audioPlayer.play().catch(() => console.log("Lyden kunne ikke afspilles:", selectBox.value));
     });
-});
+
+    // Skift variant midt i afspilningen
+    soundGrid.addEventListener('change', (e) => {
+        if (!e.target.classList.contains('sound-variant')) return;
+        const category = e.target.id.replace('variant-', '');
+        if (currentlyPlayingId === category && audioPlayer) {
+            audioPlayer.src = e.target.value;
+            audioPlayer.play().catch(() => {});
+        }
+    });
+}
 
 if (stopButton) stopButton.addEventListener('click', stopAllSound);
 
@@ -229,39 +298,29 @@ function setupTimer() {
     const minutes = parseInt(timerSelect.value);
     if (minutes > 0) {
         const totalMs = minutes * 60 * 1000;
-        const fadeDurationMs = (minutes <= 2) ? 30000 : 300000; // 30 sek. i test, ellers 5 min.
-        timeoutId = setTimeout(() => {
-            fadeOutAudio(fadeDurationMs);
-        }, Math.max(0, totalMs - fadeDurationMs));
+        const fadeDurationMs = (minutes <= 2) ? 30000 : 300000;
+        timeoutId = setTimeout(() => fadeOutAudio(fadeDurationMs), Math.max(0, totalMs - fadeDurationMs));
     }
 }
-
 function fadeOutAudio(durationMs) {
     if (!audioPlayer) return;
     let volume = 1.0;
     const steps = 100;
-    const stepTimeMs = durationMs / steps;
-    const volumeDrop = 1.0 / steps;
-
     fadeInterval = setInterval(() => {
-        volume -= volumeDrop;
-        if (volume <= 0.05) {
-            stopAllSound();
-        } else {
-            audioPlayer.volume = volume;
-        }
-    }, stepTimeMs);
+        volume -= 1.0 / steps;
+        if (volume <= 0.05) stopAllSound();
+        else audioPlayer.volume = volume;
+    }, durationMs / steps);
 }
-
 function clearTimer() {
     if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; }
     if (fadeInterval !== null) { clearInterval(fadeInterval); fadeInterval = null; }
     if (audioPlayer) audioPlayer.volume = 1.0;
 }
-if (timerSelect) timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null) setupTimer(); });
+if (timerSelect) timerSelect.addEventListener('change', () => { if (currentlyPlayingId !== null) setupTimer(); });
 
 // ==========================================
-// 6. SMART-LYT (BABY MONITOR)
+// 7. SMART-LYT (skærmen må gerne slukke)
 // ==========================================
 const btnSmartListen = document.getElementById('btn-smart-listen');
 const smartStatus = document.getElementById('smart-status');
@@ -270,14 +329,8 @@ const smartSensitivity = document.getElementById('smart-sensitivity');
 const smartSoundSelect = document.getElementById('smart-sound-select');
 const micLevel = document.getElementById('mic-level');
 
-let micStream = null;
-let audioCtx = null;
-let analyser = null;
-let micBuffer = null;
-let listening = false;
-let loudFrames = 0;
-let listenRAF = null;
-let wakeLock = null;
+let micStream = null, audioCtx = null, analyser = null, micBuffer = null;
+let listening = false, loudFrames = 0, listenTimerId = null;
 
 function setSmartStatus(text) { if (smartStatus) smartStatus.textContent = text; }
 
@@ -301,84 +354,72 @@ async function startListening() {
     if (btnSmartListen) btnSmartListen.textContent = "Stop Smart-lyt";
     setSmartStatus("Lytter... alt er roligt. 💤");
 
-    // Prøver at holde skærmen tændt, mens der lyttes
-    try {
-        if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
-    } catch (e) { /* ikke kritisk */ }
-
-    listenLoop();
+    // setInterval i stedet for requestAnimationFrame, så den også kører
+    // videre, når skærmen slukker eller fanen er i baggrunden.
+    listenTimerId = setInterval(listenTick, 100);
 }
 
 function stopListening() {
     listening = false;
-    if (listenRAF) cancelAnimationFrame(listenRAF);
-    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if (listenTimerId) { clearInterval(listenTimerId); listenTimerId = null; }
+    if (micStream) { micStream.getTracks().forEach(tr => tr.stop()); micStream = null; }
     if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
-    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
     if (smartBox) smartBox.classList.remove('listening');
     if (btnSmartListen) btnSmartListen.textContent = "Start Smart-lyt";
     if (micLevel) micLevel.style.width = "0%";
     setSmartStatus("Smart-lyt er slukket.");
 }
 
-function listenLoop() {
-    if (!listening) return;
+function listenTick() {
+    if (!listening || !analyser) return;
 
-    // Hold pause i lyttet, mens der afspilles lyd (ellers hører den sig selv)
     if (audioPlayer && !audioPlayer.paused) {
         loudFrames = 0;
         if (micLevel) micLevel.style.width = "0%";
         setSmartStatus("Beroligende lyd kører 🎵 — lytter igen, når den stopper.");
-    } else {
-        analyser.getByteTimeDomainData(micBuffer);
-        let sum = 0;
-        for (let i = 0; i < micBuffer.length; i++) {
-            const v = (micBuffer[i] - 128) / 128;
-            sum += v * v;
-        }
-        const rms = Math.sqrt(sum / micBuffer.length);
-
-        // Følsomhed 1-10: høj følsomhed = lav tærskel
-        const sens = smartSensitivity ? parseInt(smartSensitivity.value) : 6;
-        const threshold = 0.28 - (sens * 0.024); // sens 10 => 0.04, sens 1 => 0.256
-
-        if (micLevel) micLevel.style.width = Math.min(100, Math.round(rms * 300)) + "%";
-
-        if (rms > threshold) {
-            loudFrames++;
-        } else {
-            loudFrames = Math.max(0, loudFrames - 2);
-        }
-
-        // Ca. 1,5-2 sekunders vedvarende lyd før der reageres (undgår falsk alarm ved et enkelt host)
-        if (loudFrames > 90) {
-            loudFrames = 0;
-            triggerSoothingSound();
-        } else if (loudFrames > 30) {
-            setSmartStatus("Hører uro... 👂");
-        } else {
-            setSmartStatus("Lytter... alt er roligt. 💤");
-        }
+        return;
     }
 
-    listenRAF = requestAnimationFrame(listenLoop);
+    analyser.getByteTimeDomainData(micBuffer);
+    let sum = 0;
+    for (let i = 0; i < micBuffer.length; i++) {
+        const v = (micBuffer[i] - 128) / 128;
+        sum += v * v;
+    }
+    const rms = Math.sqrt(sum / micBuffer.length);
+
+    const sens = smartSensitivity ? parseInt(smartSensitivity.value) : 6;
+    const threshold = 0.28 - (sens * 0.024);
+
+    if (micLevel) micLevel.style.width = Math.min(100, Math.round(rms * 300)) + "%";
+
+    if (rms > threshold) loudFrames++;
+    else loudFrames = Math.max(0, loudFrames - 2);
+
+    // ca. 1,5 sekunds vedvarende lyd (15 x 100 ms) før der reageres
+    if (loudFrames > 15) {
+        loudFrames = 0;
+        triggerSoothingSound();
+    } else if (loudFrames > 5) {
+        setSmartStatus("Hører uro... 👂");
+    } else {
+        setSmartStatus("Lytter... alt er roligt. 💤");
+    }
 }
 
 function triggerSoothingSound() {
-    const category = smartSoundSelect ? smartSoundSelect.value : 'noise';
+    const category = smartSoundSelect ? smartSoundSelect.value : (SOUNDS[0] && SOUNDS[0].id);
     const btn = document.querySelector(`.play-btn[data-category="${category}"]`);
-    setSmartStatus(`Uro registreret! Starter beroligende lyd... 🎵`);
-    if (btn && currentlyPlayingBtn === null) btn.click();
+    setSmartStatus("Uro registreret! Starter beroligende lyd... 🎵");
+    if (btn && currentlyPlayingId === null) btn.click();
 }
 
 if (btnSmartListen) {
-    btnSmartListen.addEventListener('click', () => {
-        if (listening) stopListening(); else startListening();
-    });
+    btnSmartListen.addEventListener('click', () => { if (listening) stopListening(); else startListening(); });
 }
 
 // ==========================================
-// 7. TEMA (NATTILSTAND)
+// 8. TEMA & PROFIL
 // ==========================================
 const btnThemeToggle = document.getElementById('btn-theme-toggle');
 if (btnThemeToggle) {
@@ -388,18 +429,39 @@ if (btnThemeToggle) {
     }
     btnThemeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-theme');
-        if (document.body.classList.contains('dark-theme')) {
-            localStorage.setItem('babyRoTheme', 'dark');
-            btnThemeToggle.textContent = 'Skift til Dagstilstand ☀️';
-        } else {
-            localStorage.setItem('babyRoTheme', 'light');
-            btnThemeToggle.textContent = 'Skift til Nattilstand 🌙';
-        }
+        const dark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('babyRoTheme', dark ? 'dark' : 'light');
+        btnThemeToggle.textContent = dark ? 'Skift til Dagstilstand ☀️' : 'Skift til Nattilstand 🌙';
     });
 }
 
+function applyGenderTheme() {
+    document.body.classList.remove('theme-dreng', 'theme-pige');
+    if (babyGender === 'dreng') document.body.classList.add('theme-dreng');
+    if (babyGender === 'pige') document.body.classList.add('theme-pige');
+    document.querySelectorAll('.gender-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.getAttribute('data-gender') === babyGender);
+    });
+}
+
+async function persistProfile() {
+    localStorage.setItem('babyRoName', babyName);
+    localStorage.setItem('babyRoGender', babyGender);
+    localStorage.setItem('babyRoDueDate', babyDueDate);
+
+    if (!isGuest && currentUserId && db) {
+        try {
+            await db.collection("users").doc(currentUserId).set({
+                babyName, babyGender, babyDueDate
+            }, { merge: true });
+        } catch (e) { console.log("Kunne ikke gemme profil i skyen:", e); }
+    }
+    applyGenderTheme();
+    renderTexts();
+}
+
 // ==========================================
-// 8. LOG: GEM, SLET & VIS
+// 9. LOG
 // ==========================================
 function formatTimeText(totalSecs) {
     if (!totalSecs || totalSecs <= 0) return `0:00 min`;
@@ -413,21 +475,16 @@ function formatTimeText(totalSecs) {
 function formatShort(totalSecs) {
     const h = Math.floor(totalSecs / 3600);
     const m = Math.round((totalSecs % 3600) / 60);
-    if (h > 0) return `${h}t ${m}m`;
-    return `${m}m`;
+    return h > 0 ? `${h}t ${m}m` : `${m}m`;
 }
 
 async function saveLogsToFirebase() {
     if (currentUserId && !isGuest && db) {
-        try {
-            await db.collection("users").doc(currentUserId).set({ sleepLogs: localSleepLogs }, { merge: true });
-        } catch (e) {
-            console.log("Kunne ikke gemme log i skyen:", e);
-        }
+        try { await db.collection("users").doc(currentUserId).set({ sleepLogs: localSleepLogs }, { merge: true }); }
+        catch (e) { console.log("Kunne ikke gemme log i skyen:", e); }
     }
 }
 
-// Fletter lokal log og sky-log uden at miste eller duplikere lure
 function mergeLogs(cloudLogs, localLogs) {
     const merged = {};
     const allDates = new Set([...Object.keys(cloudLogs || {}), ...Object.keys(localLogs || {})]);
@@ -453,15 +510,13 @@ if (btnSaveLog) {
             alert("Søvnuret er på nul. Start uret først (tryk Afspil på en lyd, eller Start ur).");
             return;
         }
-
         const endTime = new Date();
         const startTime = sessionStartTime || new Date(endTime.getTime() - (elapsedSeconds * 1000));
         const dateKey = todayKey();
         const startStreng = startTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
         const slutStreng = endTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
 
-        if (!localSleepLogs[dateKey]) { localSleepLogs[dateKey] = { sessions: [], total: 0 }; }
-
+        if (!localSleepLogs[dateKey]) localSleepLogs[dateKey] = { sessions: [], total: 0 };
         localSleepLogs[dateKey].sessions.push({
             timeDisplay: `Kl. ${startStreng} - ${slutStreng}`,
             durationText: formatTimeText(elapsedSeconds),
@@ -471,10 +526,8 @@ if (btnSaveLog) {
 
         saveLogsLocally();
         saveLogsToFirebase();
-
         stopAllSound();
         resetStopwatch();
-
         renderTodayLog();
         renderHistory();
         document.getElementById('nav-history')?.click();
@@ -482,18 +535,16 @@ if (btnSaveLog) {
 }
 
 window.deleteLogEntry = function (dateKey, index) {
-    if (confirm(`Er du sikker på, du vil slette denne søvntid for ${babyName}?`)) {
-        if (localSleepLogs[dateKey] && localSleepLogs[dateKey].sessions[index]) {
-            const sessionSecs = localSleepLogs[dateKey].sessions[index].durationSec || 0;
-            localSleepLogs[dateKey].total = Math.max(0, localSleepLogs[dateKey].total - sessionSecs);
-            localSleepLogs[dateKey].sessions.splice(index, 1);
-            if (localSleepLogs[dateKey].sessions.length === 0) delete localSleepLogs[dateKey];
-
-            saveLogsLocally();
-            saveLogsToFirebase();
-            renderTodayLog();
-            renderHistory();
-        }
+    if (!confirm(`Er du sikker på, du vil slette denne søvntid for ${babyName}?`)) return;
+    if (localSleepLogs[dateKey] && localSleepLogs[dateKey].sessions[index]) {
+        const secs = localSleepLogs[dateKey].sessions[index].durationSec || 0;
+        localSleepLogs[dateKey].total = Math.max(0, localSleepLogs[dateKey].total - secs);
+        localSleepLogs[dateKey].sessions.splice(index, 1);
+        if (localSleepLogs[dateKey].sessions.length === 0) delete localSleepLogs[dateKey];
+        saveLogsLocally();
+        saveLogsToFirebase();
+        renderTodayLog();
+        renderHistory();
     }
 };
 
@@ -508,13 +559,11 @@ function renderTodayLog() {
 
     const todayData = localSleepLogs[dateKey];
     listEl.innerHTML = "";
-
     if (!todayData || todayData.sessions.length === 0) {
         listEl.innerHTML = `<li>Ingen lure gemt endnu i dag.</li>`;
         totalEl.textContent = "0:00 min";
         return;
     }
-
     todayData.sessions.forEach((session, index) => {
         listEl.innerHTML += `
             <li>
@@ -523,8 +572,7 @@ function renderTodayLog() {
                     <span>${session.durationText}</span>
                     <button class="delete-btn" onclick="deleteLogEntry('${dateKey}', ${index})">❌</button>
                 </div>
-            </li>
-        `;
+            </li>`;
     });
     totalEl.textContent = formatTimeText(todayData.total);
 }
@@ -532,17 +580,14 @@ function renderTodayLog() {
 function renderHistory() {
     const container = document.getElementById('history-container');
     if (!container) return;
-
     container.innerHTML = "";
     renderStats();
 
-    // Sorterer datoerne korrekt: nyeste øverst
     const dates = Object.keys(localSleepLogs).sort().reverse();
     if (dates.length === 0) {
         container.innerHTML = `<div class="empty-state">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>`;
         return;
     }
-
     dates.forEach(date => {
         const dayData = localSleepLogs[date];
         let listHtml = "";
@@ -554,26 +599,21 @@ function renderHistory() {
                         <strong>${session.durationText}</strong>
                         <button class="delete-btn" onclick="deleteLogEntry('${date}', ${index})">❌</button>
                     </div>
-                </li>
-            `;
+                </li>`;
         });
-
         container.innerHTML += `
             <div class="history-day-card">
                 <h3>${formatDateDK(date)}</h3>
                 <ul>${listHtml}</ul>
                 <div class="day-total">Dagens total: ${formatTimeText(dayData.total)}</div>
-            </div>
-        `;
+            </div>`;
     });
 }
 
-// Søjlediagram over de sidste 7 dage
 function renderStats() {
     const el = document.getElementById('stats-bars');
     if (!el) return;
     el.innerHTML = "";
-
     const days = [];
     let maxTotal = 0;
     for (let i = 6; i >= 0; i--) {
@@ -582,7 +622,6 @@ function renderStats() {
         if (total > maxTotal) maxTotal = total;
         days.push({ key, total, isToday: i === 0 });
     }
-
     days.forEach(day => {
         const heightPct = maxTotal > 0 ? Math.max(3, Math.round((day.total / maxTotal) * 100)) : 3;
         el.innerHTML += `
@@ -590,63 +629,50 @@ function renderStats() {
                 <span class="stats-value">${day.total > 0 ? formatShort(day.total) : ''}</span>
                 <div class="stats-bar" style="height:${heightPct}%"></div>
                 <span class="stats-day">${weekdayShort(day.key)}</span>
-            </div>
-        `;
+            </div>`;
     });
 }
 
 // ==========================================
-// 9. TIGERSPRING-BEREGNER
+// 10. TIGERSPRING-BEREGNER
 // ==========================================
-const LEAPS = [
-    { nr: 1, start: 4, end: 5 },
-    { nr: 2, start: 7, end: 9 },
-    { nr: 3, start: 11, end: 12 },
-    { nr: 4, start: 14, end: 19 },
-    { nr: 5, start: 22, end: 26 },
-    { nr: 6, start: 33, end: 37 },
-    { nr: 7, start: 41, end: 46 },
-    { nr: 8, start: 50, end: 55 },
-    { nr: 9, start: 59, end: 64 },
-    { nr: 10, start: 70, end: 76 }
-];
-
 function renderLeapStatus() {
     const textEl = document.getElementById('leap-status-text');
     if (!textEl) return;
     document.querySelectorAll('.leap-card').forEach(c => c.classList.remove('active-leap'));
 
+    const leaps = (TEXTS.leapCards || []).slice().sort((a, b) => a.from - b.from);
+
     if (!babyDueDate) {
-        textEl.innerHTML = `Indtast terminsdatoen under <strong>Profil</strong>, så viser BabyRo automatisk, hvilket spring <span class="b-name">${babyName}</span> er i – eller hvornår det næste kommer.`;
+        textEl.innerHTML = `Indtast terminsdatoen under <strong>Profil</strong>, så viser BabyRo automatisk, hvilket spring ${babyName} er i – eller hvornår det næste kommer.`;
         return;
     }
-
     const due = new Date(babyDueDate + "T00:00:00");
     const weeks = Math.floor((Date.now() - due.getTime()) / (7 * 24 * 60 * 60 * 1000));
 
     if (weeks < 0) {
-        textEl.textContent = `Der er ca. ${Math.abs(weeks)} uger til termin. Det første spring kommer omkring uge 4-5 efter termin. 💛`;
+        textEl.textContent = `Der er ca. ${Math.abs(weeks)} uger til termin. Det første spring kommer omkring uge ${leaps[0] ? leaps[0].from : 4} efter termin. 💛`;
         return;
     }
-
-    const current = LEAPS.find(l => weeks >= l.start && weeks <= l.end);
-    const next = LEAPS.find(l => l.start > weeks);
+    const current = leaps.find(l => weeks >= l.from && weeks <= l.to);
+    const next = leaps.find(l => l.from > weeks);
 
     let msg = `${babyName} er ca. <strong>${weeks} uger</strong> (regnet fra termin). `;
     if (current) {
-        msg += `Lige nu er I sandsynligvis midt i <strong>Spring ${current.nr}</strong> (uge ${current.start}-${current.end}) – se det fremhævede kort herunder. Hold ud, der er en solskinsperiode på vej! ⭐`;
+        msg += `Lige nu er I sandsynligvis midt i <strong>Spring ${current.nr}</strong> (uge ${current.from}-${current.to}) – se det fremhævede kort herunder. Hold ud, der er en solskinsperiode på vej! ⭐`;
         document.getElementById(`leap-${current.nr}`)?.classList.add('active-leap');
     } else if (next) {
-        msg += `I er i en rolig periode. Næste spring er <strong>Spring ${next.nr}</strong>, som typisk begynder omkring uge ${next.start} – altså om ca. ${next.start - weeks} uge${next.start - weeks === 1 ? '' : 'r'}. ☀️`;
+        const diff = next.from - weeks;
+        msg += `I er i en rolig periode. Næste spring er <strong>Spring ${next.nr}</strong>, som typisk begynder omkring uge ${next.from} – altså om ca. ${diff} uge${diff === 1 ? '' : 'r'}. ☀️`;
         document.getElementById(`leap-${next.nr}`)?.classList.add('active-leap');
     } else {
-        msg += `Alle 10 tigerspring er overstået – godt klaret! 🎉 Udviklingen fortsætter naturligvis, men de store mentale spring er nu bag jer.`;
+        msg += `Alle tigerspring er overstået – godt klaret! 🎉`;
     }
     textEl.innerHTML = msg;
 }
 
 // ==========================================
-// 10. PROFIL-UI (VIRKER OGSÅ SOM GÆST)
+// 11. PROFIL-UI
 // ==========================================
 const btnGoogleLogin = document.getElementById('btn-google-login');
 const btnLogout = document.getElementById('btn-logout');
@@ -657,39 +683,29 @@ const profileNameInput = document.getElementById('profile-name-input');
 const profileDueDateInput = document.getElementById('profile-duedate-input');
 const guestWarning = document.getElementById('guest-warning');
 const loggedInEmail = document.getElementById('logged-in-email');
-
 const nameSetupOverlay = document.getElementById('name-setup-overlay');
 const btnSaveName = document.getElementById('btn-save-name');
 const babyNameInput = document.getElementById('baby-name-input');
 
-// Kønsknapper (både i overlay og på profil-siden)
 document.querySelectorAll('.gender-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        babyGender = btn.getAttribute('data-gender');
-        persistProfile();
-    });
+    btn.addEventListener('click', () => { babyGender = btn.getAttribute('data-gender'); persistProfile(); });
 });
 
-// Velkomst-overlay: Gem navn (virker BÅDE som gæst og logget ind)
 if (btnSaveName) {
     btnSaveName.addEventListener('click', () => {
         const inputName = babyNameInput.value.trim();
-        if (inputName.length > 0) {
-            babyName = inputName;
-            persistProfile();
-            if (nameSetupOverlay) nameSetupOverlay.style.display = 'none';
-            if (profileNameInput) profileNameInput.value = babyName;
-        } else {
-            babyNameInput.focus();
-        }
+        if (!inputName) { babyNameInput.focus(); return; }
+        babyName = inputName;
+        persistProfile();
+        if (nameSetupOverlay) nameSetupOverlay.style.display = 'none';
+        if (profileNameInput) profileNameInput.value = babyName;
     });
 }
 
-// Profil-siden: Gem oplysninger
 if (btnUpdateName) {
     btnUpdateName.addEventListener('click', () => {
         const inputName = profileNameInput.value.trim();
-        if (inputName.length > 0) babyName = inputName;
+        if (inputName) babyName = inputName;
         if (profileDueDateInput && profileDueDateInput.value) babyDueDate = profileDueDateInput.value;
         persistProfile();
         alert("Oplysningerne er gemt! ✅");
@@ -702,7 +718,7 @@ function refreshProfileInputs() {
 }
 
 // ==========================================
-// 11. LOGIN / LOGOUT (FIREBASE)
+// 12. LOGIN / LOGOUT
 // ==========================================
 if (auth) {
     if (btnGoogleLogin) {
@@ -711,18 +727,14 @@ if (auth) {
             auth.signInWithPopup(provider).catch(err => alert("Login fejl: " + err.message));
         });
     }
-
     if (btnLogout) {
-        btnLogout.addEventListener('click', () => {
-            if (confirm("Er du sikker på, at du vil logge ud?")) auth.signOut();
-        });
+        btnLogout.addEventListener('click', () => { if (confirm("Er du sikker på, at du vil logge ud?")) auth.signOut(); });
     }
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             isGuest = false;
             currentUserId = user.uid;
-
             if (guestSection) guestSection.style.display = 'none';
             if (loggedInSection) loggedInSection.style.display = 'block';
             if (guestWarning) guestWarning.style.display = 'none';
@@ -731,53 +743,41 @@ if (auth) {
             try {
                 const userDoc = await db.collection("users").doc(currentUserId).get();
                 const data = userDoc.exists ? userDoc.data() : {};
-
-                // Profil: Skyen vinder, hvis den har noget – ellers skubbes det lokale op
                 if (data.babyName) babyName = data.babyName;
                 if (data.babyGender) babyGender = data.babyGender;
                 if (data.babyDueDate) babyDueDate = data.babyDueDate;
 
-                // Log: Flet sky + lokal, så INTET går tabt ved login
                 localSleepLogs = mergeLogs(data.sleepLogs || {}, localSleepLogs);
                 saveLogsLocally();
                 await persistProfile();
                 await saveLogsToFirebase();
 
-                if (!data.babyName && babyName === "Baby") {
-                    if (nameSetupOverlay) nameSetupOverlay.style.display = 'flex';
-                }
-            } catch (e) {
-                console.log("Kunne ikke hente data fra skyen:", e);
-            }
+                if (!data.babyName && babyName === "Baby" && nameSetupOverlay) nameSetupOverlay.style.display = 'flex';
+            } catch (e) { console.log("Kunne ikke hente data fra skyen:", e); }
         } else {
             isGuest = true;
             currentUserId = null;
-
             if (guestSection) guestSection.style.display = 'block';
             if (loggedInSection) loggedInSection.style.display = 'none';
             if (guestWarning) guestWarning.style.display = 'block';
-
-            // Behold de lokale oplysninger — de forsvinder IKKE, fordi man logger ud
             babyName = localStorage.getItem('babyRoName') || "Baby";
             babyGender = localStorage.getItem('babyRoGender') || "neutral";
             babyDueDate = localStorage.getItem('babyRoDueDate') || "";
             localSleepLogs = loadLocalLogs();
         }
 
-        updateBabyNameInUI();
         applyGenderTheme();
         refreshProfileInputs();
+        renderTexts();
         renderTodayLog();
         renderHistory();
-        renderLeapStatus();
     });
 }
 
 // ==========================================
-// 12. TABS & OPSTART
+// 13. TABS & OPSTART
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Tab-navigation
     const tabs = [
         { id: 'nav-player', viewId: 'view-player' },
         { id: 'nav-history', viewId: 'view-history' },
@@ -788,34 +788,29 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs.forEach(tab => {
         const btn = document.getElementById(tab.id);
         const view = document.getElementById(tab.viewId);
-        if (btn && view) {
-            btn.addEventListener('click', () => {
-                tabs.forEach(t => {
-                    document.getElementById(t.viewId)?.classList.remove('active-view');
-                    const v = document.getElementById(t.viewId);
-                    if (v) v.style.display = 'none';
-                    document.getElementById(t.id)?.classList.remove('active');
-                });
-                view.classList.add('active-view');
-                view.style.display = 'block';
-                btn.classList.add('active');
-                window.scrollTo(0, 0);
+        if (!btn || !view) return;
+        btn.addEventListener('click', () => {
+            tabs.forEach(tt => {
+                const v = document.getElementById(tt.viewId);
+                if (v) { v.classList.remove('active-view'); v.style.display = 'none'; }
+                document.getElementById(tt.id)?.classList.remove('active');
             });
-        }
+            view.classList.add('active-view');
+            view.style.display = 'block';
+            btn.classList.add('active');
+            window.scrollTo(0, 0);
+        });
     });
-    // Sørger for at forsiden vises korrekt fra start
     const playerView = document.getElementById('view-player');
     if (playerView) playerView.style.display = 'block';
 
-    // Første besøg (også som gæst): Vis velkomst-overlay, hvis der intet navn er gemt
-    if (!localStorage.getItem('babyRoName') && nameSetupOverlay) {
-        nameSetupOverlay.style.display = 'flex';
-    }
+    if (!localStorage.getItem('babyRoName') && nameSetupOverlay) nameSetupOverlay.style.display = 'flex';
 
-    updateBabyNameInUI();
     applyGenderTheme();
     refreshProfileInputs();
+    renderSounds();
+    renderTexts();
     renderTodayLog();
     renderHistory();
-    renderLeapStatus();
+    loadContentFromCloud();
 });
