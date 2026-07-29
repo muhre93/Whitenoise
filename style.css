@@ -5,6 +5,7 @@
     --accent-color: #a4b5a8; 
     --btn-stop: #d69f9f;
     --btn-save: #8faec2; 
+    --btn-pause: #e3c07b; /* Blød gul til pause-knap */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,13 +22,12 @@ body {
 header { text-align: center; margin-bottom: 20px; }
 header h1 { font-size: 2.5rem; color: var(--accent-color); font-weight: 600; }
 
-/* Faneblade (Tabs) - Tilpasset så 4 stk ser godt ud på mobil */
 .top-tabs { 
     display: flex; 
     justify-content: center; 
     gap: 10px; 
     margin-bottom: 30px; 
-    flex-wrap: wrap; /* Gør at de rykker ned på næste linje på smalle skærme */
+    flex-wrap: wrap; 
     max-width: 800px;
     margin-left: auto;
     margin-right: auto;
@@ -39,7 +39,6 @@ header h1 { font-size: 2.5rem; color: var(--accent-color); font-weight: 600; }
 }
 .tab-btn.active { background: var(--accent-color); color: white; }
 
-/* Layout Grid - Styrer PC vs Mobil */
 .layout-wrapper {
     display: flex;
     flex-direction: column; 
@@ -54,7 +53,6 @@ header h1 { font-size: 2.5rem; color: var(--accent-color); font-weight: 600; }
     .sidebar { flex: 1; }
 }
 
-/* Timer */
 .timer-section {
     background: var(--card-bg); padding: 20px; border-radius: 15px;
     margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;
@@ -80,7 +78,9 @@ button {
 .save-btn { background-color: var(--btn-save); color: white; }
 .reset-btn { background-color: #e5e0d5; color: var(--text-main); }
 
-/* Lydkort Grid */
+/* Den nye pause-knap styling */
+.pause-btn { background-color: var(--btn-pause); color: #4a4a4a; }
+
 .sound-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -89,7 +89,6 @@ button {
 .sound-card { background-color: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); text-align: center; }
 .sound-variant { width: 100%; margin: 10px 0; }
 
-/* Søvnlog Box */
 .today-log-box {
     background-color: var(--card-bg); padding: 25px; border-radius: 20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-top: 5px solid var(--btn-save);
@@ -100,7 +99,6 @@ button {
 .log-list li { background: var(--bg-color); padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; font-size: 0.95rem; display: flex; justify-content: space-between; }
 .log-total { font-weight: 600; font-size: 1.1rem; border-top: 2px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; }
 
-/* Historik Siden */
 .history-wrapper { max-width: 800px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 20px; }
 .history-day-card { border-left: 4px solid var(--accent-color); background: var(--bg-color); padding: 20px; border-radius: 0 10px 10px 0; margin-top: 20px; }
 .history-day-card h3 { margin-bottom: 10px; }
@@ -108,7 +106,6 @@ button {
 .history-day-card li { padding: 5px 0; border-bottom: 1px dashed #ccc; }
 .history-day-card .day-total { font-weight: bold; color: var(--accent-color); }
 
-/* Info Bokse til de nye faner */
 .info-section { 
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
