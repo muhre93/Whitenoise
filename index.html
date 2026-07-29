@@ -10,20 +10,10 @@
 </head>
 <body>
 
-    <!-- Skærmbillede når man logger ind første gang for at vælge navn -->
-    <div id="name-setup-overlay" class="overlay" style="display: none;">
-        <div class="login-box">
-            <h2>Velkommen! 👋</h2>
-            <p>Hvad hedder dit barn?</p>
-            <input type="text" id="baby-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
-            <button id="btn-save-name" class="play-btn">Gem navn og start</button>
-        </div>
-    </div>
-
-    <!-- REN, CENTRERET TOP HEADER -->
+    <!-- REN TOP HEADER -->
     <header class="top-header">
-        <button id="btn-theme-toggle" class="theme-btn" title="Skift nattilstand">🌙</button>
         <h1>BabyRo</h1>
+        <p class="subtitle">Beroligende lyde til <span class="b-name">Baby</span></p>
     </header>
 
     <!-- NAVIGATION MED 5 FANER -->
@@ -32,7 +22,7 @@
         <button id="nav-history" class="nav-item">🌙 Log</button>
         <button id="nav-sleep" class="nav-item">👶 Søvn</button>
         <button id="nav-leaps" class="nav-item">🐯 Spring</button>
-        <button id="btn-auth-nav" class="nav-item auth-nav">👤 Log ind</button>
+        <button id="nav-profile" class="nav-item">👤 Profil</button>
     </nav>
 
     <!-- START: AFSSPILLER-SIDEN (Forsiden) -->
@@ -40,11 +30,10 @@
         <div class="layout-wrapper">
             
             <div class="main-content">
+                <!-- Søvnur (Fylder hele vejen hen) -->
                 <section class="control-center">
-                    <div class="time-display-wrapper">
-                        <p class="timer-label"><span class="b-name">Baby</span>s Søvnur</p>
-                        <div id="time-elapsed" class="time-display">00:00:00</div>
-                    </div>
+                    <p class="timer-label"><span class="b-name">Baby</span>s Søvnur</p>
+                    <div id="time-elapsed" class="time-display">00:00:00</div>
                     
                     <div class="time-actions">
                         <button id="btn-pause-time" class="action-btn pause-btn">Pause ur</button>
@@ -53,7 +42,7 @@
                     </div>
 
                     <div class="auto-stop-box">
-                        <label for="timer-select">Sluk lyden efter:</label>
+                        <label for="timer-select">Sluk lyden blødt efter:</label>
                         <select id="timer-select">
                             <option value="0">Kør hele tiden</option>
                             <option value="2">2 min (Test)</option>
@@ -65,7 +54,7 @@
                     </div>
                 </section>
 
-                <!-- De 9 Lydkort -->
+                <!-- De 8 Lydkort (2 rækker á 4 horizontalt) -->
                 <section class="sound-grid">
                     <div class="sound-card">
                         <div class="card-icon">💨</div>
@@ -91,7 +80,7 @@
                         <div class="card-icon">❤️</div>
                         <h3>Hjerte</h3>
                         <select class="sound-variant" id="variant-hjerte">
-                            <option value="lyde/hjerte-1.mp3">Rolig (Mave)</option>
+                            <option value="lyde/hjerte-1.mp3">Rolig</option>
                             <option value="lyde/hjerte-2.mp3">Med sus</option>
                             <option value="lyde/hjerte-3.mp3">Dyb puls</option>
                         </select>
@@ -103,7 +92,7 @@
                         <select class="sound-variant" id="variant-regn">
                             <option value="lyde/regn-1.mp3">Let regn</option>
                             <option value="lyde/regn-2.mp3">Tung regn</option>
-                            <option value="lyde/regn-3.mp3">Med torden</option>
+                            <option value="lyde/regn-3.mp3">Torden</option>
                         </select>
                         <button class="play-btn" data-category="regn">Afspil</button>
                     </div>
@@ -111,9 +100,9 @@
                         <div class="card-icon">🌊</div>
                         <h3>Havet</h3>
                         <select class="sound-variant" id="variant-hav">
-                            <option value="lyde/hav-1.mp3">Milde bølger</option>
-                            <option value="lyde/hav-2.mp3">Dyb havbund</option>
-                            <option value="lyde/hav-3.mp3">Stenstrand</option>
+                            <option value="lyde/hav-1.mp3">Bølger</option>
+                            <option value="lyde/hav-2.mp3">Havbund</option>
+                            <option value="lyde/hav-3.mp3">Strand</option>
                         </select>
                         <button class="play-btn" data-category="hav">Afspil</button>
                     </div>
@@ -129,11 +118,11 @@
                     </div>
                     <div class="sound-card">
                         <div class="card-icon">🧺</div>
-                        <h3>Vaskemaskine</h3>
+                        <h3>Vask</h3>
                         <select class="sound-variant" id="variant-vask">
-                            <option value="lyde/vask-1.mp3">Tromle kører</option>
-                            <option value="lyde/vask-2.mp3">Centrifugering</option>
-                            <option value="lyde/vask-3.mp3">Gammel maskine</option>
+                            <option value="lyde/vask-1.mp3">Tromle</option>
+                            <option value="lyde/vask-2.mp3">Centrifuge</option>
+                            <option value="lyde/vask-3.mp3">Gammel</option>
                         </select>
                         <button class="play-btn" data-category="vask">Afspil</button>
                     </div>
@@ -141,21 +130,11 @@
                         <div class="card-icon">🚗</div>
                         <h3>Bilkørsel</h3>
                         <select class="sound-variant" id="variant-bil">
-                            <option value="lyde/bil-1.mp3">Motorvej i regn</option>
-                            <option value="lyde/bil-2.mp3">Summende motor</option>
+                            <option value="lyde/bil-1.mp3">Motorvej</option>
+                            <option value="lyde/bil-2.mp3">Motor</option>
                             <option value="lyde/bil-3.mp3">Natkørsel</option>
                         </select>
                         <button class="play-btn" data-category="bil">Afspil</button>
-                    </div>
-                    <div class="sound-card">
-                        <div class="card-icon">🌀</div>
-                        <h3>Ventilator</h3>
-                        <select class="sound-variant" id="variant-ventilator">
-                            <option value="lyde/ventilator-1.mp3">Bordventilator</option>
-                            <option value="lyde/ventilator-2.mp3">Loftventilator</option>
-                            <option value="lyde/ventilator-3.mp3">Tårnventilator</option>
-                        </select>
-                        <button class="play-btn" data-category="ventilator">Afspil</button>
                     </div>
                 </section>
                 
@@ -164,7 +143,7 @@
                 </div>
             </div>
 
-            <!-- Dagens log (Forsiden) -->
+            <!-- Dagens log (i siden) -->
             <aside class="sidebar">
                 <div class="today-log-box">
                     <h2><span class="b-name">Baby</span>s søvn i dag</h2>
@@ -176,20 +155,18 @@
             
         </div>
     </main>
+    <!-- SLUT: AFSSPILLER-SIDEN -->
 
     <!-- START: SØVNLOG-SIDEN -->
     <main id="view-history" class="view-section" style="display: none;">
         <div class="page-header">
-            <h2><span class="b-name">Baby</span>s Søvnlog</h2>
-            <p>Følg med i søvnmønsteret fra dag til dag.</p>
+            <h2>Søvnlog</h2>
+            <p>Følg med i mønsteret fra dag til dag.</p>
         </div>
 
-        <!-- ADVARSELSBOKS (Vises kun for gæster) -->
         <div id="guest-warning" class="warning-box">
-            <strong>⚠️ Vigtigt: Du er ikke logget ind.</strong><br>
-            Lige nu gemmes <span class="b-name">Baby</span>s sovetider kun lokalt på denne telefon. 
-            Hvis du sletter din browserdata eller skifter telefon, mister du historikken. 
-            <br><br>Opret en gratis profil via "Log ind" i menuen for at sikre data i skyen.
+            <strong>⚠️ Kun gemt på denne telefon</strong><br>
+            Du er ikke logget ind. Dine data kan gå tabt. Gå til Profil-fanen for at logge ind og gemme sikkert i skyen.
         </div>
 
         <div class="log-container" id="history-container">
@@ -207,20 +184,20 @@
         <div class="info-section">
             <div class="info-card">
                 <h3>0-3 måneder</h3>
-                <p>I denne alder kender <span class="b-name">Baby</span> endnu ikke forskel på nat og dag. Søvncyklussen er meget kort (typisk omkring 45 minutter), og de tilbringer en stor del af tiden i REM-søvn, som er den drømmende og "aktive" søvn. Det betyder, at de ofte grynter, græder lidt i søvne eller spjætter, uden egentlig at være vågne.</p>
-                <p><strong>Hvorfor lyd hjælper:</strong> White noise genskaber lydniveauet fra livmoderen og beroliger dem i denne overgang til verden.</p>
+                <p>I denne alder kender baby endnu ikke forskel på nat og dag. Søvncyklussen er meget kort (ca. 45 min), og de er oftest i "aktiv" REM-søvn, hvor de grynter og spjætter.</p>
+                <p><strong>Brug lyden:</strong> Genskaber lydniveauet fra livmoderen og giver enorm tryghed.</p>
             </div>
             
             <div class="info-card">
                 <h3>3-6 måneder</h3>
-                <p>Her begynder melatonin-produktionen for alvor, og døgnrytmen etableres langsomt. Omkring de 4 måneder rammer mange dog "søvnregressionen". Søvnen bliver mere voksen, og <span class="b-name">Baby</span> vågner meget nemmere op mellem hver cyklus.</p>
-                <p><strong>Hvorfor lyd hjælper:</strong> Konstant baggrundsstøj fungerer som en bro, der hjælper barnet med at glide videre til næste søvncyklus uden at vågne helt op.</p>
+                <p>Her rammer mange "søvnregressionen". Søvnen bliver mere voksen, og barnet vågner lettere op mellem hver cyklus.</p>
+                <p><strong>Brug lyden:</strong> Konstant støj fungerer som en bro, der hjælper barnet med at glide videre i søvnen uden at vågne helt.</p>
             </div>
 
             <div class="info-card">
                 <h3>6-12 måneder</h3>
-                <p>Søvnen bliver mere forudsigelig, og mange begynder at sove længere stræk. Men i denne alder sker der en massiv motorisk udvikling (kravle, sidde, rejse sig), og <span class="b-name">Baby</span> kan have svært ved at "slukke" for hjernen.</p>
-                <p><strong>Hvorfor lyd hjælper:</strong> En fast lyd (f.eks. brown noise) fungerer nu som en betinget refleks: Når barnet hører lyden, ved hjernen automatisk, at det er tid til at sove.</p>
+                <p>Søvnen bliver mere forudsigelig. Den motoriske udvikling betyder dog, at hjernen har svært ved at koble fra.</p>
+                <p><strong>Brug lyden:</strong> Fungerer nu som en betinget refleks: Når barnet hører lyden, ved hjernen, at det er sovetid.</p>
             </div>
         </div>
     </main>
@@ -235,18 +212,49 @@
         <div class="info-section">
             <div class="info-card highlight-card">
                 <h3>Er <span class="b-name">Baby</span> i et spring?</h3>
-                <p>Udover fysisk vækst går alle babyer igennem 10 store mentale "tigerspring" i løbet af deres første 20 måneder. Under et tigerspring opdager de verden på en helt ny måde – hjernen vokser simpelthen. Det er fantastisk, men det er også enormt utrygt for dem!</p>
+                <p>Udover fysisk vækst går alle babyer igennem 10 store mentale "tigerspring" i løbet af deres første 20 måneder. Verden opdages på ny, og det er utrygt!</p>
                 
-                <h4 style="margin-top: 15px; margin-bottom: 10px; color: inherit;">Typiske tegn på et spring:</h4>
+                <h4 style="margin-top: 15px;">Typiske tegn:</h4>
                 <ul class="leap-list">
-                    <li>Ekstra pylret og grædende.</li>
-                    <li>Ekstrem tryghedssøgende (vil bæres konstant).</li>
-                    <li>Søvnen bliver markant dårligere og urolig.</li>
-                    <li>Spisemønstre ændres (spiser mere eller mindre).</li>
+                    <li>Pylret og grædende.</li>
+                    <li>Vil bæres konstant.</li>
+                    <li>Søvnen bliver urolig.</li>
                 </ul>
                 
-                <p style="margin-top: 15px;"><strong>Hvordan bruges lyden her?</strong> I disse urolige perioder er sanseapparatet på overarbejde. Monotone, brummende lyde som en tændt støvsuger, en vaskemaskine eller ventilator blokerer for nye indtryk og lader <span class="b-name">Baby</span>s hjerne få en tiltrængt pause fra verden.</p>
+                <p style="margin-top: 15px;"><strong>Sådan hjælper lyden:</strong> Monotone, brummende lyde (f.eks. brown noise eller vaskemaskine) blokerer for nye sanseindtryk og giver hjernen en tiltrængt pause.</p>
             </div>
+        </div>
+    </main>
+
+    <!-- START: PROFIL-SIDEN -->
+    <main id="view-profile" class="view-section" style="display: none;">
+        <div class="page-header">
+            <h2>Profil & Indstillinger</h2>
+        </div>
+
+        <div class="profile-card">
+            <h3>Tema & Design</h3>
+            <p style="margin-bottom: 15px; color: var(--text-light);">Skån øjnene om natten.</p>
+            <button id="btn-theme-toggle" class="action-btn pause-btn" style="width:100%;">Skift til Nattilstand 🌙</button>
+        </div>
+
+        <!-- Vises når man IKKE er logget ind -->
+        <div id="profile-guest-section" class="profile-card" style="margin-top: 20px;">
+            <h3>Sikkerhedskopiér dine data</h3>
+            <p style="margin-bottom: 15px; color: var(--text-light);">Log ind med din Google-konto for at gemme søvnloggen og barnets navn sikkert i skyen. Så kan både du og din partner få adgang fra jeres egne telefoner!</p>
+            <button id="btn-google-login" class="google-btn">
+                <span class="btn-icon">G</span> Log ind med Google
+            </button>
+        </div>
+
+        <!-- Vises når man ER logget ind -->
+        <div id="profile-logged-in-section" class="profile-card" style="margin-top: 20px; display: none;">
+            <h3>Barnets Informationer</h3>
+            <p style="margin-bottom: 10px; color: var(--text-light);">Hvad hedder dit barn?</p>
+            <input type="text" id="baby-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
+            <button id="btn-save-name" class="action-btn save-btn" style="width:100%; margin-bottom: 30px;">Opdater navn</button>
+            
+            <button id="btn-logout" class="action-btn reset-btn" style="width:100%;">Log ud af BabyRo</button>
         </div>
     </main>
 
