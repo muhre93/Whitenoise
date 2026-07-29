@@ -10,7 +10,7 @@
 </head>
 <body>
 
-    <!-- Skærmbillede når man logger ind første gang for at vælge navn -->
+    <!-- Skærmbillede når man logger ind første gang -->
     <div id="name-setup-overlay" class="overlay" style="display: none;">
         <div class="login-box">
             <h2>Velkommen! 👋</h2>
@@ -65,7 +65,7 @@
         <!-- BUNDEN: Delt op i to (Lyde til venstre, Log til højre) -->
         <div class="layout-split">
             
-            <!-- Venstre side (Lydene i 4 rækker á 2) -->
+            <!-- Venstre side (Lydene - Nu i 3x3 layout) -->
             <div class="left-sounds">
                 <section class="sound-grid">
                     <div class="sound-card">
@@ -148,6 +148,17 @@
                         </select>
                         <button class="play-btn" data-category="bil">Afspil</button>
                     </div>
+                    <!-- 9. LYD: ANDET -->
+                    <div class="sound-card">
+                        <div class="card-icon">✨</div>
+                        <h3>Andet</h3>
+                        <select class="sound-variant" id="variant-andet">
+                            <option value="lyde/andet-1.mp3">Lyd 1</option>
+                            <option value="lyde/andet-2.mp3">Lyd 2</option>
+                            <option value="lyde/andet-3.mp3">Lyd 3</option>
+                        </select>
+                        <button class="play-btn" data-category="andet">Afspil</button>
+                    </div>
                 </section>
                 
                 <div class="global-stop-wrapper">
@@ -155,7 +166,7 @@
                 </div>
             </div>
 
-            <!-- Højre side (Dagens Log - NU MEGET BREDERE PÅ PC) -->
+            <!-- Højre side (Dagens Log) -->
             <div class="right-log">
                 <div class="today-log-box">
                     <h2><span class="b-name">Baby</span>s søvn i dag</h2>
@@ -233,7 +244,7 @@
                     <li>Søvnen bliver urolig.</li>
                 </ul>
                 
-                <p style="margin-top: 15px;"><strong>Sådan hjælper lyden:</strong> Monotone, brummende lyde (f.eks. brown noise eller vaskemaskine) blokerer for nye sanseindtryk og giver hjernen en tiltrængt pause.</p>
+                <p style="margin-top: 15px;"><strong>Sådan hjælper lyden:</strong> Monotone, brummende lyde blokerer for nye sanseindtryk og giver hjernen en tiltrængt pause.</p>
             </div>
         </div>
     </main>
@@ -262,16 +273,23 @@
         </div>
 
         <div id="profile-logged-in-section" class="profile-card" style="margin-top: 20px; display: none;">
-            <h3>Barnets Informationer</h3>
+            <h3>Dine Oplysninger</h3>
             <p style="margin-bottom: 10px; color: var(--text-light);">Hvad hedder dit barn?</p>
-            <input type="text" id="baby-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
-            <button id="btn-save-name" class="action-btn save-btn" style="width:100%; margin-bottom: 30px;">Opdater navn</button>
+            <input type="text" id="profile-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
+            <button id="btn-update-name" class="action-btn save-btn" style="width:100%; margin-bottom: 30px;">Opdater navn</button>
             
             <button id="btn-logout" class="action-btn reset-btn" style="width:100%;">Log ud af BabyRo</button>
         </div>
     </main>
 
     <audio id="global-audio-player" loop></audio>
-    <script type="module" src="script.js"></script>
+
+    <!-- FIREBASE (Hentet via script tags for at forhindre nedbrud!) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Dit eget script -->
+    <script src="script.js"></script>
 </body>
 </html>
