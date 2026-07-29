@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 audioPlayer.pause();
                 resetAllButtons();
                 clearTimer();
-                stopStopwatch(); 
+                // Her sættes stopuret IKKE længere på pause. Det kører videre selvom lyden stoppes manuelt!
                 currentlyPlayingBtn = null;
                 return;
             }
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         audioPlayer.pause();
         resetAllButtons();
         clearTimer();
-        stopStopwatch(); 
+        // Manuelt stop sætter nu heller IKKE uret på pause.
         currentlyPlayingBtn = null;
     });
 
@@ -120,8 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
             timeoutId = setTimeout(() => {
                 audioPlayer.pause();
                 resetAllButtons();
-                stopStopwatch(); 
+                // FJERNET: stopStopwatch(); -> Så uret tæller videre, når lyden slukker automatisk!
                 currentlyPlayingBtn = null;
+                console.log("Automatisk sluk: Lyden stoppede, men stopuret kører videre.");
             }, minutes * 60 * 1000);
         }
     }
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveSleepSession() {
         if (elapsedSeconds === 0) {
-            alert("Uret er på nul. Start lyden først for at gemme en tid.");
+            alert("Uret er på nul. Start lyden (og uret) først for at gemme en tid.");
             return;
         }
 
@@ -170,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logs[datoStreng].total += elapsedSeconds;
         localStorage.setItem('babyRoLogs', JSON.stringify(logs));
         
-        // NYT: Her stopper vi lyden automatisk, når loggen gemmes!
+        // Stopper lyden automatisk, hvis den kørte, når luren gemmes
         audioPlayer.pause();
         resetAllButtons();
         clearTimer();
