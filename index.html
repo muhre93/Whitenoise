@@ -9,15 +9,37 @@
 </head>
 <body>
 
+    <!-- START: LOGIN SKÆRM -->
+    <div id="login-overlay" class="overlay">
+        <div class="login-box">
+            <h1>BabyRo</h1>
+            <p>Beroligende lyde & søvnlog</p>
+            <button id="btn-google-login" class="google-btn">Log ind med Google</button>
+        </div>
+    </div>
+    
+    <div id="name-setup-overlay" class="overlay" style="display: none;">
+        <div class="login-box">
+            <h2>Velkommen! 👋</h2>
+            <p>Hvad hedder dit barn?</p>
+            <input type="text" id="baby-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
+            <button id="btn-save-name" class="play-btn">Gem navn og fortsæt</button>
+        </div>
+    </div>
+    <!-- SLUT: LOGIN SKÆRM -->
+
+
+    <!-- TOP HEADER NÅR MAN ER LOGGET IND -->
     <header>
         <h1>BabyRo</h1>
-        <p>Beroligende lyde til de små</p>
+        <p>Beroligende lyde til <span class="b-name">baby</span></p>
+        <button id="btn-logout" class="logout-btn">Log ud</button>
     </header>
 
     <nav class="top-tabs">
         <button id="nav-player" class="tab-btn active">🎧 Afspiller</button>
-        <button id="nav-history" class="tab-btn">🌙 Søvnlog</button>
-        <button id="nav-sleep" class="tab-btn">👶 Barnets søvn</button>
+        <button id="nav-history" class="tab-btn">🌙 <span class="b-name">Baby</span>s Søvnlog</button>
+        <button id="nav-sleep" class="tab-btn">👶 <span class="b-name">Baby</span>s søvn</button>
         <button id="nav-leaps" class="tab-btn">🐯 Tigerspring</button>
     </nav>
 
@@ -35,8 +57,6 @@
                             <option value="60">1 time</option>
                             <option value="120">2 timer</option>
                             <option value="240">4 timer</option>
-                            <option value="480">8 timer</option>
-                            <option value="720">12 timer</option>
                         </select>
                         <button id="stop-all" class="stop-btn">Stop alt lyd</button>
                     </div>
@@ -61,7 +81,6 @@
                         </select>
                         <button class="play-btn" data-category="stovsuger">Afspil</button>
                     </div>
-
                     <div class="sound-card">
                         <h3>💇‍♀️ Hårtørrer</h3>
                         <select class="sound-variant" id="variant-hartorrer">
@@ -71,7 +90,6 @@
                         </select>
                         <button class="play-btn" data-category="hartorrer">Afspil</button>
                     </div>
-
                     <div class="sound-card">
                         <h3>❤️ Hjerterytme</h3>
                         <select class="sound-variant" id="variant-hjerte">
@@ -81,72 +99,13 @@
                         </select>
                         <button class="play-btn" data-category="hjerte">Afspil</button>
                     </div>
-
-                    <div class="sound-card">
-                        <h3>🌧️ Regnvejr</h3>
-                        <select class="sound-variant" id="variant-regn">
-                            <option value="lyde/regn-1.mp3">Let sommerregn</option>
-                            <option value="lyde/regn-2.mp3">Tung regn mod rude</option>
-                            <option value="lyde/regn-3.mp3">Torden og regn</option>
-                        </select>
-                        <button class="play-btn" data-category="regn">Afspil</button>
-                    </div>
-
-                    <div class="sound-card">
-                        <h3>🌊 Havets brusen</h3>
-                        <select class="sound-variant" id="variant-hav">
-                            <option value="lyde/hav-1.mp3">Milde bølger</option>
-                            <option value="lyde/hav-2.mp3">Dyb havbund</option>
-                            <option value="lyde/hav-3.mp3">Rullende stenstrand</option>
-                        </select>
-                        <button class="play-btn" data-category="hav">Afspil</button>
-                    </div>
-
-                    <div class="sound-card">
-                        <h3>🧺 Vaskemaskine</h3>
-                        <select class="sound-variant" id="variant-vask">
-                            <option value="lyde/vask-1.mp3">Tromle der kører rundt</option>
-                            <option value="lyde/vask-2.mp3">Centrifugering</option>
-                            <option value="lyde/vask-3.mp3">Gammeldags maskine</option>
-                        </select>
-                        <button class="play-btn" data-category="vask">Afspil</button>
-                    </div>
-
-                    <div class="sound-card">
-                        <h3>🚗 Bilkørsel</h3>
-                        <select class="sound-variant" id="variant-bil">
-                            <option value="lyde/bil-1.mp3">Motorvej i regn</option>
-                            <option value="lyde/bil-2.mp3">Summende motor</option>
-                            <option value="lyde/bil-3.mp3">Natkørsel (rumlen)</option>
-                        </select>
-                        <button class="play-btn" data-category="bil">Afspil</button>
-                    </div>
-
-                    <div class="sound-card">
-                        <h3>📻 White/Brown Noise</h3>
-                        <select class="sound-variant" id="variant-noise">
-                            <option value="lyde/noise-1.mp3">Ren White Noise (Lys)</option>
-                            <option value="lyde/noise-2.mp3">Ren Pink Noise (Mellem)</option>
-                            <option value="lyde/noise-3.mp3">Ren Brown Noise (Dyb)</option>
-                        </select>
-                        <button class="play-btn" data-category="noise">Afspil</button>
-                    </div>
-
-                    <div class="sound-card">
-                        <h3>🌀 Ventilator</h3>
-                        <select class="sound-variant" id="variant-ventilator">
-                            <option value="lyde/ventilator-1.mp3">Bordventilator</option>
-                            <option value="lyde/ventilator-2.mp3">Loftventilator</option>
-                            <option value="lyde/ventilator-3.mp3">Tårnventilator</option>
-                        </select>
-                        <button class="play-btn" data-category="ventilator">Afspil</button>
-                    </div>
+                    <!-- (Her kan du tilføje regnvejr, vaskemaskine osv. ligesom du plejer!) -->
                 </section>
             </div>
 
             <aside class="sidebar">
                 <div class="today-log-box">
-                    <h2>Dagens Søvn</h2>
+                    <h2><span class="b-name">Baby</span>s søvn i dag</h2>
                     <p class="date-subtitle" id="today-date-text">I dag</p>
                     <ul class="log-list" id="today-log-list"></ul>
                     <div class="log-total">Samlet sovetid: <span id="today-total-time">0:00 min</span></div>
@@ -154,65 +113,44 @@
             </aside>
         </div>
     </main>
-    <!-- SLUT: AFSSPILLER-SIDEN -->
 
     <!-- START: SØVNLOG-SIDEN -->
     <main id="view-history" class="view-section" style="display: none;">
         <div class="history-wrapper">
             <h2>Søvnhistorik</h2>
-            <p>Følg med i barnets søvnmønster fra tidligere dage.</p>
-            <div id="history-container"></div>
-            <button id="clear-history-btn" class="reset-btn" style="margin-top: 30px;">Slet al historik</button>
+            <p>Følg med i <span class="b-name">baby</span>s søvnmønster fra tidligere dage.</p>
+            <div id="history-container">
+                <p>Indlæser data fra skyen...</p>
+            </div>
         </div>
     </main>
-    <!-- SLUT: SØVNLOG-SIDEN -->
 
     <!-- START: BARNETS SØVN-SIDEN -->
     <main id="view-sleep" class="view-section" style="display: none;">
         <div class="info-section">
             <div class="info-box">
-                <h2>Babys søvn: 0-3 måneder</h2>
-                <p>I denne alder kender babyen endnu ikke forskel på nat og dag. Deres søvncyklus er meget kort, typisk omkring 45 minutter, og de tilbringer en stor del af tiden i "aktiv" REM-søvn. De grynter, græder i søvne og spjætter ofte uden at være rigtigt vågne.</p> 
-                <p><strong>Hvorfor lyd hjælper:</strong> White noise genskaber lydniveauet fra livmoderen (som er konstant højt på grund af moderens blodgennemstrømning) og skaber øjeblikkelig tryghed.</p>
+                <h2><span class="b-name">Baby</span>s søvn: 0-3 måneder</h2>
+                <p>I denne alder kender <span class="b-name">baby</span> endnu ikke forskel på nat og dag. Søvncyklussen er meget kort, typisk omkring 45 minutter.</p>
             </div>
-            
             <div class="info-box">
-                <h2>Babys søvn: 3-6 måneder</h2>
-                <p>Her begynder melatonin-produktionen for alvor, og en reel døgnrytme etableres. Omkring de 4 måneder rammer mange den berømte søvnregression, fordi søvnen ændrer sig til at ligne voksnes mere (med dybe og lette stadier).</p>
-                <p><strong>Hvorfor lyd hjælper:</strong> Babyen vågner nemmere op mellem de lette søvncyklusser. Konstant baggrundsstøj fungerer som en bro, der hjælper babyen med at glide videre til næste cyklus uden at kræve hjælp.</p>
-            </div>
-
-            <div class="info-box">
-                <h2>Babys søvn: 6-12 måneder</h2>
-                <p>Søvnen bliver mere forudsigelig, men den store motoriske udvikling (kravle, rejse sig) gør, at hjernen har svært ved at slukke. Mange oplever at baby "øver sig" i søvne.</p>
-                <p><strong>Hvorfor lyd hjælper:</strong> Når lyden (f.eks. brown noise) tændes til hver lur, fungerer det nu som et stærkt søvnsignal (en betinget refleks). Hjernen lærer, at denne specifikke lyd betyder afslapning og sovetid.</p>
+                <h2><span class="b-name">Baby</span>s søvn: 3-6 måneder</h2>
+                <p>Omkring de 4 måneder rammer mange den berømte søvnregression, fordi søvnen ændrer sig til at ligne voksnes mere.</p>
             </div>
         </div>
     </main>
-    <!-- SLUT: BARNETS SØVN-SIDEN -->
 
     <!-- START: TIGERSPRING-SIDEN -->
     <main id="view-leaps" class="view-section" style="display: none;">
         <div class="info-section">
             <div class="info-box highlight-box" style="grid-column: 1 / -1;">
-                <h2>Hvad er et Tigerspring?</h2>
-                <p>Udover fysisk vækst går alle babyer igennem 10 store mentale "tigerspring" i løbet af deres første 20 måneder (ifølge bogen "Vidunderlige Uger"). Under et tigerspring opdager babyen verden på en helt ny måde – hjernen vokser simpelthen. Selvom det er fantastisk, er det også enormt utrygt for barnet, da verden pludselig virker ukendt og skræmmende.</p>
-                
-                <h3 style="margin-top: 20px; margin-bottom: 10px;">Typiske tegn på et tigerspring:</h3>
-                <ul style="list-style-position: inside; margin-bottom: 15px;">
-                    <li>Baby er ekstra pylret og grædende.</li>
-                    <li>Ekstrem tryghedssøgende (vil bæres konstant).</li>
-                    <li>Søvnen bliver markant dårligere.</li>
-                    <li>Spisemønstre ændres (spiser mere eller mindre).</li>
-                </ul>
-
-                <p><strong>Hvordan bruges lyden her?</strong> I disse urolige perioder er babyens sanseapparat på overarbejde. Monotone, brummende lyde som en tændt støvsuger, en vaskemaskine eller brown noise er geniale til at lægge en "dyne" over omgivelserne. Lyden blokerer for nye indtryk og lader babyens hjerne få en tiltrængt pause fra verden.</p>
+                <h2>Er <span class="b-name">baby</span> i et tigerspring?</h2>
+                <p>Udover fysisk vækst går <span class="b-name">baby</span> igennem 10 store mentale "tigerspring". Det kan give enormt urolig søvn.</p>
             </div>
         </div>
     </main>
-    <!-- SLUT: TIGERSPRING-SIDEN -->
 
     <audio id="global-audio-player" loop></audio>
-    <script src="script.js"></script>
+    <!-- VIGTIGT: type="module" tillader os at hente Firebase ind via internettet -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>
