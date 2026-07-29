@@ -14,10 +14,9 @@
         <p>Beroligende lyde til de små</p>
     </header>
 
-    <!-- Faneblade (Nu 4 stk) -->
     <nav class="top-tabs">
         <button id="nav-player" class="tab-btn active">🎧 Afspiller</button>
-        <button id="nav-history" class="tab-btn">🌙 Søvnmønster</button>
+        <button id="nav-history" class="tab-btn">🌙 Søvnlog</button>
         <button id="nav-sleep" class="tab-btn">👶 Barnets søvn</button>
         <button id="nav-leaps" class="tab-btn">🐯 Tigerspring</button>
     </nav>
@@ -29,7 +28,7 @@
             <div class="main-content">
                 <section class="timer-section">
                     <div class="timer-controls">
-                        <label for="timer-select">Automatisk sluk:</label>
+                        <label for="timer-select">Automatisk sluk (Lyd):</label>
                         <select id="timer-select">
                             <option value="0">Kør hele tiden</option>
                             <option value="2">2 minutter (Test)</option>
@@ -43,10 +42,11 @@
                     </div>
                     
                     <div class="time-display-wrapper">
-                        <div id="time-elapsed" class="time-display">Spilletid: 00:00:00</div>
+                        <div id="time-elapsed" class="time-display">Søvnur: 00:00:00</div>
                         <div class="time-actions">
-                            <button id="btn-save-log" class="save-btn">Gem søvntid</button>
-                            <button id="btn-reset-time" class="reset-btn">Nulstil tid</button>
+                            <button id="btn-save-log" class="save-btn">Gem</button>
+                            <button id="btn-pause-time" class="pause-btn">Pause</button>
+                            <button id="btn-reset-time" class="reset-btn">Nulstil</button>
                         </div>
                     </div>
                 </section>
@@ -149,14 +149,14 @@
                     <h2>Dagens Søvn</h2>
                     <p class="date-subtitle" id="today-date-text">I dag</p>
                     <ul class="log-list" id="today-log-list"></ul>
-                    <div class="log-total">Samlet sovetid: <span id="today-total-time">0 min</span></div>
+                    <div class="log-total">Samlet sovetid: <span id="today-total-time">0:00 min</span></div>
                 </div>
             </aside>
         </div>
     </main>
     <!-- SLUT: AFSSPILLER-SIDEN -->
 
-    <!-- START: SØVNMØNSTER-SIDEN -->
+    <!-- START: SØVNLOG-SIDEN -->
     <main id="view-history" class="view-section" style="display: none;">
         <div class="history-wrapper">
             <h2>Søvnhistorik</h2>
@@ -165,7 +165,7 @@
             <button id="clear-history-btn" class="reset-btn" style="margin-top: 30px;">Slet al historik</button>
         </div>
     </main>
-    <!-- SLUT: SØVNMØNSTER-SIDEN -->
+    <!-- SLUT: SØVNLOG-SIDEN -->
 
     <!-- START: BARNETS SØVN-SIDEN -->
     <main id="view-sleep" class="view-section" style="display: none;">
