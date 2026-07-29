@@ -1,11 +1,10 @@
-/* Grundlæggende opsætning */
 :root {
-    --bg-color: #f4f1eb; /* Varm, lys sandfarve */
+    --bg-color: #f4f1eb; 
     --card-bg: #ffffff;
     --text-main: #4a4a4a;
-    --accent-color: #a4b5a8; /* Støvet, rolig grøn */
+    --accent-color: #a4b5a8; 
     --accent-hover: #8d9e91;
-    --btn-stop: #d69f9f; /* Støvet rosa til stop-knap */
+    --btn-stop: #d69f9f; 
 }
 
 * {
@@ -23,7 +22,6 @@ body {
     padding-bottom: 60px;
 }
 
-/* Header */
 header {
     text-align: center;
     margin-bottom: 30px;
@@ -41,19 +39,37 @@ header p {
     color: #7a7a7a;
 }
 
-/* Timer sektion */
+/* Timer sektion og det nye stopur */
 .timer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 20px 25px;
+    border-radius: 15px;
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.timer-controls {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     gap: 15px;
-    background: var(--card-bg);
-    padding: 15px 25px;
-    border-radius: 15px;
-    max-width: 600px;
-    margin: 0 auto 30px auto;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+}
+
+.time-display {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    background: #fdfdfd;
+    padding: 10px 30px;
+    border-radius: 10px;
+    border: 2px dashed var(--accent-color);
+    letter-spacing: 2px;
 }
 
 select {
@@ -66,7 +82,6 @@ select {
     outline: none;
 }
 
-/* Knapper */
 button {
     font-family: inherit;
     font-size: 1rem;
@@ -86,7 +101,7 @@ button {
 }
 
 .play-btn.playing {
-    background-color: #f7ca72; /* Varm gul/orange når den spiller */
+    background-color: #f7ca72; 
     color: #4a4a4a;
 }
 
@@ -95,7 +110,6 @@ button {
     color: white;
 }
 
-/* Lydkort Grid */
 .sound-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -125,12 +139,11 @@ button {
     flex-grow: 1;
 }
 
-/* Informationsbokse */
 .info-section {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 50px auto 20px auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 25px;
 }
 
@@ -146,4 +159,17 @@ button {
     margin-bottom: 15px;
     font-size: 1.4rem;
     color: var(--accent-color);
+}
+
+.info-box p {
+    margin-bottom: 15px;
+}
+
+/* Gør tigerspring-boksen lidt speciel */
+.highlight-box {
+    border-left: 5px solid #f7ca72;
+    background-color: #fffcf5;
+}
+.highlight-box h2 {
+    color: #dfad44;
 }
