@@ -36,14 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let elapsedSeconds = 0;
     let intervalId = null;
     let sessionStartTime = null; 
-    let isUrPaused = false; // Holder styr på om søvnuret er sat på pause
+    let isUrPaused = false; 
 
     // --- 3. STOPUR (SØVNUR) ---
     function startStopwatch() {
         if (sessionStartTime === null) {
             sessionStartTime = new Date();
         }
-
         clearInterval(intervalId);
         intervalId = setInterval(() => {
             elapsedSeconds++;
@@ -51,16 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000); 
     }
 
-    function stopStopwatch() { 
-        clearInterval(intervalId); 
-    }
+    function stopStopwatch() { clearInterval(intervalId); }
 
     function resetStopwatch() {
         stopStopwatch();
         elapsedSeconds = 0;
         sessionStartTime = null; 
         
-        // Nulstil også pauseknappen visuelt
         isUrPaused = false;
         btnPauseTime.textContent = 'Pause';
         btnPauseTime.style.backgroundColor = '';
@@ -78,18 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PAUSE-KNAP LOGIK ---
     btnPauseTime.addEventListener('click', () => {
-        // Gør ingenting hvis uret ikke er startet endnu
         if (elapsedSeconds === 0 && sessionStartTime === null) return;
         
         if (!isUrPaused) {
-            // Hvis det kører, sæt på pause
             stopStopwatch();
             isUrPaused = true;
             btnPauseTime.textContent = 'Start';
-            btnPauseTime.style.backgroundColor = '#a4b5a8'; // Skifter til grøn når den er klar til start
+            btnPauseTime.style.backgroundColor = '#a4b5a8'; 
             btnPauseTime.style.color = 'white';
         } else {
-            // Hvis det er pauset, genoptag
             startStopwatch();
             isUrPaused = false;
             btnPauseTime.textContent = 'Pause';
@@ -97,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btnPauseTime.style.color = '';
         }
     });
-
 
     // --- 4. LYDAFSPILLER ---
     function resetAllButtons() {
@@ -128,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.classList.add('playing');
             currentlyPlayingBtn = this;
             
-            // Hvis uret er manuelt pauset med den nye knap, fjerner vi pausen, fordi afspil er trykket
             if (isUrPaused) {
                 isUrPaused = false;
                 btnPauseTime.textContent = 'Pause';
@@ -162,33 +153,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }, minutes * 60 * 1000);
         }
     }
-
-    function clearTimer() {
-        if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; }
-    }
-
-    timerSelect.addEventListener('change', () => {
-        if (currentlyPlayingBtn !== null) setupTimer();
-    });
+    function clearTimer() { if (timeoutId !== null) { clearTimeout(timeoutId); timeoutId = null; } }
+    timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null) setupTimer(); });
 
     // --- 6. SØVNLOG & HISTORIK ---
-    
-    // NYT TIDSFORMAT (Vise minutter:sekunder, f.eks 2:51 min)
     function formatTimeText(totalSecs) {
         if (totalSecs === 0) return `0:00 min`;
-        
         const h = Math.floor(totalSecs / 3600);
         const m = Math.floor((totalSecs % 3600) / 60);
         const s = totalSecs % 60;
-        
-        // Sørger for at sekunder altid står med to tal, f.eks "05" og ikke bare "5"
         const secString = String(s).padStart(2, '0');
         
         if (h > 0) {
             const minString = String(m).padStart(2, '0');
-            return `${h}:${minString}:${secString} t`; // f.eks 1:15:30 t
+            return `${h}:${minString}:${secString} t`; 
         } else {
-            return `${m}:${secString} min`; // f.eks 2:51 min
+            return `${m}:${secString} min`; 
         }
     }
 
@@ -210,7 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         logs[datoStreng].sessions.push({
             timeDisplay: `Kl. ${startStreng} - ${slutStreng}`, 
-            durationText: formatTimeText(elapsedSeconds)
+            durationText: formatTimeText(elapsedSeconds),
+            durationSec: elapsedSeconds // Gemmer sekunderne så vi kan trække dem fra igen, hvis man sletter!
         });
         
         logs[datoStreng].total += elapsedSeconds;
@@ -243,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Forsiden har IKKE nogen sletteknap. Det er kun visning.
         todayData.sessions.forEach(session => {
             const li = document.createElement('li');
             const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
@@ -252,6 +234,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         totalEl.textContent = formatTimeText(todayData.total);
     }
+
+    // Gør slette-funktionen global, så HTML-knappen kan finde den
+    window.deleteLogEntry = function(dateStr, index) {
+        if(confirm("Er du sikker på, at du vil slette denne specifikke søvntid?")) {
+            let logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
+            
+            if(logs[dateStr]) {
+                const session = logs[dateStr].sessions[index];
+                const sessionSecs = session.durationSec || 0; 
+                
+                // Trækker tiden fra dagens total
+                logs[dateStr].total -= sessionSecs;
+                if(logs[dateStr].total < 0) logs[dateStr].total = 0;
+                
+                // Fjerner den specifikke linje
+                logs[dateStr].sessions.splice(index, 1);
+                
+                // Hvis der ikke er flere tider den dag, sletter vi hele dagen fra hukommelsen
+                if(logs[dateStr].sessions.length === 0) {
+                    delete logs[dateStr];
+                }
+                
+                localStorage.setItem('babyRoLogs', JSON.stringify(logs));
+                
+                // Opdaterer begge skærme med det samme
+                renderTodayLog();
+                renderHistory();
+            }
+        }
+    };
 
     function renderHistory() {
         const container = document.getElementById('history-container');
@@ -268,10 +280,18 @@ document.addEventListener('DOMContentLoaded', () => {
         dates.forEach(date => {
             const dayData = logs[date];
             let listHtml = "";
-            dayData.sessions.forEach(session => {
+            
+            // Historik-fanen HAR sletteknappen (❌)
+            dayData.sessions.forEach((session, index) => {
                 const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
-                listHtml += `<li>${displayText} - Søvnur: ${session.durationText}</li>`;
+                listHtml += `
+                    <li>
+                        <span>${displayText} - Søvnur: ${session.durationText}</span>
+                        <button class="delete-btn" onclick="deleteLogEntry('${date}', ${index})" title="Slet tid">❌</button>
+                    </li>
+                `;
             });
+            
             const cardHtml = `
                 <div class="history-day-card">
                     <h3>Dato: ${date}</h3>
@@ -292,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('clear-history-btn').addEventListener('click', () => {
-        if(confirm("Vil du slette al tidligere historik permanent?")) {
+        if(confirm("Er du HELT sikker på, at du vil slette AL tidligere historik permanent?")) {
             localStorage.removeItem('babyRoLogs');
             renderHistory();
             renderTodayLog();
