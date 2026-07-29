@@ -4,28 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BabyRo - Beroligende Lyde</title>
+    <!-- Det nye, søde favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- START: LOGIN SKÆRM (APP START) -->
-    <div id="login-overlay" class="overlay">
-        <div class="login-box">
-            <h1 class="brand-title">BabyRo</h1>
-            <p class="brand-subtitle">Beroligende lyde & søvnlog til de små</p>
-            
-            <div class="login-actions">
-                <button id="btn-google-login" class="google-btn">
-                    <span class="btn-icon">G</span> Log ind med Google
-                </button>
-                <div class="divider"><span>eller</span></div>
-                <button id="btn-guest-login" class="guest-btn">Fortsæt uden login</button>
-            </div>
-            <p class="small-text">Login kræves for at gemme søvnlog og tilpasse barnets navn.</p>
-        </div>
-    </div>
-    
+    <!-- Skærmbillede når man logger ind første gang for at vælge navn -->
     <div id="name-setup-overlay" class="overlay" style="display: none;">
         <div class="login-box">
             <h2>Velkommen! 👋</h2>
@@ -34,21 +20,28 @@
             <button id="btn-save-name" class="play-btn">Gem navn og start</button>
         </div>
     </div>
-    <!-- SLUT: LOGIN SKÆRM -->
 
-
-    <!-- TOP HEADER -->
+    <!-- TOP HEADER MED LOGIN KNAP -->
     <header class="top-header">
         <h1>BabyRo</h1>
-        <button id="btn-logout" class="header-btn" style="display: none;">Log ud</button>
-        <button id="btn-force-login" class="header-btn" style="display: none;">Log ind</button>
+        <div class="header-actions">
+            <button id="btn-google-login" class="header-btn login-btn">Log ind (Gem data)</button>
+            <button id="btn-logout" class="header-btn logout-btn" style="display: none;">Log ud</button>
+        </div>
     </header>
+
+    <!-- NAVIGATION (Rykket til toppen) -->
+    <nav class="app-nav">
+        <button id="nav-player" class="nav-item active">🎧 Lyde</button>
+        <button id="nav-history" class="nav-item">🌙 Log</button>
+        <button id="nav-sleep" class="nav-item">👶 Søvn</button>
+        <button id="nav-leaps" class="nav-item">🐯 Spring</button>
+    </nav>
 
     <!-- START: AFSSPILLER-SIDEN (Forsiden) -->
     <main id="view-player" class="view-section active-view">
         <div class="layout-wrapper">
             
-            <!-- Det nye, smukke kontrolpanel -->
             <section class="control-center">
                 <div class="time-display-wrapper">
                     <p class="timer-label"><span class="b-name">Baby</span>s Søvnur</p>
@@ -74,7 +67,7 @@
                 </div>
             </section>
 
-            <!-- Lydkortene (App-grid) -->
+            <!-- Lydkortene -->
             <section class="sound-grid">
                 <div class="sound-card">
                     <div class="card-icon">💨</div>
@@ -143,7 +136,6 @@
                 </div>
             </section>
             
-            <!-- Global Stop knap i bunden af playeren -->
             <div class="global-stop-wrapper">
                 <button id="stop-all" class="stop-btn">Sluk alt lyd</button>
             </div>
@@ -163,7 +155,6 @@
             <div class="empty-state">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>
         </div>
     </main>
-    <!-- SLUT: SØVNLOG-SIDEN -->
 
     <!-- START: BARNETS SØVN-SIDEN -->
     <main id="view-sleep" class="view-section" style="display: none;">
@@ -204,26 +195,6 @@
             </div>
         </div>
     </main>
-
-    <!-- BUND-MENU (App Navigation) -->
-    <nav class="app-nav">
-        <button id="nav-player" class="nav-item active">
-            <span class="nav-icon">🎧</span>
-            <span>Lyde</span>
-        </button>
-        <button id="nav-history" class="nav-item">
-            <span class="nav-icon">🌙</span>
-            <span>Log</span>
-        </button>
-        <button id="nav-sleep" class="nav-item">
-            <span class="nav-icon">👶</span>
-            <span>Søvn</span>
-        </button>
-        <button id="nav-leaps" class="nav-item">
-            <span class="nav-icon">🐯</span>
-            <span>Spring</span>
-        </button>
-    </nav>
 
     <audio id="global-audio-player" loop></audio>
     <script type="module" src="script.js"></script>
