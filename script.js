@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logs[datoStreng].sessions.push({
             timeDisplay: `Kl. ${startStreng} - ${slutStreng}`, 
             durationText: formatTimeText(elapsedSeconds),
-            durationSec: elapsedSeconds // Gemmer sekunderne så vi kan trække dem fra igen, hvis man sletter!
+            durationSec: elapsedSeconds 
         });
         
         logs[datoStreng].total += elapsedSeconds;
@@ -206,36 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetStopwatch();
     }
 
-    function renderTodayLog() {
-        const nu = new Date();
-        const datoStreng = nu.toLocaleDateString('da-DK');
-        document.getElementById('today-date-text').textContent = `Dato: ${datoStreng}`;
-
-        const logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
-        const todayData = logs[datoStreng];
-        const listEl = document.getElementById('today-log-list');
-        const totalEl = document.getElementById('today-total-time');
-
-        listEl.innerHTML = "";
-
-        if (!todayData || todayData.sessions.length === 0) {
-            listEl.innerHTML = "<li>Ingen lure gemt endnu i dag.</li>";
-            totalEl.textContent = "0:00 min";
-            return;
-        }
-
-        // Forsiden har IKKE nogen sletteknap. Det er kun visning.
-        todayData.sessions.forEach(session => {
-            const li = document.createElement('li');
-            const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
-            li.innerHTML = `<span>${displayText}</span> <span>${session.durationText}</span>`;
-            listEl.appendChild(li);
-        });
-
-        totalEl.textContent = formatTimeText(todayData.total);
-    }
-
-    // Gør slette-funktionen global, så HTML-knappen kan finde den
+    // Gør slette-funktionen global, så HTML-knapperne kan finde den
     window.deleteLogEntry = function(dateStr, index) {
         if(confirm("Er du sikker på, at du vil slette denne specifikke søvntid?")) {
             let logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
@@ -265,6 +236,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    function renderTodayLog() {
+        const nu = new Date();
+        const datoStreng = nu.toLocaleDateString('da-DK');
+        document.getElementById('today-date-text').textContent = `Dato: ${datoStreng}`;
+
+        const logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
+        const todayData = logs[datoStreng];
+        const listEl = document.getElementById('today-log-list');
+        const totalEl = document.getElementById('today-total-time');
+
+        listEl.innerHTML = "";
+
+        if (!todayData || todayData.sessions.length === 0) {
+            listEl.innerHTML = "<li>Ingen lure gemt endnu i dag.</li>";
+            totalEl.textContent = "0:00 min";
+            return;
+        }
+
+        // Forsiden (Dagens Søvn) har nu også sletteknappen!
+        todayData.sessions.forEach((session, index) => {
+            const li = document.createElement('li');
+            const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
+            li.innerHTML = `
+                <span>${displayText}</span> 
+                <div style="display:flex; align-items:center;">
+                    <span>${session.durationText}</span>
+                    <button class="delete-btn" onclick="deleteLogEntry('${datoStreng}', ${index})" title="Slet tid">❌</button>
+                </div>
+            `;
+            listEl.appendChild(li);
+        });
+
+        totalEl.textContent = formatTimeText(todayData.total);
+    }
+
     function renderHistory() {
         const container = document.getElementById('history-container');
         const logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
@@ -281,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayData = logs[date];
             let listHtml = "";
             
-            // Historik-fanen HAR sletteknappen (❌)
+            // Historik-fanen har stadig sletteknappen
             dayData.sessions.forEach((session, index) => {
                 const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
                 listHtml += `
