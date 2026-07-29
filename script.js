@@ -15,15 +15,14 @@ const firebaseConfig = {
   measurementId: "G-9HT4SHH5BR"
 };
 
-// VIGTIGT: Vi pakker Firebase ind i en try/catch. 
-// Det betyder, at hvis din API nøgle mangler, så overlever koden, og fanerne vil stadig virke!
+// Skudsikker start af Firebase
 let app, auth, db;
 try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
 } catch (error) {
-    console.error("Firebase kunne ikke starte. Mangler du at indsætte API nøgle?", error);
+    console.log("Firebase venter på korrekt opsætning.");
 }
 
 // GLOBALE VARIABLER
@@ -69,7 +68,7 @@ function updateBabyNameInUI() {
 }
 
 // ==========================================
-// 2. APP NAVIGATION (FANEBLADE - NU IDIOTSIKRET)
+// 2. APP NAVIGATION (FANEBLADE)
 // ==========================================
 const tabs = [
     { id: 'nav-player', viewId: 'view-player' },
@@ -83,14 +82,12 @@ tabs.forEach(tab => {
     const btn = document.getElementById(tab.id);
     const view = document.getElementById(tab.viewId);
     
-    // Vi tjekker om knappen og siden faktisk findes i HTML'en, før vi gør noget
+    // Sikkerhedstjek at elementerne findes, før vi gør noget
     if(btn && view) {
         btn.addEventListener('click', () => {
             tabs.forEach(t => {
-                const tView = document.getElementById(t.viewId);
-                const tBtn = document.getElementById(t.id);
-                if(tView) tView.classList.remove('active-view');
-                if(tBtn) tBtn.classList.remove('active');
+                document.getElementById(t.viewId)?.classList.remove('active-view');
+                document.getElementById(t.id)?.classList.remove('active');
             });
             view.classList.add('active-view');
             btn.classList.add('active');
@@ -146,7 +143,7 @@ if(btnPauseTime) {
 }
 
 // ==========================================
-// 4. LYDAFSPILLER & 5-MINUTTERS FADE OUT
+// 4. LYDAFSPILLER & FADE OUT
 // ==========================================
 const audioPlayer = document.getElementById('global-audio-player');
 const playButtons = document.querySelectorAll('.play-btn');
@@ -178,7 +175,7 @@ playButtons.forEach(button => {
         }
 
         startStopwatch(); setupTimer(); 
-        audioPlayer.play().catch(e => console.log("Kan ikke afspille: ", e));
+        audioPlayer.play().catch(e => console.log("Lyd tester: ", e));
     });
 });
 
@@ -235,7 +232,6 @@ if(timerSelect) timerSelect.addEventListener('change', () => { if (currentlyPlay
 // 5. DATABASE (FIREBASE & LOKAL LOG)
 // ==========================================
 
-// Hvis auth findes (hvis Firebase startede uden fejl), tænd for login logik
 if (auth) {
     if(btnGoogleLogin) {
         btnGoogleLogin.addEventListener('click', () => {
@@ -456,6 +452,5 @@ if(btnResetTime) {
     });
 }
 
-// Start app
 renderTodayLog();
 renderHistory();
