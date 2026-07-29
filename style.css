@@ -1,70 +1,64 @@
 :root {
-    --bg-main: #F7F5F0;       /* Meget blød sandfarve */
+    --bg-main: #F7F5F0;       
     --card-bg: #FFFFFF;
     --text-dark: #3A3A3A;
     --text-light: #7A7A7A;
-    --accent-green: #8DA399;  /* Rolig, støvet grøn */
+    --accent-green: #8DA399;  
     --accent-green-hover: #758a80;
-    --btn-stop: #E8C5C5;      /* Blød rosa */
-    --btn-pause: #EED690;     /* Rolig gul */
-    --btn-save: #A4C3D2;      /* Støvet babyblå */
-    --nav-bg: #FFFFFF;
+    --btn-stop: #E8C5C5;      
+    --btn-pause: #EED690;     
+    --btn-save: #A4C3D2;      
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; }
 
-/* Mobil-first opsætning */
 body { 
     background-color: var(--bg-main); color: var(--text-dark); 
-    line-height: 1.6; 
-    padding-bottom: 90px; /* Plads til bund-menuen */
+    line-height: 1.6; padding: 15px; padding-top: 0;
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Header */
+/* Header & Top Menu */
 .top-header { 
-    display: flex; justify-content: center; align-items: center; 
-    padding: 15px 20px; background: var(--bg-main); 
-    position: sticky; top: 0; z-index: 50;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 20px 0 15px 0;
 }
-.top-header h1 { font-size: 1.8rem; color: var(--accent-green); font-weight: 700; }
-.header-btn { 
-    position: absolute; right: 20px; background: transparent; 
-    border: 1px solid #ccc; color: var(--text-light); 
-    border-radius: 15px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer;
-}
+.top-header h1 { font-size: 2.2rem; color: var(--accent-green); font-weight: 700; }
 
-/* APP NAVIGATION (Bund-menu) */
+.header-actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 5px; }
+.header-btn { 
+    background: transparent; border: 2px solid var(--accent-green); 
+    color: var(--accent-green); border-radius: 12px; padding: 6px 15px; 
+    font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+}
+.login-btn { background: var(--accent-green); color: white; }
+.logout-btn { border-color: #ccc; color: #888; }
+
 .app-nav {
-    position: fixed; bottom: 0; left: 0; width: 100%;
-    background: var(--nav-bg); display: flex; justify-content: space-around;
-    padding: 10px 0 15px 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-    border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 100;
+    display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; 
+    flex-wrap: wrap; max-width: 800px; margin-left: auto; margin-right: auto;
 }
 .nav-item {
-    background: none; border: none; display: flex; flex-direction: column; 
-    align-items: center; gap: 4px; color: #b0b0b0; cursor: pointer; flex: 1;
-    transition: 0.3s;
+    background: #e5e0d5; color: var(--text-dark); border: none; 
+    padding: 10px 20px; border-radius: 20px; font-size: 0.95rem; cursor: pointer;
+    font-weight: 600; text-align: center; transition: 0.3s; flex-grow: 1; max-width: 150px;
 }
-.nav-item .nav-icon { font-size: 1.4rem; filter: grayscale(100%); opacity: 0.5; transition: 0.3s;}
-.nav-item span:last-child { font-size: 0.75rem; font-weight: 600; }
-.nav-item.active { color: var(--accent-green); }
-.nav-item.active .nav-icon { filter: grayscale(0%); opacity: 1; transform: translateY(-2px); }
+.nav-item.active { background: var(--accent-green); color: white; }
 
-/* Viser / Skjuler sider */
-.view-section { display: none; padding: 0 15px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+/* Views */
+.view-section { display: none; max-width: 800px; margin: 0 auto; animation: fadeIn 0.3s ease; }
 .view-section.active-view { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* CONTROL CENTER (Ur og timer) */
+/* Control Center */
 .control-center {
     background: var(--card-bg); border-radius: 24px; padding: 25px 20px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.04); margin-bottom: 30px; text-align: center;
 }
 .timer-label { color: var(--text-light); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;}
 .time-display { font-size: 2.8rem; font-weight: 700; color: var(--accent-green); margin-bottom: 20px; font-variant-numeric: tabular-nums;}
-.time-actions { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;}
-.action-btn { flex: 1; max-width: 120px; padding: 12px 0; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; color: white; transition: 0.2s;}
+.time-actions { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;}
+.action-btn { flex: 1; min-width: 100px; padding: 12px 10px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; color: white; transition: 0.2s;}
 .pause-btn { background: var(--btn-pause); color: var(--text-dark); }
 .save-btn { background: var(--btn-save); }
 .reset-btn { background: #f0f0f0; color: var(--text-light); }
@@ -73,28 +67,18 @@ body {
 .auto-stop-box label { font-size: 0.9rem; font-weight: 600; color: var(--text-light); }
 .auto-stop-box select { border: none; background: transparent; font-weight: 700; color: var(--text-dark); font-size: 0.9rem; outline: none; cursor: pointer;}
 
-/* LYDKORT GRID (Responsive) */
-.sound-grid {
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr); /* 2 kolonner på mobil */
-    gap: 15px; margin-bottom: 30px;
-}
-.sound-card {
-    background: var(--card-bg); border-radius: 20px; padding: 20px 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; display: flex; flex-direction: column;
-}
+/* Sound Grid */
+.sound-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+.sound-card { background: var(--card-bg); border-radius: 20px; padding: 20px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; display: flex; flex-direction: column; }
 .card-icon { font-size: 2rem; margin-bottom: 10px; }
 .sound-card h3 { font-size: 1rem; margin-bottom: 10px; }
-.sound-variant { 
-    width: 100%; border: 1px solid #eee; border-radius: 8px; padding: 8px;
-    font-size: 0.85rem; margin-bottom: 15px; background: #fafafa; color: var(--text-dark); flex-grow: 1;
-}
+.sound-variant { width: 100%; border: 1px solid #eee; border-radius: 8px; padding: 8px; font-size: 0.85rem; margin-bottom: 15px; background: #fafafa; color: var(--text-dark); flex-grow: 1; }
 .play-btn { background: var(--accent-green); color: white; border: none; border-radius: 10px; padding: 10px; font-weight: 700; cursor: pointer; transition: 0.3s;}
 .play-btn.playing { background: var(--btn-pause); color: var(--text-dark); }
 .global-stop-wrapper { text-align: center; margin: 30px 0; }
 .stop-btn { background: var(--btn-stop); color: white; border: none; border-radius: 12px; padding: 15px 40px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 15px rgba(232, 197, 197, 0.4); cursor: pointer;}
 
-/* SØVNLOG & INFO SIDER */
+/* Log & Info Sider */
 .page-header { text-align: center; margin-bottom: 25px; }
 .page-header h2 { font-size: 1.6rem; color: var(--accent-green); }
 .page-header p { color: var(--text-light); font-size: 0.95rem; }
@@ -115,26 +99,13 @@ body {
 .leap-list { padding-left: 20px; margin: 15px 0; color: var(--text-dark); }
 .leap-list li { margin-bottom: 5px; }
 
-/* LOGIN OVERLAYS */
-.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-main); display: flex; justify-content: center; align-items: center; z-index: 1000;}
+/* Overlays (Kun til at indtaste navn nu) */
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(247, 245, 240, 0.9); display: flex; justify-content: center; align-items: center; z-index: 1000;}
 .login-box { background: var(--card-bg); padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; max-width: 90%; width: 380px;}
-.brand-title { font-size: 2.5rem; color: var(--accent-green); margin-bottom: 5px; }
-.brand-subtitle { color: var(--text-light); margin-bottom: 30px; font-size: 1rem; }
-.login-actions { display: flex; flex-direction: column; gap: 15px; }
-.google-btn { background: #4285F4; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;}
-.btn-icon { background: white; color: #4285F4; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold;}
-.divider { display: flex; align-items: center; color: #ccc; font-size: 0.85rem; margin: 5px 0;}
-.divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #eee; margin: 0 10px;}
-.guest-btn { background: #f0f0f0; color: var(--text-dark); border: none; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;}
-.small-text { font-size: 0.75rem; color: #aaa; margin-top: 20px; }
-#baby-name-input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 1.1rem; text-align: center; margin-bottom: 20px; outline: none; transition: 0.3s;}
+#baby-name-input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 1.1rem; text-align: center; margin-bottom: 20px; outline: none;}
 #baby-name-input:focus { border-color: var(--accent-green); }
 
-/* Desktop justeringer (hvis man åbner på PC) */
 @media (min-width: 768px) {
-    body { padding-bottom: 0; padding-top: 20px; }
-    .top-header { position: relative; background: transparent;}
-    .app-nav { position: relative; max-width: 600px; margin: 0 auto 40px auto; border-radius: 30px; padding: 5px; }
-    .nav-item { padding: 10px; flex-direction: row; justify-content: center; gap: 10px; }
-    .sound-grid { grid-template-columns: repeat(3, 1fr); } /* 3 kolonner på PC */
+    .sound-grid { grid-template-columns: repeat(3, 1fr); } 
+    .top-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 20px 40px;}
 }
