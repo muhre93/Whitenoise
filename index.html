@@ -14,19 +14,17 @@
         <p>Beroligende lyde til de små</p>
     </header>
 
-    <!-- Faneblade til at skifte mellem siderne -->
     <nav class="top-tabs">
         <button id="nav-player" class="tab-btn active">🎧 Afspiller</button>
         <button id="nav-history" class="tab-btn">🌙 Søvnmønster</button>
     </nav>
 
     <!-- START: AFSSPILLER-SIDEN -->
-    <main id="view-player" class="view-section active-view">
+    <main id="view-player" class="view-section">
         <div class="layout-wrapper">
             
-            <!-- Venstre side: Afspiller og lyde -->
+            <!-- Venstre side (på pc) / Top (på mobil) -->
             <div class="main-content">
-                <!-- Kontrolpanel -->
                 <section class="timer-section">
                     <div class="timer-controls">
                         <label for="timer-select">Automatisk sluk:</label>
@@ -46,12 +44,11 @@
                         <div id="time-elapsed" class="time-display">Spilletid: 00:00:00</div>
                         <div class="time-actions">
                             <button id="btn-save-log" class="save-btn">Gem søvntid</button>
-                            <button id="btn-reset-time" class="reset-btn">Nulstil</button>
+                            <button id="btn-reset-time" class="reset-btn">Nulstil tid</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- Lydkortene (De 9 lyde) -->
                 <section class="sound-grid">
                     <div class="sound-card">
                         <h3>💨 Støvsuger</h3>
@@ -143,38 +140,38 @@
                         <button class="play-btn" data-category="ventilator">Afspil</button>
                     </div>
                 </section>
-                
-                <!-- Informationsbokse i bunden -->
-                <section class="info-section">
-                    <div class="info-box">
-                        <h2>Babys søvn: 0-3 måneder</h2>
-                        <p>I denne alder kender babyen endnu ikke forskel på nat og dag. Deres søvncyklus er meget kort, og de tilbringer en stor del af tiden i "aktiv" REM-søvn. De grynter og spjætter ofte. White noise genskaber lydniveauet fra livmoderen og beroliger dem.</p>
-                    </div>
-                    
-                    <div class="info-box highlight-box">
-                        <h2>Tigerspring</h2>
-                        <p>Under de 10 mentale tigerspring opdager babyen verden på en ny måde, hvilket ofte giver urolig søvn og tryghedssøgen. Monotone lyde som støvsuger blokerer for nye indtryk og skaber ro.</p>
-                    </div>
-                </section>
             </div>
 
-            <!-- Højre side (Sidebar): Dagens Søvn -->
+            <!-- Højre side (på pc) / Mellem (på mobil) -->
             <aside class="sidebar">
                 <div class="today-log-box">
                     <h2>Dagens Søvn</h2>
                     <p class="date-subtitle" id="today-date-text">I dag</p>
                     
                     <ul class="log-list" id="today-log-list">
-                        <!-- Listen med tider kommer her via Javascript -->
+                        <!-- Listen med tider kommer her -->
                     </ul>
 
                     <div class="log-total">
-                        Samlet i dag: <span id="today-total-time">0 min</span>
+                        Samlet sovetid: <span id="today-total-time">0 min</span>
                     </div>
                 </div>
             </aside>
 
         </div>
+
+        <!-- Informationsbokse er nu flyttet HELT i bunden -->
+        <section class="info-section">
+            <div class="info-box">
+                <h2>Babys søvn: 0-3 måneder</h2>
+                <p>I denne alder kender babyen endnu ikke forskel på nat og dag. Deres søvncyklus er meget kort, og de tilbringer en stor del af tiden i "aktiv" REM-søvn. De grynter og spjætter ofte. White noise genskaber lydniveauet fra livmoderen og beroliger dem.</p>
+            </div>
+            
+            <div class="info-box highlight-box">
+                <h2>Tigerspring</h2>
+                <p>Under de 10 mentale tigerspring opdager babyen verden på en ny måde, hvilket ofte giver urolig søvn og tryghedssøgen. Monotone lyde som støvsuger blokerer for nye indtryk og skaber ro.</p>
+            </div>
+        </section>
     </main>
     <!-- SLUT: AFSSPILLER-SIDEN -->
 
