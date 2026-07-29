@@ -21,32 +21,61 @@ const db = getFirestore(app);
 
 // GLOBALE VARIABLER
 let currentUserId = null;
-let isGuest = true; // Nu er man gæst som standard!
+let isGuest = true; 
 let babyName = "Baby";
-let localSleepLogs = {}; 
+let localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {}; 
 
-const btnGoogleLogin = document.getElementById('btn-google-login');
-const btnLogout = document.getElementById('btn-logout');
+const btnAuthNav = document.getElementById('btn-auth-nav');
 const nameSetupOverlay = document.getElementById('name-setup-overlay');
 const btnSaveName = document.getElementById('btn-save-name');
 const babyNameInput = document.getElementById('baby-name-input');
+const guestWarning = document.getElementById('guest-warning');
 
 // ==========================================
-// 1. LOGIN LOGIK (Ingen tvang!)
+// 0. NATTILSTAND (Dark Mode)
 // ==========================================
-btnGoogleLogin.addEventListener('click', () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(err => alert("Login fejl: " + err.message));
+const btnThemeToggle = document.getElementById('btn-theme-toggle');
+
+// Tjekker om brugeren tidligere har valgt dark mode
+if(localStorage.getItem('babyRoTheme') === 'dark') {
+    document.body.classList.add('dark-theme');
+    btnThemeToggle.textContent = '☀️';
+}
+
+btnThemeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    if (document.body.classList.contains('dark-theme')) {
+        localStorage.setItem('babyRoTheme', 'dark');
+        btnThemeToggle.textContent = '☀️';
+    } else {
+        localStorage.setItem('babyRoTheme', 'light');
+        btnThemeToggle.textContent = '🌙';
+    }
 });
 
-btnLogout.addEventListener('click', () => signOut(auth));
+
+// ==========================================
+// 1. LOGIN LOGIK (Via Menu Knap)
+// ==========================================
+btnAuthNav.addEventListener('click', () => {
+    if (isGuest) {
+        // Hvis man ikke er logget ind, start Google login
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider).catch(err => alert("Login fejl: " + err.message));
+    } else {
+        // Hvis man allerede ER logget ind, spørg om man vil logge ud
+        if(confirm(`Du er logget ind og gemmer ${babyName}s søvn i skyen. Vil du logge ud?`)) {
+            signOut(auth);
+        }
+    }
+});
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         isGuest = false;
         currentUserId = user.uid;
-        btnGoogleLogin.style.display = 'none';
-        btnLogout.style.display = 'block';
+        btnAuthNav.textContent = '👤 Profil'; // Skifter navn på menu-knappen
+        guestWarning.style.display = 'none';  // Skjuler advarsel
         
         const userDocRef = doc(db, "users", currentUserId);
         const userDoc = await getDoc(userDocRef);
@@ -54,19 +83,26 @@ onAuthStateChanged(auth, async (user) => {
         if (userDoc.exists() && userDoc.data().babyName) {
             babyName = userDoc.data().babyName;
             updateBabyNameInUI();
-            loadLogsFromFirebase();
+            
+            if(userDoc.data().sleepLogs) {
+                localSleepLogs = userDoc.data().sleepLogs;
+                localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
+            }
+            renderTodayLog();
+            renderHistory();
         } else {
             nameSetupOverlay.style.display = 'flex';
         }
     } else {
-        // Logget ud / Gæst
         isGuest = true;
         currentUserId = null;
         babyName = "Baby";
         updateBabyNameInUI();
-        btnGoogleLogin.style.display = 'block';
-        btnLogout.style.display = 'none';
-        localSleepLogs = {}; // Rydder skærmen for tidligere data
+        btnAuthNav.textContent = '👤 Log ind'; 
+        guestWarning.style.display = 'block'; 
+        
+        localSleepLogs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
+        renderTodayLog();
         renderHistory();
     }
 });
@@ -75,10 +111,9 @@ btnSaveName.addEventListener('click', async () => {
     const inputName = babyNameInput.value.trim();
     if (inputName.length > 0) {
         babyName = inputName;
-        await setDoc(doc(db, "users", currentUserId), { babyName: babyName, sleepLogs: {} }, { merge: true });
+        await setDoc(doc(db, "users", currentUserId), { babyName: babyName, sleepLogs: localSleepLogs }, { merge: true });
         nameSetupOverlay.style.display = 'none';
         updateBabyNameInUI();
-        loadLogsFromFirebase();
     }
 });
 
@@ -105,6 +140,9 @@ tabs.forEach(tab => {
             document.getElementById(t.viewId).classList.remove('active-view');
             document.getElementById(t.id).classList.remove('active');
         });
+        // Fjerner også active class fra auth-knappen for en sikkerheds skyld
+        btnAuthNav.classList.remove('active'); 
+        
         view.classList.add('active-view');
         btn.classList.add('active');
     });
@@ -200,24 +238,12 @@ function clearTimer() { if (timeoutId !== null) { clearTimeout(timeoutId); timeo
 timerSelect.addEventListener('change', () => { if (currentlyPlayingBtn !== null) setupTimer(); });
 
 // ==========================================
-// 5. DATABASE (GEM OG VIS LOG)
+// 5. DATABASE (GEM OG VIS LOG FOR ALLE)
 // ==========================================
-async function loadLogsFromFirebase() {
-    if(isGuest) return;
-    const userDocRef = doc(db, "users", currentUserId);
-    const userDoc = await getDoc(userDocRef);
-    if (userDoc.exists() && userDoc.data().sleepLogs) {
-        localSleepLogs = userDoc.data().sleepLogs;
-    } else {
-        localSleepLogs = {};
-    }
-    renderHistory();
-}
 
 async function saveLogsToFirebase() {
-    if (currentUserId) {
+    if (currentUserId && !isGuest) {
         await setDoc(doc(db, "users", currentUserId), { sleepLogs: localSleepLogs }, { merge: true });
-        renderHistory();
     }
 }
 
@@ -232,11 +258,6 @@ function formatTimeText(totalSecs) {
 }
 
 document.getElementById('btn-save-log').addEventListener('click', () => {
-    if(isGuest) {
-        alert("Opret en profil (Log ind i toppen) for at gemme sovetider i skyen!");
-        return;
-    }
-
     if (elapsedSeconds === 0) {
         alert("Søvnuret er på nul. Start uret først.");
         return;
@@ -258,11 +279,14 @@ document.getElementById('btn-save-log').addEventListener('click', () => {
     
     localSleepLogs[datoStreng].total += elapsedSeconds;
     
+    localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
     saveLogsToFirebase();
     
     audioPlayer.pause(); resetAllButtons(); clearTimer(); currentlyPlayingBtn = null;
     resetStopwatch();
     
+    renderTodayLog();
+    renderHistory();
     document.getElementById('nav-history').click();
 });
 
@@ -274,28 +298,54 @@ window.deleteLogEntry = function(dateStr, index) {
             if(localSleepLogs[dateStr].total < 0) localSleepLogs[dateStr].total = 0;
             localSleepLogs[dateStr].sessions.splice(index, 1);
             if(localSleepLogs[dateStr].sessions.length === 0) delete localSleepLogs[dateStr];
+            
+            localStorage.setItem('babyRoLogs', JSON.stringify(localSleepLogs));
             saveLogsToFirebase(); 
+            
+            renderTodayLog();
+            renderHistory();
         }
     }
 };
 
-function renderHistory() {
-    const container = document.getElementById('history-container');
-    container.innerHTML = "";
-    
-    if(isGuest) {
-        container.innerHTML = `
-            <div style="text-align:center; padding: 40px 20px;">
-                <h3 style="color:#a4b5a8; margin-bottom:10px;">Du er ikke logget ind</h3>
-                <p style="color:#7a7a7a;">Log ind med Google i toppen for at gemme sovetider.</p>
-            </div>
-        `;
+function renderTodayLog() {
+    const nu = new Date();
+    const datoStreng = nu.toLocaleDateString('da-DK');
+    document.getElementById('today-date-text').textContent = `Dato: ${datoStreng}`;
+
+    const todayData = localSleepLogs[datoStreng];
+    const listEl = document.getElementById('today-log-list');
+    const totalEl = document.getElementById('today-total-time');
+
+    listEl.innerHTML = "";
+
+    if (!todayData || todayData.sessions.length === 0) {
+        listEl.innerHTML = `<li>Ingen lure gemt endnu i dag.</li>`;
+        totalEl.textContent = "0:00 min";
         return;
     }
 
+    todayData.sessions.forEach((session, index) => {
+        listEl.innerHTML += `
+            <li>
+                <span>${session.timeDisplay}</span> 
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span>${session.durationText}</span>
+                    <button class="delete-btn" onclick="deleteLogEntry('${datoStreng}', ${index})">❌</button>
+                </div>
+            </li>
+        `;
+    });
+    totalEl.textContent = formatTimeText(todayData.total);
+}
+
+function renderHistory() {
+    const container = document.getElementById('history-container');
+    container.innerHTML = "";
+
     const dates = Object.keys(localSleepLogs).reverse(); 
     if (dates.length === 0) {
-        container.innerHTML = `<div class="empty-state">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>`;
+        container.innerHTML = `<div class="empty-state" style="text-align:center; padding: 20px;">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>`;
         return;
     }
 
