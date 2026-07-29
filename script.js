@@ -1,24 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- 1. HÅNDTERING AF FANEBLADE ---
-    const tabPlayer = document.getElementById('nav-player');
-    const tabHistory = document.getElementById('nav-history');
-    const viewPlayer = document.getElementById('view-player');
-    const viewHistory = document.getElementById('view-history');
+    // --- 1. HÅNDTERING AF DE 4 FANEBLADE ---
+    const tabs = [
+        { btn: document.getElementById('nav-player'), view: document.getElementById('view-player') },
+        { btn: document.getElementById('nav-history'), view: document.getElementById('view-history') },
+        { btn: document.getElementById('nav-sleep'), view: document.getElementById('view-sleep') },
+        { btn: document.getElementById('nav-leaps'), view: document.getElementById('view-leaps') }
+    ];
 
-    tabPlayer.addEventListener('click', () => {
-        viewPlayer.style.display = 'block';
-        viewHistory.style.display = 'none';
-        tabPlayer.classList.add('active');
-        tabHistory.classList.remove('active');
-    });
-
-    tabHistory.addEventListener('click', () => {
-        viewPlayer.style.display = 'none';
-        viewHistory.style.display = 'block';
-        tabHistory.classList.add('active');
-        tabPlayer.classList.remove('active');
-        renderHistory(); 
+    tabs.forEach(tab => {
+        tab.btn.addEventListener('click', () => {
+            // Skjul alle visninger og fjern "active" fra alle knapper
+            tabs.forEach(t => {
+                t.view.style.display = 'none';
+                t.btn.classList.remove('active');
+            });
+            // Vis den valgte og gør knappen aktiv
+            tab.view.style.display = 'block';
+            tab.btn.classList.add('active');
+            
+            // Hvis vi gik ind på historik, opdater loggen
+            if (tab.btn.id === 'nav-history') {
+                renderHistory();
+            }
+        });
     });
 
     // --- 2. VARIABLER TIL LYD OG TID ---
@@ -35,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. STOPUR (TÆLLER OP) ---
     function startStopwatch() {
-        clearInterval(intervalId); // Sørg for at den ikke tæller dobbelt
+        clearInterval(intervalId);
         intervalId = setInterval(() => {
             elapsedSeconds++;
             updateDisplay();
@@ -46,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(intervalId); 
     }
 
-    // DENNE FUNKTION ER DET ENESTE STED TIDEN NULSTILLES
     function resetStopwatch() {
         stopStopwatch();
         elapsedSeconds = 0;
@@ -74,17 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectElement = document.getElementById(`variant-${category}`);
             const audioSrc = selectElement.value;
 
-            // Hvis man trykker på Pause
             if (currentlyPlayingBtn === this) {
                 audioPlayer.pause();
                 resetAllButtons();
                 clearTimer();
-                stopStopwatch(); // Vi pauser tiden, DEN NULSTILLER IKKE!
+                stopStopwatch(); 
                 currentlyPlayingBtn = null;
                 return;
             }
 
-            // Hvis man trykker Afspil (enten fra stilhed, eller skifter lyd)
             resetAllButtons();
             audioPlayer.src = audioSrc;
             
@@ -92,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.classList.add('playing');
             currentlyPlayingBtn = this;
             
-            startStopwatch(); // Tiden kører videre fra hvor den var
+            startStopwatch(); 
             setupTimer(); 
             
             audioPlayer.play().catch(() => console.log("Lyd tester"));
@@ -103,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         audioPlayer.pause();
         resetAllButtons();
         clearTimer();
-        stopStopwatch(); // Pauser bare tiden
+        stopStopwatch(); 
         currentlyPlayingBtn = null;
     });
 
@@ -142,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveSleepSession() {
-        // Bemærk: Ingen grænse på sekunder mere! Du kan gemme med det samme.
         if (elapsedSeconds === 0) {
             alert("Uret er på nul. Start lyden først for at gemme en tid.");
             return;
@@ -164,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('babyRoLogs', JSON.stringify(logs));
         
         renderTodayLog();
-        resetStopwatch(); // Nu nulstilles uret automatisk til næste lur
+        resetStopwatch();
     }
 
     function renderTodayLog() {
@@ -240,6 +241,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Indlæser loggen første gang siden åbnes
     renderTodayLog();
 });
