@@ -10,16 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabs.forEach(tab => {
         tab.btn.addEventListener('click', () => {
-            // Skjul alle visninger og fjern "active" fra alle knapper
             tabs.forEach(t => {
                 t.view.style.display = 'none';
                 t.btn.classList.remove('active');
             });
-            // Vis den valgte og gør knappen aktiv
             tab.view.style.display = 'block';
             tab.btn.classList.add('active');
             
-            // Hvis vi gik ind på historik, opdater loggen
             if (tab.btn.id === 'nav-history') {
                 renderHistory();
             }
@@ -37,9 +34,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentlyPlayingBtn = null;
     let elapsedSeconds = 0;
     let intervalId = null;
+    let sessionStartTime = null; // NY: Holder styr på, hvornår lyden startede
 
     // --- 3. STOPUR (TÆLLER OP) ---
     function startStopwatch() {
+        // Hvis sessionStartTime er null, betyder det at det er en ny lur
+        if (sessionStartTime === null) {
+            sessionStartTime = new Date();
+        }
+
         clearInterval(intervalId);
         intervalId = setInterval(() => {
             elapsedSeconds++;
@@ -54,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetStopwatch() {
         stopStopwatch();
         elapsedSeconds = 0;
+        sessionStartTime = null; // Nulstiller også starttidspunktet
         updateDisplay();
     }
 
@@ -149,15 +153,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const nu = new Date();
-        const datoStreng = nu.toLocaleDateString('da-DK'); 
-        const tidStreng = nu.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+        const endTime = new Date();
+        // Hvis sessionStartTime af en eller anden grund mangler, regner den baglæns
+        const startTime = sessionStartTime || new Date(endTime.getTime() - (elapsedSeconds * 1000));
+
+        const datoStreng = endTime.toLocaleDateString('da-DK'); 
+        const startStreng = startTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+        const slutStreng = endTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
 
         let logs = JSON.parse(localStorage.getItem('babyRoLogs')) || {};
         if (!logs[datoStreng]) { logs[datoStreng] = { sessions: [], total: 0 }; }
 
         logs[datoStreng].sessions.push({
-            time: tidStreng,
+            timeDisplay: `Kl. ${startStreng} - ${slutStreng}`, // Gemmer formatet "Kl. 12:15 - 13:45"
             durationText: formatTimeText(elapsedSeconds)
         });
         
@@ -188,7 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         todayData.sessions.forEach(session => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>Kl. ${session.time}</span> <span>${session.durationText}</span>`;
+            // Tjekker for bagudkompatibilitet hvis der er gemt gamle data
+            const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
+            li.innerHTML = `<span>${displayText}</span> <span>${session.durationText}</span>`;
             listEl.appendChild(li);
         });
 
@@ -211,7 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayData = logs[date];
             let listHtml = "";
             dayData.sessions.forEach(session => {
-                listHtml += `<li>Kl. ${session.time} - Spilletid: ${session.durationText}</li>`;
+                const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
+                listHtml += `<li>${displayText} - Spilletid: ${session.durationText}</li>`;
             });
             const cardHtml = `
                 <div class="history-day-card">
