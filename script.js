@@ -29,14 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const stopButton = document.getElementById('stop-all');
     const timerSelect = document.getElementById('timer-select');
     const timeDisplay = document.getElementById('time-elapsed');
+    const btnPauseTime = document.getElementById('btn-pause-time');
     
     let timeoutId = null;
     let currentlyPlayingBtn = null;
     let elapsedSeconds = 0;
     let intervalId = null;
     let sessionStartTime = null; 
+    let isUrPaused = false; // Holder styr på om søvnuret er sat på pause
 
-    // --- 3. STOPUR (TÆLLER OP) ---
+    // --- 3. STOPUR (SØVNUR) ---
     function startStopwatch() {
         if (sessionStartTime === null) {
             sessionStartTime = new Date();
@@ -57,6 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
         stopStopwatch();
         elapsedSeconds = 0;
         sessionStartTime = null; 
+        
+        // Nulstil også pauseknappen visuelt
+        isUrPaused = false;
+        btnPauseTime.textContent = 'Pause';
+        btnPauseTime.style.backgroundColor = '';
+        btnPauseTime.style.color = '';
+        
         updateDisplay();
     }
 
@@ -64,8 +73,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
         const m = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
         const s = String(elapsedSeconds % 60).padStart(2, '0');
-        timeDisplay.textContent = `Spilletid: ${h}:${m}:${s}`;
+        timeDisplay.textContent = `Søvnur: ${h}:${m}:${s}`;
     }
+
+    // --- PAUSE-KNAP LOGIK ---
+    btnPauseTime.addEventListener('click', () => {
+        // Gør ingenting hvis uret ikke er startet endnu
+        if (elapsedSeconds === 0 && sessionStartTime === null) return;
+        
+        if (!isUrPaused) {
+            // Hvis det kører, sæt på pause
+            stopStopwatch();
+            isUrPaused = true;
+            btnPauseTime.textContent = 'Start';
+            btnPauseTime.style.backgroundColor = '#a4b5a8'; // Skifter til grøn når den er klar til start
+            btnPauseTime.style.color = 'white';
+        } else {
+            // Hvis det er pauset, genoptag
+            startStopwatch();
+            isUrPaused = false;
+            btnPauseTime.textContent = 'Pause';
+            btnPauseTime.style.backgroundColor = '';
+            btnPauseTime.style.color = '';
+        }
+    });
+
 
     // --- 4. LYDAFSPILLER ---
     function resetAllButtons() {
@@ -85,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 audioPlayer.pause();
                 resetAllButtons();
                 clearTimer();
-                // Her sættes stopuret IKKE længere på pause. Det kører videre selvom lyden stoppes manuelt!
                 currentlyPlayingBtn = null;
                 return;
             }
@@ -93,10 +124,18 @@ document.addEventListener('DOMContentLoaded', () => {
             resetAllButtons();
             audioPlayer.src = audioSrc;
             
-            this.textContent = 'Pause';
+            this.textContent = 'Pause lyd';
             this.classList.add('playing');
             currentlyPlayingBtn = this;
             
+            // Hvis uret er manuelt pauset med den nye knap, fjerner vi pausen, fordi afspil er trykket
+            if (isUrPaused) {
+                isUrPaused = false;
+                btnPauseTime.textContent = 'Pause';
+                btnPauseTime.style.backgroundColor = '';
+                btnPauseTime.style.color = '';
+            }
+
             startStopwatch(); 
             setupTimer(); 
             
@@ -108,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         audioPlayer.pause();
         resetAllButtons();
         clearTimer();
-        // Manuelt stop sætter nu heller IKKE uret på pause.
         currentlyPlayingBtn = null;
     });
 
@@ -120,9 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timeoutId = setTimeout(() => {
                 audioPlayer.pause();
                 resetAllButtons();
-                // FJERNET: stopStopwatch(); -> Så uret tæller videre, når lyden slukker automatisk!
                 currentlyPlayingBtn = null;
-                console.log("Automatisk sluk: Lyden stoppede, men stopuret kører videre.");
             }, minutes * 60 * 1000);
         }
     }
@@ -136,20 +172,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 6. SØVNLOG & HISTORIK ---
+    
+    // NYT TIDSFORMAT (Vise minutter:sekunder, f.eks 2:51 min)
     function formatTimeText(totalSecs) {
-        if (totalSecs === 0) return `0 sek`;
-        if (totalSecs < 60) return `${totalSecs} sek`;
+        if (totalSecs === 0) return `0:00 min`;
+        
         const h = Math.floor(totalSecs / 3600);
         const m = Math.floor((totalSecs % 3600) / 60);
-        let text = "";
-        if (h > 0) text += `${h} t `;
-        if (m > 0 || h > 0) text += `${m} min`;
-        return text.trim();
+        const s = totalSecs % 60;
+        
+        // Sørger for at sekunder altid står med to tal, f.eks "05" og ikke bare "5"
+        const secString = String(s).padStart(2, '0');
+        
+        if (h > 0) {
+            const minString = String(m).padStart(2, '0');
+            return `${h}:${minString}:${secString} t`; // f.eks 1:15:30 t
+        } else {
+            return `${m}:${secString} min`; // f.eks 2:51 min
+        }
     }
 
     function saveSleepSession() {
         if (elapsedSeconds === 0) {
-            alert("Uret er på nul. Start lyden (og uret) først for at gemme en tid.");
+            alert("Søvnuret er på nul. Start uret først for at gemme en tid.");
             return;
         }
 
@@ -171,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logs[datoStreng].total += elapsedSeconds;
         localStorage.setItem('babyRoLogs', JSON.stringify(logs));
         
-        // Stopper lyden automatisk, hvis den kørte, når luren gemmes
         audioPlayer.pause();
         resetAllButtons();
         clearTimer();
@@ -195,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!todayData || todayData.sessions.length === 0) {
             listEl.innerHTML = "<li>Ingen lure gemt endnu i dag.</li>";
-            totalEl.textContent = "0 min";
+            totalEl.textContent = "0:00 min";
             return;
         }
 
@@ -226,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let listHtml = "";
             dayData.sessions.forEach(session => {
                 const displayText = session.timeDisplay ? session.timeDisplay : `Kl. ${session.time}`;
-                listHtml += `<li>${displayText} - Spilletid: ${session.durationText}</li>`;
+                listHtml += `<li>${displayText} - Søvnur: ${session.durationText}</li>`;
             });
             const cardHtml = `
                 <div class="history-day-card">
@@ -239,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- KNAPPER TIL TID OG LOG ---
     document.getElementById('btn-save-log').addEventListener('click', saveSleepSession);
     
     document.getElementById('btn-reset-time').addEventListener('click', () => {
