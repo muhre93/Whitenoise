@@ -16,7 +16,15 @@
             <h2>Velkommen! 👋</h2>
             <p>Hvad hedder dit barn?</p>
             <input type="text" id="baby-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
-            <button id="btn-save-name" class="play-btn">Gem navn og start</button>
+
+            <p style="margin-bottom: 10px;">Er det en dreng eller en pige?</p>
+            <div class="gender-picker">
+                <button class="gender-btn" data-gender="dreng">👦 Dreng</button>
+                <button class="gender-btn" data-gender="pige">👧 Pige</button>
+                <button class="gender-btn" data-gender="neutral">🌿 Neutral</button>
+            </div>
+
+            <button id="btn-save-name" class="play-btn" style="width:100%; padding: 14px;">Gem og start</button>
         </div>
     </div>
 
@@ -37,12 +45,12 @@
 
     <!-- START: AFSSPILLER-SIDEN (Forsiden) -->
     <main id="view-player" class="view-section active-view">
-        
-        <!-- TOPPEN: SØVNURET (Fylder hele bredden) -->
+
+        <!-- TOPPEN: SØVNURET -->
         <section class="control-center">
             <p class="timer-label"><span class="b-name">Baby</span>s Søvnur</p>
             <div id="time-elapsed" class="time-display">00:00:00</div>
-            
+
             <div class="time-actions">
                 <button id="btn-pause-time" class="action-btn pause-btn">Pause ur</button>
                 <button id="btn-save-log" class="action-btn save-btn">Gem lur</button>
@@ -54,6 +62,7 @@
                 <select id="timer-select">
                     <option value="0">Kør hele tiden</option>
                     <option value="2">2 min (Test)</option>
+                    <option value="30">30 min</option>
                     <option value="60">1 time</option>
                     <option value="120">2 timer</option>
                     <option value="240">4 timer</option>
@@ -62,10 +71,10 @@
             </div>
         </section>
 
-        <!-- BUNDEN: Delt op i to (Lyde til venstre, Log til højre) -->
+        <!-- BUNDEN: Delt op i to -->
         <div class="layout-split">
-            
-            <!-- Venstre side (Lydene - Nu i 3x3 layout) -->
+
+            <!-- Venstre side (Lydene) -->
             <div class="left-sounds">
                 <section class="sound-grid">
                     <div class="sound-card">
@@ -148,7 +157,6 @@
                         </select>
                         <button class="play-btn" data-category="bil">Afspil</button>
                     </div>
-                    <!-- 9. LYD: ANDET -->
                     <div class="sound-card">
                         <div class="card-icon">✨</div>
                         <h3>Andet</h3>
@@ -160,10 +168,40 @@
                         <button class="play-btn" data-category="andet">Afspil</button>
                     </div>
                 </section>
-                
+
                 <div class="global-stop-wrapper">
                     <button id="stop-all" class="stop-btn">Sluk alt lyd</button>
                 </div>
+
+                <!-- SMART-LYT / BABY MONITOR -->
+                <section class="smart-listen-box">
+                    <h2>🎙️ Smart-lyt</h2>
+                    <p class="smart-desc">Læg telefonen i nærheden af <span class="b-name">Baby</span>. Hvis der høres gråd eller uro, starter BabyRo automatisk en beroligende lyd. Skærmen skal forblive tændt.</p>
+
+                    <div class="smart-row">
+                        <label for="smart-sound-select">Lyd der startes:</label>
+                        <select id="smart-sound-select">
+                            <option value="noise">📻 Støj</option>
+                            <option value="hjerte">❤️ Hjerte</option>
+                            <option value="stovsuger">💨 Støvsuger</option>
+                            <option value="hartorrer">💇‍♀️ Hårtørrer</option>
+                            <option value="regn">🌧️ Regnvejr</option>
+                            <option value="hav">🌊 Havet</option>
+                            <option value="vask">🧺 Vask</option>
+                            <option value="bil">🚗 Bilkørsel</option>
+                            <option value="andet">✨ Andet</option>
+                        </select>
+                    </div>
+
+                    <div class="smart-row">
+                        <label for="smart-sensitivity">Følsomhed:</label>
+                        <input type="range" id="smart-sensitivity" min="1" max="10" value="6">
+                    </div>
+
+                    <div class="mic-meter"><div id="mic-level" class="mic-level"></div></div>
+                    <p id="smart-status" class="smart-status">Smart-lyt er slukket.</p>
+                    <button id="btn-smart-listen" class="action-btn save-btn" style="width:100%;">Start Smart-lyt</button>
+                </section>
             </div>
 
             <!-- Højre side (Dagens Log) -->
@@ -175,7 +213,7 @@
                     <div class="log-total">Samlet sovetid: <span id="today-total-time">0:00 min</span></div>
                 </div>
             </div>
-            
+
         </div>
     </main>
     <!-- SLUT: AFSSPILLER-SIDEN -->
@@ -192,6 +230,12 @@
             Du er ikke logget ind. Dine data kan gå tabt. Gå til Profil-fanen for at logge ind og gemme sikkert i skyen.
         </div>
 
+        <!-- STATISTIK: Sidste 7 dage -->
+        <div class="stats-card">
+            <h3>Sidste 7 dage</h3>
+            <div id="stats-bars" class="stats-bars"></div>
+        </div>
+
         <div class="log-container" id="history-container">
             <div class="empty-state">Brug afspilleren og tryk "Gem lur" for at starte loggen.</div>
         </div>
@@ -201,26 +245,83 @@
     <main id="view-sleep" class="view-section" style="display: none;">
         <div class="page-header">
             <h2>Viden om Søvn</h2>
-            <p>Forstå <span class="b-name">Baby</span>s udvikling.</p>
+            <p>Sådan sover børn fra fødslen til 3-års alderen.</p>
         </div>
 
         <div class="info-section">
             <div class="info-card">
-                <h3>0-3 måneder</h3>
-                <p>I denne alder kender baby endnu ikke forskel på nat og dag. Søvncyklussen er meget kort (ca. 45 min), og de er oftest i "aktiv" REM-søvn, hvor de grynter og spjætter.</p>
-                <p><strong>Brug lyden:</strong> Genskaber lydniveauet fra livmoderen og giver enorm tryghed.</p>
-            </div>
-            
-            <div class="info-card">
-                <h3>3-6 måneder</h3>
-                <p>Her rammer mange "søvnregressionen". Søvnen bliver mere voksen, og barnet vågner lettere op mellem hver cyklus.</p>
-                <p><strong>Brug lyden:</strong> Konstant støj fungerer som en bro, der hjælper barnet med at glide videre i søvnen uden at vågne helt.</p>
+                <h3>0-3 måneder: Den fjerde trimester</h3>
+                <p>Nyfødte sover typisk 14-17 timer i døgnet, men i små bidder på 2-4 timer – uden forskel på nat og dag. Døgnrytmen (det indre ur) er slet ikke udviklet endnu, og kroppen producerer først sit eget søvnhormon (melatonin) omkring 2-3 måneders alderen.</p>
+                <p>Søvncyklussen er kun ca. 40-50 minutter, og halvdelen af søvnen er "aktiv" REM-søvn, hvor baby grynter, smiler, spjætter og laver lyde. Det er helt normalt – lad være med at tage baby op ved den mindste lyd, for ofte sover barnet stadig.</p>
+                <p><strong>Brug lyden:</strong> I livmoderen var der konstant larm (op til 80-90 dB fra puls, blodgennemstrømning og mave). Total stilhed er faktisk utrygt for en nyfødt. Konstante, monotone lyde genskaber livmoderens lydtapet og aktiverer beroligelsesrefleksen.</p>
             </div>
 
             <div class="info-card">
-                <h3>6-12 måneder</h3>
-                <p>Søvnen bliver mere forudsigelig. Den motoriske udvikling betyder dog, at hjernen har svært ved at koble fra.</p>
-                <p><strong>Brug lyden:</strong> Fungerer nu som en betinget refleks: Når barnet hører lyden, ved hjernen, at det er sovetid.</p>
+                <h3>3-6 måneder: Søvnen bliver "voksen"</h3>
+                <p>Omkring 4 måneder sker en stor og permanent ændring: Babys søvn omorganiseres til voksne søvnstadier med lette og dybe faser. Det er den berømte <strong>4-måneders søvnregression</strong> – barnet vågner nu kortvarigt op mellem hver søvncyklus, og hvis omstændighederne har ændret sig (lyden er væk, sutten er faldet ud), vågner det helt.</p>
+                <p>Samlet søvn: 12-16 timer i døgnet, typisk fordelt på 3-4 lure om dagen. Nattesøvnen begynder langsomt at samle sig i længere stræk.</p>
+                <p><strong>Brug lyden:</strong> En konstant lyd fungerer som en bro mellem søvncyklusserne. Når barnet vågner let op og hører præcis det samme som ved indsovning, glider det videre i søvnen uden at vågne helt.</p>
+            </div>
+
+            <div class="info-card">
+                <h3>6-12 måneder: Rytme og separationsangst</h3>
+                <p>Søvnen bliver mere forudsigelig, og de fleste går fra 3 til 2 lure (typisk formiddag og eftermiddag). Samlet søvnbehov: 12-15 timer i døgnet. Mange kan nu sove længere stræk om natten, men opvågninger er stadig normale.</p>
+                <p>To ting kan drille: <strong>Motorisk udvikling</strong> (kravle, rejse sig, stå) betyder, at hjernen "øver" om natten, og barnet kan vågne stående i tremmesengen. Og omkring 8-10 måneder rammer <strong>separationsangsten</strong> – barnet forstår nu, at mor og far findes, selv når de er væk, og protesterer derfor ved puttetid.</p>
+                <p><strong>Brug lyden:</strong> Lyden er nu blevet en betinget søvnsignal: Når barnet hører den, ved hjernen, at nu er det sovetid. Den maskerer også lyde fra resten af hjemmet, når barnet sover lettere.</p>
+            </div>
+
+            <div class="info-card">
+                <h3>1-2 år: Fra to lure til én</h3>
+                <p>Søvnbehov: 11-14 timer i døgnet. Et sted mellem 12 og 18 måneder dropper de fleste formiddagsluren og går til én lang middagslur på 1,5-3 timer. Overgangen kan give nogle rodede uger med et overtræt barn sidst på dagen – ryk puttetiden tidligere i den periode.</p>
+                <p>Nye udfordringer: Sprogeksplosionen og viljen! Barnet kan nu protestere aktivt mod at skulle sove, og omkring 18 måneder kommer ofte en ny søvnregression drevet af selvstændighedstrang og tandfrembrud (kindtænder gør ondt).</p>
+                <p><strong>Brug lyden:</strong> En fast lyd som en del af putteritualet giver forudsigelighed og tryghed – to ting, som et 1-2-årigt barn har brug for, netop fordi verden føles stor og vild.</p>
+            </div>
+
+            <div class="info-card">
+                <h3>2-3 år: Drømme, mørkeræd og den store seng</h3>
+                <p>Søvnbehov: 10-13 timer i døgnet. Middagsluren skrumper – nogle dropper den helt omkring 3-års alderen, andre holder fast til 4-5 år. Barnet kan nu udskyde og forhandle ("én historie til!"), og faste, kærlige rammer omkring sengetid bliver vigtigere end nogensinde.</p>
+                <p>Fantasien eksploderer, og med den kommer <strong>mareridt</strong> (barnet vågner bange og kan trøstes) og hos nogle <strong>natterædsler</strong> (barnet skriger og virker vågent, men sover faktisk – det bedste er at blive hos barnet uden at vække det). Mørkeræd er også almindeligt nu – en svag natlampe med varmt lys er fint.</p>
+                <p><strong>Brug lyden:</strong> Rolige, ensartede lyde hjælper det tankemylder, som et 2-3-årigt hoved er fuldt af, med at falde til ro – og maskerer de "uhyggelige" lyde, huset laver om natten.</p>
+            </div>
+
+            <div class="info-card">
+                <h3>⏱️ Vågetider: Hvor længe kan barnet være vågen?</h3>
+                <p>Et af de bedste værktøjer mod putte-kampe er at ramme "søvnvinduet" – putte barnet, inden det bliver overtræt. Vejledende vågetid mellem lure:</p>
+                <table class="wake-table">
+                    <tr><th>Alder</th><th>Vågetid</th><th>Antal lure</th></tr>
+                    <tr><td>0-3 mdr.</td><td>45-90 min.</td><td>4-6</td></tr>
+                    <tr><td>3-6 mdr.</td><td>1,5-2,5 timer</td><td>3-4</td></tr>
+                    <tr><td>6-9 mdr.</td><td>2-3 timer</td><td>2-3</td></tr>
+                    <tr><td>9-12 mdr.</td><td>2,5-3,5 timer</td><td>2</td></tr>
+                    <tr><td>12-18 mdr.</td><td>3-5 timer</td><td>1-2</td></tr>
+                    <tr><td>18 mdr.-3 år</td><td>5-6 timer</td><td>0-1</td></tr>
+                </table>
+                <p style="margin-top:10px;">Tegn på træthed: gnider øjne, kigger væk, gaber, bliver "fjern". Tegn på overtræthed: hektisk, pylret, buer ryggen – så er vinduet ved at lukke.</p>
+            </div>
+
+            <div class="info-card">
+                <h3>🌙 Den gode putterutine</h3>
+                <p>Børn elsker forudsigelighed. En kort, fast rutine på 15-30 minutter i samme rækkefølge hver aften fortæller kroppen, at søvnen er på vej:</p>
+                <ul class="leap-list">
+                    <li>Dæmp lys og tempo i hjemmet den sidste time.</li>
+                    <li>Bad eller vask → ren ble → nattøj.</li>
+                    <li>Mad/amning (gerne før barnet er helt væk, så det ikke KUN kan sove ved mad).</li>
+                    <li>Historie, sang eller stille pusletid.</li>
+                    <li>Tænd den samme lyd i BabyRo – babys eget søvnsignal.</li>
+                    <li>Læg barnet døsigt, men vågent, i sengen.</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>🛡️ Tryg søvn – de vigtigste råd</h3>
+                <ul class="leap-list">
+                    <li>Læg altid baby til at sove på ryggen det første år.</li>
+                    <li>Fast madras, ingen løse dyner, puder eller bamser i sengen de første måneder – brug evt. sovepose.</li>
+                    <li>Sov i samme rum som barnet de første 6 måneder (egen seng).</li>
+                    <li>Hold soveværelset køligt (ca. 18-20 °C) og røgfrit.</li>
+                    <li>Lydstyrke: Placér højttaleren mindst 1-2 meter fra barnet og hold lyden dæmpet – som en stille bruser, ikke højere (max ca. 50 dB ved barnets hoved).</li>
+                </ul>
+                <p style="margin-top:10px; font-size:0.85rem; color:var(--text-light);">BabyRo er en hjælp til hverdagen – ikke sundhedsfaglig rådgivning. Er du bekymret for dit barns søvn, så tal med sundhedsplejersken eller lægen.</p>
             </div>
         </div>
     </main>
@@ -229,22 +330,98 @@
     <main id="view-leaps" class="view-section" style="display: none;">
         <div class="page-header">
             <h2>Tigerspring</h2>
-            <p>Mentale udviklingsspring.</p>
+            <p>De 10 mentale udviklingsspring i barnets første 20 måneder.</p>
         </div>
-        
+
         <div class="info-section">
+
+            <!-- Beregnet status ud fra termin -->
+            <div id="leap-status" class="info-card leap-status-card">
+                <h3>Hvor er <span class="b-name">Baby</span> lige nu?</h3>
+                <p id="leap-status-text">Indtast terminsdatoen under <strong>Profil</strong>, så viser BabyRo automatisk, hvilket spring <span class="b-name">Baby</span> er i – eller hvornår det næste kommer.</p>
+            </div>
+
             <div class="info-card highlight-card">
-                <h3>Er <span class="b-name">Baby</span> i et spring?</h3>
-                <p>Udover fysisk vækst går alle babyer igennem 10 store mentale "tigerspring" i løbet af deres første 20 måneder. Verden opdages på ny, og det er utrygt!</p>
-                
-                <h4 style="margin-top: 15px;">Typiske tegn:</h4>
+                <h3>Hvad er et tigerspring?</h3>
+                <p>Udover at vokse fysisk gennemgår alle babyer 10 store <strong>mentale</strong> udviklingsspring i løbet af de første ca. 20 måneder. Ved hvert spring modnes hjernen pludseligt, og barnet kan opfatte verden på en helt ny måde. Det er fantastisk – men også skræmmende, for alt det velkendte føles pludselig anderledes.</p>
+                <p>Springene kommer på overraskende faste tidspunkter og regnes altid fra <strong>terminsdatoen</strong> – ikke fødselsdagen. Et barn født 3 uger før termin rammer altså springene ca. 3 uger "senere" end kalenderalderen.</p>
+                <h4 style="margin-top: 15px;">De typiske tegn (de tre G'er):</h4>
                 <ul class="leap-list">
-                    <li>Pylret og grædende.</li>
-                    <li>Vil bæres konstant.</li>
-                    <li>Søvnen bliver urolig.</li>
+                    <li><strong>Grædende</strong> – mere pylret og let til tårer end normalt.</li>
+                    <li><strong>Grenagtig/klæbende</strong> – vil bæres og være tæt på mor eller far hele tiden.</li>
+                    <li><strong>Gnaven</strong> – urolig søvn, dårlig appetit, humørsvingninger.</li>
                 </ul>
-                
-                <p style="margin-top: 15px;"><strong>Sådan hjælper lyden:</strong> Monotone, brummende lyde blokerer for nye sanseindtryk og giver hjernen en tiltrængt pause.</p>
+                <p style="margin-top: 15px;"><strong>Sådan hjælper lyden:</strong> Under et spring bombarderes hjernen med nye indtryk. Monotone, brummende lyde skærmer for indtrykkene og giver hjernen en tiltrængt pause – derfor virker støvsugeren ofte som magi netop i springperioderne.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-1">
+                <h3><span class="leap-badge">Spring 1</span> Uge 4-5: Sanseindtryk</h3>
+                <p>Alle sanser skærpes på én gang. Verden bliver skarpere, lysere og mere larmende – indefra mærker baby nu også sin egen fordøjelse tydeligere. Det er ofte her, den første "hvorfor græder mit ellers rolige barn?"-uge rammer.</p>
+                <p><strong>Bagefter kan baby:</strong> Kigge længere og mere fokuseret, reagere tydeligere på lyde og berøring – og give jer det allerførste rigtige smil.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-2">
+                <h3><span class="leap-badge">Spring 2</span> Uge 7-9: Mønstre</h3>
+                <p>Baby begynder at opdage simple mønstre – både i det, den ser (striber, kontraster, egne hænder!), og i det, den mærker. Mange babyer bliver i denne periode dybt fascinerede af deres egne hænder.</p>
+                <p><strong>Bagefter kan baby:</strong> Holde hovedet mere stabilt, lave små kontrollerede bevægelser, lyttebevidst pludre ("åh" og "eh") og studere ting længe.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-3">
+                <h3><span class="leap-badge">Spring 3</span> Uge 11-12: Glidende overgange</h3>
+                <p>Nu opfattes bløde, glidende forandringer: en stemme der går op og ned, en bevægelse der glider hen over rummet. Babys egne bevægelser bliver også mere flydende og mindre robotagtige.</p>
+                <p><strong>Bagefter kan baby:</strong> Følge ting med øjnene i én glidende bevægelse, hvine og "synge" med tonefald, og gribe mere målrettet efter ting.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-4">
+                <h3><span class="leap-badge">Spring 4</span> Uge 14-19: Begivenheder</h3>
+                <p>Det længste og ofte hårdeste spring – og det falder typisk sammen med 4-måneders søvnregressionen. Baby forstår nu korte "begivenheder": at én ting fører til den næste (rasle → lyd, række ud → gribe → putte i munden).</p>
+                <p><strong>Bagefter kan baby:</strong> Gribe, vende og undersøge ting bevidst, putte alt i munden, reagere på sit eget navn og måske trille rundt.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-5">
+                <h3><span class="leap-badge">Spring 5</span> Uge 22-26: Sammenhænge</h3>
+                <p>Baby forstår nu afstande – og dermed den skræmmende opdagelse, at mor og far kan bevæge sig VÆK. Det er startskuddet til separationsangsten. Baby forstår også, at ting hænger sammen: knappen og lyden, låget og gryden.</p>
+                <p><strong>Bagefter kan baby:</strong> Sidde mere selv, flytte ting fra hånd til hånd, kigge efter tabte ting og protestere højlydt, når du forlader rummet.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-6">
+                <h3><span class="leap-badge">Spring 6</span> Uge 33-37: Kategorier</h3>
+                <p>Verden bliver sorteret! Baby opdager, at ting kan grupperes: en hund er en hund, uanset om den er stor, lille, på billede eller i virkeligheden. Baby undersøger alt systematisk – klemmer, banker, smider og smager for at finde ud af, hvad ting "er".</p>
+                <p><strong>Bagefter kan baby:</strong> Genkende kategorier (dyr, mad, mennesker), vise tydelige præferencer og forstå enkelte ord.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-7">
+                <h3><span class="leap-badge">Spring 7</span> Uge 41-46: Rækkefølger</h3>
+                <p>Baby forstår nu, at ting skal gøres i en bestemt rækkefølge for at lykkes: Først klodsen op, SÅ slippe den i spanden. Nu peges der ivrigt, og baby elsker at "hjælpe til" med små opgaver.</p>
+                <p><strong>Bagefter kan baby:</strong> Stable, putte ting i og ud af beholdere, pege på ting den vil have, sige de første rigtige ord og måske tage de første skridt.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-8">
+                <h3><span class="leap-badge">Spring 8</span> Uge 50-55: Programmer</h3>
+                <p>Efter rækkefølger kommer "programmer": fleksible planer med et mål. Barnet forstår nu hele forløb som "at spise frokost" eller "at gå tur" – og VIL selv! Det vil selv holde skeen, selv vaske, selv bestemme.</p>
+                <p><strong>Bagefter kan barnet:</strong> Efterligne hverdagsopgaver (feje, tale i telefon), hjælpe med påklædning og lege begyndende "som om"-lege.</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-9">
+                <h3><span class="leap-badge">Spring 9</span> Uge 59-64: Principper</h3>
+                <p>Barnet begynder at tænke over sin egen tænkning: at planlægge, forhandle og – ja – teste grænser med fuldt overlæg. Nu opdages det, at man kan få sin vilje på flere måder: charme, drama, list. Trodsalderens spæde start!</p>
+                <p><strong>Bagefter kan barnet:</strong> Planlægge små "projekter", lave sjov med jer, efterligne strategisk og vise begyndende forståelse for "mit" og "dit".</p>
+            </div>
+
+            <div class="info-card leap-card" id="leap-10">
+                <h3><span class="leap-badge">Spring 10</span> Uge 70-76: Systemer</h3>
+                <p>Det sidste store spring (ca. 17 måneder). Barnet forstår nu "systemer": familien er ét system, naboens familie et andet. Samvittigheden vågner – barnet kan nu føle empati, trøste andre og forstå, at det selv er et "jeg" med egne valg.</p>
+                <p><strong>Bagefter kan barnet:</strong> Vise omsorg, genkende sig selv i spejlet, lege mere avancerede fantasilege og sætte ord sammen til små sætninger.</p>
+            </div>
+
+            <div class="info-card">
+                <h3>Godt at huske</h3>
+                <ul class="leap-list">
+                    <li>Springperioderne varer typisk 1-6 uger – de tidlige er korte, de sene længere.</li>
+                    <li>Uro og dårlig søvn i et spring er et sundhedstegn: hjernen arbejder på højtryk.</li>
+                    <li>Efter hvert spring kommer en solskinsperiode, hvor barnet pludselig kan nye ting.</li>
+                    <li>Alle datoer er vejledende – dit barn er ikke "bagud", fordi et spring kommer en uge senere.</li>
+                </ul>
             </div>
         </div>
     </main>
@@ -256,12 +433,30 @@
         </div>
 
         <div class="profile-card">
+            <h3>Dit barn</h3>
+            <p style="margin-bottom: 10px; color: var(--text-light);">Hvad hedder dit barn?</p>
+            <input type="text" id="profile-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
+
+            <p style="margin-bottom: 10px; color: var(--text-light);">Dreng eller pige? (skifter appens farver)</p>
+            <div class="gender-picker" style="margin-bottom: 20px;">
+                <button class="gender-btn" data-gender="dreng">👦 Dreng</button>
+                <button class="gender-btn" data-gender="pige">👧 Pige</button>
+                <button class="gender-btn" data-gender="neutral">🌿 Neutral</button>
+            </div>
+
+            <p style="margin-bottom: 10px; color: var(--text-light);">Terminsdato (bruges til at beregne tigerspring)</p>
+            <input type="date" id="profile-duedate-input">
+
+            <button id="btn-update-name" class="action-btn save-btn" style="width:100%;">Gem oplysninger</button>
+        </div>
+
+        <div class="profile-card">
             <h3>Tema & Design</h3>
             <p style="margin-bottom: 15px; color: var(--text-light);">Skån øjnene om natten.</p>
             <button id="btn-theme-toggle" class="action-btn pause-btn" style="width:100%;">Skift til Nattilstand 🌙</button>
         </div>
 
-        <div id="profile-guest-section" class="profile-card" style="margin-top: 20px;">
+        <div id="profile-guest-section" class="profile-card">
             <h3>Sikkerhedskopiér dine data</h3>
             <div class="warning-box" style="margin-top: 15px; text-align: left;">
                 <strong>⚠️ Kun gemt på denne telefon</strong><br>
@@ -272,12 +467,9 @@
             </button>
         </div>
 
-        <div id="profile-logged-in-section" class="profile-card" style="margin-top: 20px; display: none;">
-            <h3>Dine Oplysninger</h3>
-            <p style="margin-bottom: 10px; color: var(--text-light);">Hvad hedder dit barn?</p>
-            <input type="text" id="profile-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="15">
-            <button id="btn-update-name" class="action-btn save-btn" style="width:100%; margin-bottom: 30px;">Opdater navn</button>
-            
+        <div id="profile-logged-in-section" class="profile-card" style="display: none;">
+            <h3>Din konto</h3>
+            <p id="logged-in-email" style="margin-bottom: 20px; color: var(--text-light);"></p>
             <button id="btn-logout" class="action-btn reset-btn" style="width:100%;">Log ud af BabyRo</button>
         </div>
     </main>
@@ -288,7 +480,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    
+
     <!-- Dit eget script -->
     <script src="script.js"></script>
 </body>
