@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let timeoutId = null;
     let currentlyPlayingBtn = null;
     
-    // Variabler til at holde styr på spilletid
     let elapsedSeconds = 0;
     let intervalId = null;
 
@@ -21,11 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Stopur funktioner ---
     function startStopwatch() {
-        clearInterval(intervalId); // Sørg for at slette gamle tællere
+        clearInterval(intervalId);
         intervalId = setInterval(() => {
             elapsedSeconds++;
             updateDisplay();
-        }, 1000); // Kører hvert sekund
+        }, 1000); 
     }
 
     function stopStopwatch() {
@@ -39,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateDisplay() {
-        // Omregner sekunder til Timer:Minutter:Sekunder format
         const h = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
         const m = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
         const s = String(elapsedSeconds % 60).padStart(2, '0');
@@ -53,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectElement = document.getElementById(`variant-${category}`);
             const audioSrc = selectElement.value;
 
-            // Stop lyden hvis man klikker på knappen igen
-            if (currentlyPlayingBtn === this && !audioPlayer.paused) {
+            // Stop lyden hvis man klikker på knappen der allerede spiller
+            if (currentlyPlayingBtn === this) {
                 audioPlayer.pause();
                 resetAllButtons();
                 clearTimer();
@@ -63,21 +61,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Start forfra med ny lyd
             resetAllButtons();
             audioPlayer.src = audioSrc;
             
-            audioPlayer.play().then(() => {
-                this.textContent = 'Pause';
-                this.classList.add('playing');
-                currentlyPlayingBtn = this;
-                
-                resetStopwatch();
-                startStopwatch();
-                setupTimer(); 
-            }).catch(error => {
-                console.error("Lyden kunne ikke afspilles:", error);
-                alert("Lyden kunne ikke afspilles. Tjek at lydfilerne ligger i 'lyde'-mappen og er navngivet korrekt.");
+            // Vi ændrer knappen og starter uret MED DET SAMME (så du kan teste)
+            this.textContent = 'Pause';
+            this.classList.add('playing');
+            currentlyPlayingBtn = this;
+            resetStopwatch();
+            startStopwatch();
+            setupTimer(); 
+            
+            // Forsøger at afspille lyden i baggrunden
+            audioPlayer.play().catch(error => {
+                console.log("Lydfilen mangler, men vi starter stopuret alligevel så du kan teste siden.");
             });
         });
     });
@@ -95,12 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupTimer() {
         clearTimer();
         
-        // Henter værdien i minutter (fra vores HTML)
         const minutes = parseInt(timerSelect.value);
         
-        // Hvis værdien er større end 0, starter vi en nedtælling
         if (minutes > 0) {
-            const milliseconds = minutes * 60 * 1000; // Omregner minutter til millisekunder
+            const milliseconds = minutes * 60 * 1000; 
             
             timeoutId = setTimeout(() => {
                 audioPlayer.pause();
@@ -120,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     timerSelect.addEventListener('change', () => {
-        if (!audioPlayer.paused) {
+        if (currentlyPlayingBtn !== null) {
             setupTimer();
         }
     });
