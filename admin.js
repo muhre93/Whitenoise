@@ -473,6 +473,7 @@ document.getElementById('btn-save-token').addEventListener('click', () => {
     tokenStatus.textContent = "✔ Nøglen er gemt for denne session";
     tokenStatus.className = "upload-info done";
     loadFiles();
+    tjekPushStatus();
 });
 
 function formatBytes(b) {
@@ -511,6 +512,62 @@ async function loadFiles() {
         wrap.innerHTML = `<p class="upload-info error">${esc(err.message)}</p>`;
     }
 }
+
+// ---------- PUSH-OPSÆTNING ----------
+async function tjekPushStatus() {
+    const el = document.getElementById('push-state');
+    if (!el) return;
+    if (!WORKER_URL || WORKER_URL.includes('dit-brugernavn')) {
+        el.textContent = "Udfyld WORKER_URL i cloudflare-config.js først.";
+        el.className = "upload-info error";
+        return;
+    }
+    try {
+        const r = await fetch(WORKER_URL + '/health');
+        const d = await r.json();
+        if (d.push) {
+            el.textContent = "Push er slået til. Du behøver ikke gøre mere.";
+            el.className = "upload-info done";
+        } else {
+            el.textContent = "Push er ikke sat op endnu. Gem din nøgle ovenfor, og tryk på knappen.";
+            el.className = "upload-info";
+        }
+    } catch (e) {
+        el.textContent = "Kunne ikke nå din Worker. Tjek WORKER_URL.";
+        el.className = "upload-info error";
+    }
+}
+
+document.getElementById('btn-push-setup')?.addEventListener('click', async () => {
+    const el = document.getElementById('push-state');
+    const token = getToken();
+    if (!token) {
+        el.textContent = "Gem først din adgangsnøgle i feltet ovenfor.";
+        el.className = "upload-info error";
+        return;
+    }
+    if (!confirm("Lav nye push-nøgler?\n\nHar du gjort det før, skal alle forældre slå påmindelser til igen.")) return;
+
+    el.textContent = "Laver nøgler...";
+    el.className = "upload-info";
+    try {
+        const r = await fetch(WORKER_URL + '/push/setup', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const d = await r.json();
+        if (r.ok && d.publicKey) {
+            el.textContent = "Færdig! Push er nu slået til.";
+            el.className = "upload-info done";
+        } else {
+            el.textContent = "Fejl: " + (d.error || ("status " + r.status));
+            el.className = "upload-info error";
+        }
+    } catch (e) {
+        el.textContent = "Fejl: " + e.message;
+        el.className = "upload-info error";
+    }
+});
 
 document.getElementById('btn-refresh-files').addEventListener('click', loadFiles);
 
@@ -554,6 +611,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 function renderAll() {
+    tjekPushStatus();
     if (tokenInput && getToken()) { tokenInput.value = getToken(); tokenStatus.textContent = '✔ Nøgle aktiv'; tokenStatus.className = 'upload-info done'; }
     renderSounds();
     renderGeneral();
