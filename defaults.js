@@ -112,5 +112,8 @@ const DEFAULT_TEXTS = {
     leapOutroTitle: "Godt at huske",
     leapOutroBody: "<ul class=\"leap-list\"><li>Springperioderne varer typisk 1-6 uger – de tidlige er korte, de sene længere.</li><li>Uro og dårlig søvn i et spring er et sundhedstegn: hjernen arbejder på højtryk.</li><li>Efter hvert spring kommer en solskinsperiode, hvor barnet pludselig kan nye ting.</li><li>Alle datoer er vejledende – dit barn er ikke \"bagud\", fordi et spring kommer en uge senere.</li></ul>",
 
-    profileTitle: "Profil & Indstillinger"
+    profileTitle: "Profil & Indstillinger",
+    planTitle: "Dagens plan",
+    growthTitle: "Vækst & udvikling",
+    navGrowth: "📈 Vækst"
 };
