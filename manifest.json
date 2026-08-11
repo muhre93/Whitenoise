@@ -1,0 +1,15 @@
+{
+  "name": "BabyRo — Beroligende lyde",
+  "short_name": "BabyRo",
+  "description": "Beroligende lyde, søvnlog, vækstkurver og tigerspring til de første to år.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F5F0",
+  "theme_color": "#8DA399",
+  "lang": "da",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
