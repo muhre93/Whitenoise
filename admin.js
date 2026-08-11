@@ -44,7 +44,10 @@ const GENERAL_FIELDS = {
     historySub: ["Log: underoverskrift", "text"],
     statsTitle: ["Log: overskrift over grafen", "text"],
     guestWarning: ["Log: advarsel til gæster (HTML)", "area"],
-    profileTitle: ["Profil: overskrift", "text"]
+    profileTitle: ["Profil: overskrift", "text"],
+    planTitle: ["Dagens plan: overskrift", "text"],
+    growthTitle: ["Vækst: overskrift", "text"],
+    navGrowth: ["Faneblad: Vækst", "text"]
 };
 
 // ==========================================
