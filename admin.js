@@ -45,6 +45,8 @@ const GENERAL_FIELDS = {
     statsTitle: ["Log: overskrift over grafen", "text"],
     guestWarning: ["Log: advarsel til gæster (HTML)", "area"],
     profileTitle: ["Profil: overskrift", "text"],
+    navCare: ["Faneblad: Pleje", "text"],
+    navKnow: ["Faneblad: Viden", "text"],
     planTitle: ["Dagens plan: overskrift", "text"],
     growthTitle: ["Vækst: overskrift", "text"],
     navGrowth: ["Faneblad: Vækst", "text"]
@@ -461,6 +463,48 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 });
 
 // ==========================================
+// MILEPÆLE-FORSLAG
+// ==========================================
+function renderMsList() {
+    const el = document.getElementById('ms-list');
+    if (!el) return;
+    const liste = texts.milestoneSuggestions || [];
+    if (!liste.length) { el.innerHTML = '<p class="muted">Ingen forslag. Tryk på knappen for at tilføje.</p>'; return; }
+    el.innerHTML = liste.map((s, i) => `
+        <div class="variant">
+            <div class="row" style="align-items:flex-end;">
+                <label class="field" style="margin-bottom:0;">
+                    <span>Forslag ${i + 1}</span>
+                    <input type="text" value="${esc(s)}" data-msi="${i}" class="ms-input">
+                </label>
+                <button class="icon-btn" data-msact="up" data-msi="${i}">↑</button>
+                <button class="icon-btn" data-msact="down" data-msi="${i}">↓</button>
+                <button class="icon-btn del" data-msact="del" data-msi="${i}">🗑</button>
+            </div>
+        </div>`).join('');
+}
+
+document.getElementById('ms-list')?.addEventListener('input', (e) => {
+    if (!e.target.classList.contains('ms-input')) return;
+    texts.milestoneSuggestions[Number(e.target.dataset.msi)] = e.target.value;
+    markDirty();
+});
+document.getElementById('ms-list')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-msact]');
+    if (!btn) return;
+    const i = Number(btn.dataset.msi);
+    if (btn.dataset.msact === 'up') move(texts.milestoneSuggestions, i, -1);
+    if (btn.dataset.msact === 'down') move(texts.milestoneSuggestions, i, 1);
+    if (btn.dataset.msact === 'del') texts.milestoneSuggestions.splice(i, 1);
+    renderMsList(); markDirty();
+});
+document.getElementById('btn-add-ms')?.addEventListener('click', () => {
+    texts.milestoneSuggestions = texts.milestoneSuggestions || [];
+    texts.milestoneSuggestions.push("Ny milepæl");
+    renderMsList(); markDirty();
+});
+
+// ==========================================
 // FILER PÅ CLOUDFLARE
 // ==========================================
 const tokenInput = document.getElementById('worker-token');
@@ -617,6 +661,7 @@ function renderAll() {
     renderGeneral();
     renderSleep();
     renderLeaps();
+    renderMsList();
     fillStaticFields();
 }
 
