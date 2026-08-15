@@ -90,12 +90,12 @@ document.getElementById('btn-add-care')?.addEventListener('click', async () => {
 
     if (type === 'amning') {
         entry.side = document.getElementById('care-side').value;
-        const m = parseInt(document.getElementById('care-min').value);
-        if (!isNaN(m)) entry.min = m;
+        const m = talFraFelt('care-min');
+        if (!isNaN(m)) entry.min = Math.round(m);
     }
     if (type === 'flaske') {
-        const ml = parseInt(document.getElementById('care-ml').value);
-        if (!isNaN(ml)) entry.ml = ml;
+        const ml = talFraFelt('care-ml');
+        if (!isNaN(ml)) entry.ml = Math.round(ml);
     }
     if (type === 'ble') entry.ble = document.getElementById('care-diaper').value;
 
