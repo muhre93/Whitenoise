@@ -5,18 +5,23 @@
 // i stedet for flere megabyte.
 // ==================================================
 
-const MILEPAEL_FORSLAG = [
+const MILEPAEL_FORSLAG = (typeof DEFAULT_TEXTS !== 'undefined' && DEFAULT_TEXTS.milestoneSuggestions) || [
     "Første smil", "Første grin", "Løfter hovedet", "Griber om ting",
     "Triller om på maven", "Sover igennem", "Første tand", "Sidder selv",
     "Første ord", "Kravler", "Står selv", "Første skridt",
     "Vinker farvel", "Drikker af kop", "Første sætning", "Løber"
 ];
 
+function milepaelForslag() {
+    return (typeof TEXTS !== 'undefined' && Array.isArray(TEXTS.milestoneSuggestions) && TEXTS.milestoneSuggestions.length)
+        ? TEXTS.milestoneSuggestions : MILEPAEL_FORSLAG;
+}
+
 let msPhotoData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const dl = document.getElementById('ms-suggestions');
-    if (dl) dl.innerHTML = MILEPAEL_FORSLAG.map(s => `<option value="${s}">`).join('');
+    if (dl) dl.innerHTML = milepaelForslag().map(s => `<option value="${esc(s)}">`).join('');
     const d = document.getElementById('ms-date');
     if (d && !d.value) d.value = todayKey();
 });
