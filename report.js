@@ -331,4 +331,7 @@ async function aabnRapport() {
 }
 
 document.getElementById('btn-open-report')?.addEventListener('click', aabnRapport);
+
+// Rapportkortet ligger under Profil → Barnet, så info opdateres når man går derind
+document.getElementById('nav-profile')?.addEventListener('click', opdaterRapportInfo);
 document.addEventListener('DOMContentLoaded', opdaterRapportInfo);
