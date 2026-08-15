@@ -36,6 +36,15 @@ function indlaesGaestData() {
     milestones = gaestLaes('milestones', []);
 }
 
+window.nulstilGaest = function () {
+    if (!confirm("Slet alt i BabyRo på denne telefon?\n\nSøvnlog, pleje, vækst og milepæle forsvinder. Det kan ikke fortrydes.")) return;
+    ['profile', 'sleep', 'growth', 'care', 'milestones'].forEach(k => localStorage.removeItem(gaestNoegle(k)));
+    localStorage.removeItem('babyRoLogs');
+    indlaesGaestData();
+    opdaterAlt();
+    alert("Alt er nulstillet. Du starter forfra. 👶");
+};
+
 function gemGaestProfil() {
     gaestSkriv('profile', { name: babyName, gender: babyGender, birthDate: babyBirthDate, dueDate: babyDueDate, birthInfo });
 }
@@ -74,7 +83,8 @@ async function indlaesBrugerensBoern() {
     }
 
     const oensket = localStorage.getItem('babyRoActiveChild') || userData.activeChild;
-    const valgt = childList.find(c => c.id === oensket) || childList[0];
+    const muligt = childList.filter(c => !c.archived);
+    const valgt = muligt.find(c => c.id === oensket) || muligt[0] || childList[0];
     await skiftBarn(valgt.id, false);
 }
 
@@ -168,18 +178,16 @@ async function skiftBarn(id, gemValg) {
 // ==========================================
 // BARNEVÆLGER ØVERST
 // ==========================================
+function aktiveBoern() { return childList.filter(c => !c.archived); }
+
 function renderChildBar() {
     const bar = document.getElementById('child-bar');
     const chips = document.getElementById('child-chips');
     if (!bar || !chips) return;
 
-    // Vis kun linjen, når der er noget at vælge imellem
-    if (isGuest || childList.length < 2) {
-        bar.style.display = childList.length > 1 ? 'flex' : 'none';
-    } else {
-        bar.style.display = 'flex';
-    }
-    chips.innerHTML = childList.map(c =>
+    const aktive = aktiveBoern();
+    bar.style.display = aktive.length > 1 ? 'flex' : 'none';
+    chips.innerHTML = aktive.map(c =>
         `<button class="chip ${c.id === childId ? 'active' : ''}" data-child="${c.id}">${esc(c.name || 'Baby')}</button>`
     ).join('');
     chips.querySelectorAll('[data-child]').forEach(b => {
@@ -204,12 +212,18 @@ async function tilfoejBarn() {
 // ==========================================
 function renderChildrenList() {
     const el = document.getElementById('children-list');
+    const arkivKort = document.getElementById('archived-card');
+    const arkivEl = document.getElementById('archived-list');
     if (!el) return;
+
     if (isGuest) {
-        el.innerHTML = `<p class="field-label">Log ind for at oprette og skifte mellem flere børn.</p>`;
+        el.innerHTML = `<p class="field-label">Log ind for at oprette og skifte mellem flere børn.</p>
+            <button class="action-btn reset-btn full-btn" onclick="nulstilGaest()" style="margin-top:10px;">🗑 Nulstil alt og start forfra</button>`;
+        if (arkivKort) arkivKort.style.display = 'none';
         return;
     }
-    el.innerHTML = childList.map(c => {
+
+    const raekke = (c, arkiveret) => {
         const antal = Object.keys(c.members || {}).length;
         return `<div class="child-row ${c.id === childId ? 'current' : ''}">
             <div>
@@ -217,31 +231,79 @@ function renderChildrenList() {
                 <small>${c.birthDate ? new Date(c.birthDate).toLocaleDateString('da-DK') : 'Ingen fødselsdato'}${antal > 1 ? ` · delt med ${antal - 1}` : ''}</small>
             </div>
             <div class="child-row-actions">
-                ${c.id === childId ? '<span class="chip-tag">Valgt</span>' : `<button class="mini-btn" data-pick="${c.id}">Vælg</button>`}
-                <button class="mini-btn danger" data-remove="${c.id}">Fjern</button>
+                ${arkiveret
+                    ? `<button class="mini-btn" data-unarchive="${c.id}">Hent frem</button>`
+                    : (c.id === childId ? '<span class="chip-tag">Valgt</span>' : `<button class="mini-btn" data-pick="${c.id}">Vælg</button>`)}
+                ${arkiveret ? '' : `<button class="mini-btn" data-archive="${c.id}" title="Gem væk uden at slette">Gem væk</button>`}
+                <button class="mini-btn danger" data-delete="${c.id}">Slet</button>
             </div>
         </div>`;
-    }).join('');
+    };
 
-    el.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => skiftBarn(b.dataset.pick)));
-    el.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => fjernBarn(b.dataset.remove)));
+    const aktive = aktiveBoern();
+    const arkiv = childList.filter(c => c.archived);
+
+    el.innerHTML = aktive.map(c => raekke(c, false)).join('');
+    if (arkivKort) arkivKort.style.display = arkiv.length ? 'block' : 'none';
+    if (arkivEl) arkivEl.innerHTML = arkiv.map(c => raekke(c, true)).join('');
+
+    document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => skiftBarn(b.dataset.pick)));
+    document.querySelectorAll('[data-archive]').forEach(b => b.addEventListener('click', () => arkiverBarn(b.dataset.archive, true)));
+    document.querySelectorAll('[data-unarchive]').forEach(b => b.addEventListener('click', () => arkiverBarn(b.dataset.unarchive, false)));
+    document.querySelectorAll('[data-delete]').forEach(b => b.addEventListener('click', () => sletBarnHelt(b.dataset.delete)));
 }
 
-async function fjernBarn(id) {
-    if (childList.length <= 1) { alert("Du skal have mindst ét barn i BabyRo."); return; }
+// Gem væk: barnet forsvinder fra vælgeren, men alt er i behold
+async function arkiverBarn(id, skjul) {
     const c = childList.find(x => x.id === id);
-    if (!confirm(`Fjern ${c?.name || 'barnet'} fra din konto?\n\nData slettes ikke — deler du med den anden forælder, har vedkommende dem stadig.`)) return;
+    if (!c) return;
+    if (skjul && aktiveBoern().length <= 1) {
+        alert("Du kan ikke gemme dit eneste barn væk. Tilføj et andet først, eller slet barnet i stedet.");
+        return;
+    }
     try {
+        await db.collection("children").doc(id).set({ archived: !!skjul }, { merge: true });
+        c.archived = !!skjul;
+        if (skjul && childId === id) await skiftBarn(aktiveBoern()[0].id);
+        else { renderChildBar(); renderChildrenList(); }
+    } catch (e) { alert("Kunne ikke ændre: " + e.message); }
+}
+
+// Slet helt: undermapperne først, så selve barnet
+async function sletBarnHelt(id) {
+    const c = childList.find(x => x.id === id);
+    const navn = c?.name || 'barnet';
+    const antal = Object.keys(c?.members || {}).length;
+
+    if (!confirm(`Slet ${navn} helt?\n\nAl søvn, pleje, vækst og milepæle slettes permanent.${antal > 1 ? '\n\nOBS: Barnet er delt — det slettes også for den anden forælder.' : ''}\n\nDet kan ikke fortrydes.`)) return;
+    if (!confirm(`Sidste chance. Skriv-frit tjek: er du HELT sikker på, at ${navn} skal slettes?`)) return;
+
+    try {
+        const base = db.collection("children").doc(id);
+        // Undermapperne skal væk først — bagefter kan reglerne ikke se barnet
+        for (const mappe of ['sleep', 'care', 'milestones', 'data']) {
+            const snap = await base.collection(mappe).get();
+            for (const doc of (snap.docs || [])) await base.collection(mappe).doc(doc.id).delete();
+        }
+        if (c?.inviteCode) await db.collection("invites").doc(c.inviteCode).delete().catch(() => {});
+        await base.delete();
         await db.collection("users").doc(currentUserId).set({
             children: firebase.firestore.FieldValue.arrayRemove(id)
         }, { merge: true });
-        await db.collection("children").doc(id).set({
-            members: { [currentUserId]: firebase.firestore.FieldValue.delete() }
-        }, { merge: true });
+
         childList = childList.filter(x => x.id !== id);
-        if (childId === id) await skiftBarn(childList[0].id);
-        else renderChildrenList();
-    } catch (e) { alert("Kunne ikke fjerne: " + e.message); }
+        if (!childList.length) {
+            const nyt = await opretBarn("Baby", true);
+            const d = await db.collection("children").doc(nyt).get();
+            childList = [Object.assign({ id: nyt }, d.data())];
+            await skiftBarn(nyt);
+            alert(`${navn} er slettet. Der er oprettet et nyt, tomt barn.`);
+        } else {
+            if (childId === id) await skiftBarn(childList[0].id);
+            else { renderChildBar(); renderChildrenList(); }
+            alert(`${navn} er slettet.`);
+        }
+    } catch (e) { alert("Kunne ikke slette: " + e.message); }
 }
 
 // ==========================================
@@ -308,7 +370,11 @@ document.getElementById('btn-join-child')?.addEventListener('click', async () =>
         const cid = inv.data().childId;
         if (childList.some(c => c.id === cid)) { alert("Du er allerede tilsluttet det barn."); return; }
 
-        await db.collection("children").doc(cid).set({ members: { [currentUserId]: true } }, { merge: true });
+        // joinedWith beviser over for Firestore-reglerne, at vi kender koden
+        await db.collection("children").doc(cid).set({
+            members: { [currentUserId]: true },
+            joinedWith: kode
+        }, { merge: true });
         await db.collection("users").doc(currentUserId).set({
             children: firebase.firestore.FieldValue.arrayUnion(cid)
         }, { merge: true });
