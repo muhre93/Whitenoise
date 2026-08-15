@@ -28,13 +28,11 @@ document.getElementById('btn-add-measure')?.addEventListener('click', async () =
     const maaling = { dato, note: document.getElementById('m-note').value.trim() || "" };
     let noget = false;
     ['vaegt', 'laengde', 'hoved'].forEach(k => {
-        const v = parseFloat(String(document.getElementById('m-' + k).value).replace(',', '.'));
+        const v = talFraFelt('m-' + k);
         if (!isNaN(v) && v > 0) { maaling[k] = v; noget = true; }
     });
     (growthData.customTypes || []).forEach(c => {
-        const el = document.getElementById('m-custom-' + c.id);
-        if (!el) return;
-        const v = parseFloat(String(el.value).replace(',', '.'));
+        const v = talFraFelt('m-custom-' + c.id);
         if (!isNaN(v)) { maaling[c.id] = v; noget = true; }
     });
     if (!noget) { alert("Udfyld mindst én måling."); return; }
@@ -88,14 +86,15 @@ function renderCustomFields() {
     wrap.innerHTML = `<div class="measure-form">` + egne.map(c => `
         <label class="field"><span>${esc(c.navn)} (${esc(c.enhed)})
             <button class="mini-del" onclick="sletEgenType('${c.id}')" title="Slet denne type">✕</button></span>
-            <input type="number" step="0.01" id="m-custom-${c.id}"></label>`).join('') + `</div>`;
+            <input type="text" inputmode="decimal" id="m-custom-${c.id}" placeholder="0,0"></label>`).join('') + `</div>`;
 }
 
 function renderGrowthTabs() {
     const el = document.getElementById('growth-tabs');
     if (!el) return;
     const typer = alleMaalTyper();
-    el.innerHTML = Object.keys(typer).map(k =>
+    el.innerHTML = `<button class="chart-tab ${aktivtMaal === 'samlet' ? 'active' : ''}" data-maal="samlet">⚖️📏 Vægt &amp; længde</button>` +
+        Object.keys(typer).map(k =>
         `<button class="chart-tab ${k === aktivtMaal ? 'active' : ''}" data-maal="${k}">${typer[k].ikon || '✨'} ${esc(typer[k].navn)}</button>`
     ).join('');
     el.querySelectorAll('[data-maal]').forEach(b =>
@@ -105,6 +104,7 @@ function renderGrowthTabs() {
 function tegnVaekstChart() {
     const area = document.getElementById('growth-chart');
     if (!area) return;
+    if (aktivtMaal === 'samlet') { tegnSamletChart(area); return; }
     const typer = alleMaalTyper();
     const type = typer[aktivtMaal];
     if (!type) { area.innerHTML = ''; return; }
@@ -124,7 +124,7 @@ function tegnVaekstChart() {
     const punkter = maalinger.map(m => {
         const mdr = alderVedDato(m.dato);
         return { x: Math.max(0, mdr), y: m[aktivtMaal],
-            label: `${new Date(m.dato).toLocaleDateString('da-DK')}: ${m[aktivtMaal]} ${type.enhed} (${mdr.toFixed(1)} mdr.)` };
+            label: `${new Date(m.dato).toLocaleDateString('da-DK')}: ${talTilFelt(m[aktivtMaal])} ${type.enhed} (${mdr.toFixed(1)} mdr.)` };
     });
     const maxAlder = Math.max(3, Math.ceil(Math.max(...punkter.map(p => p.x)) + 1));
     let legend = `<span class="c-key"><i class="c-swatch c-sw-s1"></i>${esc(babyName)}</span>`;
@@ -155,6 +155,83 @@ function tegnVaekstChart() {
     if (vurdering) area.insertAdjacentHTML('beforeend', `<p class="growth-status">${vurdering}</p>`);
 }
 
+// Vægt og længde i ét billede. Begge omregnes til "procent af
+// det typiske for alderen", så to forskellige enheder kan stå
+// på samme akse — og man kan se, om de følges ad.
+function tegnSamletChart(area) {
+    if (!babyBirthDate) {
+        area.innerHTML = `<div class="chart-empty">Indtast fødselsdato under Profil, så kan kurven tegnes efter alder.</div>`;
+        return;
+    }
+    const maalinger = (growthData.measurements || [])
+        .filter(m => m.vaegt != null || m.laengde != null)
+        .sort((a, b) => a.dato.localeCompare(b.dato));
+    if (!maalinger.length) {
+        area.innerHTML = `<div class="chart-empty">Ingen målinger endnu. Tilføj vægt og længde under "Tilføj måling".</div>`;
+        return;
+    }
+
+    function pctAfMedian(maal, vaerdi, mdr) {
+        const ref = WHO_DATA[babyGender]?.[maal];
+        if (!ref) return null;
+        const aldre = Object.keys(ref).map(Number).sort((a, b) => a - b);
+        const naermest = aldre.reduce((b, a) => Math.abs(a - mdr) < Math.abs(b - mdr) ? a : b, aldre[0]);
+        return (vaerdi / ref[naermest][1]) * 100;
+    }
+
+    const vPunkter = [], lPunkter = [];
+    maalinger.forEach(m => {
+        const mdr = Math.max(0, alderVedDato(m.dato));
+        if (m.vaegt != null) {
+            const p = pctAfMedian('vaegt', m.vaegt, mdr);
+            if (p != null) vPunkter.push({ x: mdr, y: p, label: `${new Date(m.dato).toLocaleDateString('da-DK')}: ${talTilFelt(m.vaegt)} kg (${Math.round(p)} % af typisk)` });
+        }
+        if (m.laengde != null) {
+            const p = pctAfMedian('laengde', m.laengde, mdr);
+            if (p != null) lPunkter.push({ x: mdr, y: p, label: `${new Date(m.dato).toLocaleDateString('da-DK')}: ${talTilFelt(m.laengde)} cm (${Math.round(p)} % af typisk)` });
+        }
+    });
+
+    if (!vPunkter.length && !lPunkter.length) {
+        area.innerHTML = `<div class="chart-empty">Kan ikke sammenligne uden WHO-data for det valgte køn.</div>`;
+        return;
+    }
+
+    const maxAlder = Math.max(3, Math.ceil(Math.max(...[...vPunkter, ...lPunkter].map(p => p.x)) + 1));
+    const linje100 = [{ x: 0, y: 100 }, { x: maxAlder, y: 100 }];
+
+    area.innerHTML = lineChart({
+        series: [
+            { points: linje100, klasse: 'c-s3', dots: false },
+            { points: vPunkter, klasse: 'c-s1' },
+            { points: lPunkter, klasse: 'c-s2' }
+        ],
+        xMin: 0, xMax: maxAlder,
+        formatY: v => Math.round(v) + ' %',
+        formatX: v => Math.round(v) + " mdr",
+        xTicks: Math.min(6, maxAlder),
+        legend: `<span class="c-key"><i class="c-swatch c-sw-s1"></i>Vægt</span>
+                 <span class="c-key"><i class="c-swatch c-sw-s2"></i>Længde</span>
+                 <span class="c-key"><i class="c-swatch c-sw-s3"></i>Typisk for alderen (100 %)</span>`
+    });
+
+    // Kort forklaring af, hvad de to kurver fortæller sammen
+    const sidsteV = vPunkter[vPunkter.length - 1];
+    const sidsteL = lPunkter[lPunkter.length - 1];
+    let tekst = "";
+    if (sidsteV && sidsteL) {
+        const forskel = Math.abs(sidsteV.y - sidsteL.y);
+        tekst = `Seneste måling: vægten ligger på <strong>${Math.round(sidsteV.y)} %</strong> og længden på <strong>${Math.round(sidsteL.y)} %</strong> af det typiske for alderen. `;
+        if (forskel < 8) tekst += `De følges pænt ad — barnet vokser proportionalt.`;
+        else if (sidsteV.y > sidsteL.y) tekst += `Vægten ligger et stykke over længden. Det ses ofte hos velnærede babyer og udjævner sig typisk, når barnet begynder at bevæge sig mere.`;
+        else tekst += `Længden ligger et stykke over vægten — altså et langt, slankt barn. Nævn det gerne ved næste besøg, hvis afstanden vokser.`;
+        tekst += ` Det vigtigste er, at begge kurver holder <em>samme</em> niveau over tid.`;
+    } else {
+        tekst = `Tilføj både vægt og længde på samme dato for at kunne sammenligne dem.`;
+    }
+    area.insertAdjacentHTML('beforeend', `<p class="growth-status">${tekst}</p>`);
+}
+
 function vurderMaaling(m) {
     const type = alleMaalTyper()[aktivtMaal];
     if (!type || type.egen) return "";
@@ -166,8 +243,8 @@ function vurderMaaling(m) {
     const naermest = aldre.reduce((best, a) => Math.abs(a - mdr) < Math.abs(best - mdr) ? a : best, aldre[0]);
     const [lav, median, hoej] = ref[naermest];
     const v = m[aktivtMaal];
-    let tekst = `Seneste måling: <strong>${v} ${type.enhed}</strong> ved ${mdr.toFixed(1)} måneder. `;
-    tekst += `Det typiske for alderen er ${median} ${type.enhed} (normalområde ${lav}-${hoej}). `;
+    let tekst = `Seneste måling: <strong>${talTilFelt(v)} ${type.enhed}</strong> ved ${mdr.toFixed(1)} måneder. `;
+    tekst += `Det typiske for alderen er ${talTilFelt(median)} ${type.enhed} (normalområde ${talTilFelt(lav)}-${talTilFelt(hoej)}). `;
     if (v < lav) tekst += `${esc(babyName)} ligger under normalområdet — nævn det gerne ved næste besøg hos sundhedsplejersken.`;
     else if (v > hoej) tekst += `${esc(babyName)} ligger over normalområdet — det er ofte helt fint, men tal med sundhedsplejersken.`;
     else tekst += `Det ligger pænt inden for normalområdet.`;
@@ -189,7 +266,7 @@ function renderMeasureList() {
             const mdr = alderVedDato(x.dato);
             return `<tr><td>${new Date(x.dato).toLocaleDateString('da-DK')}</td>
                 <td>${mdr != null ? mdr.toFixed(1) + ' mdr' : '–'}</td>
-                ${kolonner.map(k => `<td>${x[k] != null ? x[k] : '–'}</td>`).join('')}
+                ${kolonner.map(k => `<td>${x[k] != null ? talTilFelt(x[k]) : '–'}</td>`).join('')}
                 <td>${esc(x.note || '')}</td>
                 <td><button class="delete-btn" onclick="sletMaaling('${x.dato}')">❌</button></td></tr>`;
         }).join('')}</tbody></table></div>`;
