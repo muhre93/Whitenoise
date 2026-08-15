@@ -38,6 +38,7 @@
         <button class="tab-btn" data-tab="tab-general">✏️ Generelle tekster</button>
         <button class="tab-btn" data-tab="tab-sleep">👶 Søvn-artikler</button>
         <button class="tab-btn" data-tab="tab-leaps">🐯 Tigerspring</button>
+        <button class="tab-btn" data-tab="tab-lists">⭐ Milepæle</button>
         <button class="tab-btn" data-tab="tab-files">📁 Filer</button>
         <button class="tab-btn" data-tab="tab-backup">💾 Backup</button>
     </nav>
@@ -116,6 +117,16 @@
             <span>Afsluttende kort: tekst (HTML)</span>
             <textarea rows="6" data-key="leapOutroBody" class="general-input"></textarea>
         </label>
+    </section>
+
+    <!-- ---------- LISTER ---------- -->
+    <section id="tab-lists" class="tab-panel">
+        <div class="section-intro">
+            <h2>Milepæle-forslag</h2>
+            <p class="muted">De forslag, forældre får, når de skriver en milepæl. Rækkefølgen her er rækkefølgen i appen.</p>
+        </div>
+        <div id="ms-list"></div>
+        <button id="btn-add-ms" class="btn btn-add">+ Tilføj forslag</button>
     </section>
 
     <!-- ---------- FILER ---------- -->
