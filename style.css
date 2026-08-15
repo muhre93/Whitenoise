@@ -36,11 +36,6 @@ body { background:var(--bg-main); color:var(--text-dark); line-height:1.6; paddi
 .view-section.active-view { display:block; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(5px);} to{opacity:1;transform:translateY(0);} }
 
-.sub-tabs { display:flex; gap:10px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
-.sub-tab { background:var(--card-bg); border:2px solid var(--nav-bg); color:var(--text-dark); padding:10px 22px; border-radius:12px; font-weight:700; cursor:pointer; transition:.2s; }
-.sub-tab.active { background:var(--accent-green); border-color:var(--accent-green); color:#fff; }
-.sub-panel { display:none; }
-.sub-panel.active { display:block; }
 
 .panel { background:var(--card-bg); border-radius:24px; padding:30px 25px; box-shadow:0 8px 30px rgba(0,0,0,.04); margin-bottom:30px; width:100%; }
 
@@ -265,12 +260,89 @@ input:focus,textarea:focus,select:focus { border-color:var(--accent-green); }
 .notif-error { color:#b56a6a; font-weight:700; }
 .empty-state { text-align:center; padding:20px; color:var(--text-light); }
 
+
+
+/* ==================================================
+   v6 — hjælpebobler, feedback, underfaner, install
+   ================================================== */
+
+/* PLADSHOLDERE — tydeligt at feltet er tomt */
+::placeholder { color: var(--text-light); opacity: .55; font-weight: 500; font-style: italic; }
+input:focus::placeholder, textarea:focus::placeholder { opacity: .28; }
+
+/* KNAPFEEDBACK — man skal kunne se, at trykket blev registreret */
+button { -webkit-tap-highlight-color: transparent; }
+button:not(:disabled) { transition: transform .12s ease, filter .12s ease, background .25s, color .25s, border-color .25s; }
+button:not(:disabled):hover { filter: brightness(1.06); }
+button.pressed { transform: scale(.955); filter: brightness(.9); }
+button:disabled { opacity: .6; cursor: not-allowed; }
+.action-btn:focus-visible, .nav-item:focus-visible, .sub-tab:focus-visible,
+.chart-tab:focus-visible, .qa-btn:focus-visible, .mini-btn:focus-visible {
+    outline: 3px solid var(--accent-green); outline-offset: 2px;
+}
+.qa-btn.pressed { background: var(--accent-green); color: #fff; }
+
+/* HJÆLPEBOBLER */
+.hint {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--nav-bg); color: var(--text-light);
+    font-size: .72rem; font-weight: 700; cursor: help;
+    vertical-align: middle; margin-left: 5px; user-select: none; flex: none;
+}
+.hint:hover { background: var(--accent-green); color: #fff; }
+.tooltip {
+    position: absolute; z-index: 900; background: var(--text-dark); color: var(--bg-main);
+    padding: 12px 14px; border-radius: 12px; font-size: .85rem; line-height: 1.5;
+    box-shadow: 0 8px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none;
+    transition: opacity .18s ease; top: 0; left: 0; font-weight: 600;
+}
+.tooltip.vis { opacity: 1; }
+body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
+
+.mini-help { font-size: .84rem; color: var(--text-light); margin-top: 12px; text-align: center; }
+
+/* UNDERFANER — bruges nu på alle sider */
+.sub-tabs {
+    display: flex; gap: 8px; justify-content: center; margin-bottom: 22px;
+    flex-wrap: wrap; position: sticky; top: 0; z-index: 40;
+    background: var(--bg-main); padding: 10px 0; border-radius: 0 0 14px 14px;
+}
+.sub-tab {
+    background: var(--card-bg); border: 2px solid var(--nav-bg); color: var(--text-dark);
+    padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: .88rem; cursor: pointer;
+}
+.sub-tab.active { background: var(--accent-green); border-color: var(--accent-green); color: #fff; }
+.sub-panel { display: none; animation: fadeIn .25s ease; }
+.sub-panel.active { display: block; }
+
+/* INSTALLATION */
+.install-steps { margin-top: 14px; }
+.steps { padding-left: 22px; margin-bottom: 10px; }
+.steps li { margin-bottom: 8px; font-size: .93rem; }
+
+/* RAPPORT-PERIODE */
+.rep-btn {
+    flex: 1; min-width: 70px; background: var(--bg-main); border: 2px solid transparent;
+    color: var(--text-dark); padding: 12px 8px; border-radius: 12px; font-weight: 700; cursor: pointer;
+}
+.rep-btn.active { background: var(--accent-green); color: #fff; }
+
+/* KOMBINERET VÆKSTKURVE */
+.c-line.c-s3 { stroke: var(--text-light); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.c-sw-s3 { background: var(--text-light); }
+
+/* BØRNELISTE */
+.child-row-actions { flex-wrap: wrap; }
+
 @media (min-width:800px) { .sound-grid { grid-template-columns:repeat(3,1fr); } .quick-add { grid-template-columns:repeat(6,1fr); } }
 
 @media print {
     .app-nav,.top-header,.child-bar,.print-row,.chart-tabs,.period-card,.sub-tabs,
     .smart-listen-box,.control-center,.sound-grid,.global-stop-wrapper,
-    .plan-card,.warning-box,.delete-btn,.measure-actions,.quick-add,.care-now { display:none !important; }
+    .plan-card,.warning-box,.delete-btn,.measure-actions,.quick-add,.care-now,
+    .hint,.tooltip,.install-steps { display:none !important; }
+    .sub-panel { display:block !important; }
     .panel,.history-day-card,.stat-card { box-shadow:none; border:1px solid #ddd; break-inside:avoid; }
     .view-section { display:block !important; max-width:100%; }
     body { background:#fff; color:#000; padding:0; }
