@@ -194,7 +194,7 @@ function opdaterNotifStatus(fejl) {
     if (fejl) { el.textContent = fejl; el.classList.add('notif-error'); return; }
     el.classList.remove('notif-error');
 
-    if (!notifSlaaetTil()) { el.textContent = "Påmindelser er slået fra."; return; }
+    if (!notifSlaaetTil()) { el.textContent = T('notifOff'); return; }
     const naeste = typeof naesteSoevnTid === 'function' ? naesteSoevnTid() : null;
     const lag = pushKlar
         ? "Ægte push er aktiv — beskeden kommer, også når telefonen er lukket."
@@ -209,7 +209,7 @@ function opdaterKnap() {
     const kort = document.getElementById('btn-enable-notif');
     const test = document.getElementById('btn-notif-test');
     const til = notifSlaaetTil();
-    if (btn) btn.textContent = til ? "🔕 Slå påmindelser fra" : "🔔 Slå påmindelser til";
+    if (btn) btn.textContent = til ? T('disableNotif') : T('enableNotif');
     if (kort) kort.style.display = til ? 'none' : 'block';
     if (test) test.style.display = (til && pushKlar) ? 'block' : 'none';
     opdaterNotifStatus();

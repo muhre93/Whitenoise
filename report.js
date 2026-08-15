@@ -175,7 +175,7 @@ async function byggeRapport() {
     const maalTabel = maalinger.length ? `<table class="rap-table">
         <tr><th>Dato</th><th>Alder</th><th>Vægt</th><th>Længde</th><th>Hoved</th><th>Note</th></tr>
         ${maalinger.map(m => `<tr>
-            <td>${new Date(m.dato).toLocaleDateString('da-DK')}</td>
+            <td>${new Date(m.dato).toLocaleDateString(locale())}</td>
             <td>${alderVedDatoFor(babyBirthDate, m.dato) != null ? alderVedDatoFor(babyBirthDate, m.dato).toFixed(1) + ' mdr' : '–'}</td>
             <td>${m.vaegt != null ? talTilFelt(m.vaegt) : '–'}</td>
             <td>${m.laengde != null ? talTilFelt(m.laengde) : '–'}</td>
@@ -185,7 +185,7 @@ async function byggeRapport() {
 
     const ms = milestones.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12);
     const msHtml = ms.length ? `<ul class="rap-list">${ms.map(m =>
-        `<li><strong>${esc(m.title)}</strong> — ${new Date(m.date).toLocaleDateString('da-DK')}${alderVedMilepael(m.date) ? ` (${alderVedMilepael(m.date)})` : ''}</li>`
+        `<li><strong>${esc(m.title)}</strong> — ${new Date(m.date).toLocaleDateString(locale())}${alderVedMilepael(m.date) ? ` (${alderVedMilepael(m.date)})` : ''}</li>`
     ).join('')}</ul>` : `<p class="rap-tom">Ingen milepæle registreret.</p>`;
 
     // Eventuel sammenligning med et søskendebarn
@@ -273,11 +273,11 @@ h4{font-size:.92rem;color:var(--text-light);margin-bottom:6px;}
 
 <h1>${esc(babyName)}</h1>
 <p class="rap-sub">
-    ${babyBirthDate ? `Født ${new Date(babyBirthDate).toLocaleDateString('da-DK')}${f['birth-time'] ? ' kl. ' + esc(f['birth-time']) : ''}${f['birth-place'] ? ', ' + esc(f['birth-place']) : ''} · ${alderTekst()}` : 'Fødselsdato ikke angivet'}
+    ${babyBirthDate ? `Født ${new Date(babyBirthDate).toLocaleDateString(locale())}${f['birth-time'] ? ' kl. ' + esc(f['birth-time']) : ''}${f['birth-place'] ? ', ' + esc(f['birth-place']) : ''} · ${alderTekst()}` : 'Fødselsdato ikke angivet'}
     ${foedsel ? `<br>Ved fødslen: ${esc(foedsel)}` : ''}
     ${(f['parent-1'] || f['parent-2']) ? `<br>Forældre: ${esc([f['parent-1'], f['parent-2']].filter(Boolean).join(' og '))}` : ''}
 </p>
-<p class="rap-sub">Rapport dannet ${new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })} · perioden ${formatDateDK(p.fra)} til ${formatDateDK(p.til)} (${p.antal} dage)</p>
+<p class="rap-sub">Rapport dannet ${new Date().toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })} · perioden ${formatDateDK(p.fra)} til ${formatDateDK(p.til)} (${p.antal} dage)</p>
 
 <h2>Søvn</h2>
 <div class="rap-grid">
@@ -335,3 +335,151 @@ document.getElementById('btn-open-report')?.addEventListener('click', aabnRappor
 // Rapportkortet ligger under Profil → Barnet, så info opdateres når man går derind
 document.getElementById('nav-profile')?.addEventListener('click', opdaterRapportInfo);
 document.addEventListener('DOMContentLoaded', opdaterRapportInfo);
+
+// ==================================================
+// MIN OVERSIGT
+// Alt om barnet på én læsbar side — erstatningen for
+// den gamle JSON-fil, som ingen kunne bruge til noget.
+// ==================================================
+function byggeOversigt() {
+    const f = birthInfo || {};
+    const careListe = typeof alleCareEntries === 'function' ? alleCareEntries() : [];
+    const alleDage = Object.keys(localSleepLogs).sort();
+    const totalSek = alleDage.reduce((s, k) => s + (localSleepLogs[k].total || 0), 0);
+    const antalLure = alleDage.reduce((s, k) => s + (localSleepLogs[k].sessions || []).length, 0);
+
+    const raekke = (etiket, vaerdi) => vaerdi ? `<tr><td>${esc(etiket)}</td><td>${esc(vaerdi)}</td></tr>` : '';
+
+    const stamdata = `<table class="o-table">
+        ${raekke(T('name'), babyName)}
+        ${raekke(T('birthDate'), babyBirthDate ? new Date(babyBirthDate).toLocaleDateString(locale()) : '')}
+        ${raekke(T('age'), alderTekst())}
+        ${raekke(T('dueDate'), babyDueDate ? new Date(babyDueDate).toLocaleDateString(locale()) : '')}
+        ${raekke(T('birthTime'), f['birth-time'])}
+        ${raekke(T('birthPlace'), f['birth-place'])}
+        ${raekke(T('birthWeight'), f['birth-weight'] ? f['birth-weight'] + ' g' : '')}
+        ${raekke(T('birthLength'), f['birth-length'] ? f['birth-length'] + ' cm' : '')}
+        ${raekke(T('head'), f['birth-head'] ? f['birth-head'] + ' cm' : '')}
+        ${raekke(T('gestWeek'), f['birth-week'])}
+        ${raekke(T('parent1'), f['parent-1'])}
+        ${raekke(T('parent2'), f['parent-2'])}
+    </table>
+    ${f['birth-story'] ? `<div class="o-story">${esc(f['birth-story']).replaceAll('\n', '<br>')}</div>` : ''}`;
+
+    // Vækst
+    const maal = (growthData.measurements || []).slice().sort((a, b) => b.dato.localeCompare(a.dato));
+    const vaekst = maal.length ? `<table class="o-table">
+        <tr><th>${T('date')}</th><th>${T('age')}</th><th>${T('weight')}</th><th>${T('length')}</th><th>${T('head')}</th><th>${T('note').split(' ')[0]}</th></tr>
+        ${maal.map(m => `<tr>
+            <td>${new Date(m.dato).toLocaleDateString(locale())}</td>
+            <td>${alderVedDatoFor(babyBirthDate, m.dato) != null ? alderVedDatoFor(babyBirthDate, m.dato).toFixed(1) + ' ' + T('months') : '–'}</td>
+            <td>${m.vaegt != null ? talTilFelt(m.vaegt) + ' kg' : '–'}</td>
+            <td>${m.laengde != null ? talTilFelt(m.laengde) + ' cm' : '–'}</td>
+            <td>${m.hoved != null ? talTilFelt(m.hoved) + ' cm' : '–'}</td>
+            <td>${esc(m.note || '')}</td></tr>`).join('')}
+    </table>` : `<p class="o-tom">${T('noMeasures')}</p>`;
+
+    // Milepæle
+    const ms = milestones.slice().sort((a, b) => b.date.localeCompare(a.date));
+    const msHtml = ms.length ? ms.map(m => `<div class="o-ms">
+        <div class="o-ms-head"><strong>${esc(m.title)}</strong>
+            <span>${new Date(m.date).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })}${alderVedMilepael(m.date) ? ` · ${alderVedMilepael(m.date)}` : ''}</span></div>
+        ${m.note ? `<p>${esc(m.note)}</p>` : ''}
+        ${m.photo ? `<img src="${m.photo}" alt="${esc(m.title)}">` : ''}
+    </div>`).join('') : `<p class="o-tom">${T('msNone')}</p>`;
+
+    // Søvn: hele loggen dag for dag
+    const soevn = alleDage.length ? alleDage.slice().reverse().map(k => `
+        <div class="o-dag">
+            <h4>${formatDateDK(k)} — ${formatTimeText(localSleepLogs[k].total)}</h4>
+            <ul>${(localSleepLogs[k].sessions || []).map(s => `<li>${esc(s.timeDisplay)} · ${esc(s.durationText)}</li>`).join('')}</ul>
+        </div>`).join('') : `<p class="o-tom">–</p>`;
+
+    // Pleje: seneste 14 dage
+    const plejeDage = [];
+    for (let i = 0; i < 14; i++) {
+        const k = dateKeyOffset(i);
+        const e = careListe.filter(x => isoKey(new Date(x.ts)) === k);
+        if (e.length) plejeDage.push({ k, e });
+    }
+    const pleje = plejeDage.length ? plejeDage.map(d => `
+        <div class="o-dag">
+            <h4>${formatDateDK(d.k)}</h4>
+            <ul>${d.e.slice().reverse().map(x => {
+                const l = careLinje(x);
+                return `<li>${clockFromMs(x.ts)} · ${l.ikon} ${esc(l.navn)}${l.detalje ? ' · ' + esc(l.detalje) : ''}${l.note ? ' — ' + esc(l.note) : ''}</li>`;
+            }).join('')}</ul>
+        </div>`).join('') : `<p class="o-tom">–</p>`;
+
+    return `<!DOCTYPE html><html lang="${SPROG}"><head><meta charset="UTF-8">
+<title>${esc(babyName)} — ${T('summaryTitle')}</title>
+<style>
+:root{--g:#8DA399;--bg:#F4F2ED;--lt:#777;--tx:#333;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{padding:28px;color:var(--tx);line-height:1.55;max-width:860px;margin:0 auto;}
+h1{font-size:1.7rem;color:var(--g);margin-bottom:4px;}
+h2{font-size:1.15rem;color:var(--g);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--bg);}
+h4{font-size:.92rem;margin-bottom:4px;}
+.o-sub{color:var(--lt);font-size:.9rem;margin-bottom:20px;}
+.o-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0;}
+.o-kpi div{background:var(--bg);border-radius:10px;padding:14px;text-align:center;}
+.o-kpi b{display:block;font-size:1.3rem;color:var(--g);}
+.o-kpi small{color:var(--lt);font-size:.75rem;}
+.o-table{width:100%;border-collapse:collapse;font-size:.88rem;}
+.o-table th{text-align:left;padding:8px 6px;border-bottom:2px solid var(--bg);color:var(--g);font-size:.8rem;}
+.o-table td{padding:8px 6px;border-bottom:1px solid var(--bg);}
+.o-table td:first-child{color:var(--lt);width:38%;}
+.o-story{background:var(--bg);border-radius:12px;padding:16px;margin-top:14px;font-size:.92rem;font-style:italic;}
+.o-dag{margin-bottom:14px;break-inside:avoid;}
+.o-dag ul{list-style:none;font-size:.86rem;color:var(--lt);}
+.o-dag li{padding:3px 0;}
+.o-ms{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:14px;break-inside:avoid;}
+.o-ms-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.o-ms-head span{color:var(--lt);font-size:.83rem;}
+.o-ms p{font-size:.9rem;margin-bottom:10px;}
+.o-ms img{max-width:320px;width:100%;border-radius:10px;}
+.o-tom{color:var(--lt);font-style:italic;font-size:.88rem;}
+.o-print{background:var(--g);color:#fff;border:none;padding:12px 22px;border-radius:9px;font-size:.95rem;font-weight:700;cursor:pointer;margin-bottom:22px;}
+.o-foot{margin-top:34px;padding-top:14px;border-top:2px solid var(--bg);font-size:.78rem;color:var(--lt);}
+@media print{.o-print{display:none;}body{padding:0;}h2{break-after:avoid;}}
+</style></head><body>
+<button class="o-print" onclick="window.print()">🖨️ ${SPROG === 'en' ? 'Print or save as PDF' : 'Print eller gem som PDF'}</button>
+
+<h1>${esc(babyName)}</h1>
+<p class="o-sub">${SPROG === 'en' ? 'Everything BabyRo has saved' : 'Alt hvad BabyRo har gemt'} · ${new Date().toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+
+<div class="o-kpi">
+    <div><b>${alleDage.length}</b><small>${T('daysWithData')}</small></div>
+    <div><b>${antalLure}</b><small>${T('statNaps')}</small></div>
+    <div><b>${formatShort(totalSek)}</b><small>${T('statTotal')}</small></div>
+    <div><b>${maal.length}</b><small>${T('allMeasures')}</small></div>
+    <div><b>${ms.length}</b><small>${T('msTitle')}</small></div>
+</div>
+
+<h2>${T('yourChild')}</h2>
+${stamdata}
+
+<h2>${T('msTitle')}</h2>
+${msHtml}
+
+<h2>${T('growthTitle')}</h2>
+${vaekst}
+
+<h2>${T('careTitle')}</h2>
+${pleje}
+
+<h2>${T('historyTitle')}</h2>
+${soevn}
+
+<p class="o-foot">${SPROG === 'en'
+    ? 'Created in BabyRo. All entries were recorded by the parents.'
+    : 'Dannet i BabyRo. Alle registreringer er indtastet af forældrene.'}</p>
+</body></html>`;
+}
+
+document.getElementById('btn-open-summary')?.addEventListener('click', () => {
+    const v = window.open('', '_blank');
+    if (!v) { alert("Browseren blokerede vinduet. Tillad pop op-vinduer for denne side."); return; }
+    v.document.write(byggeOversigt());
+    v.document.close();
+});

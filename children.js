@@ -228,14 +228,14 @@ function renderChildrenList() {
         return `<div class="child-row ${c.id === childId ? 'current' : ''}">
             <div>
                 <strong>${esc(c.name || 'Baby')}</strong>
-                <small>${c.birthDate ? new Date(c.birthDate).toLocaleDateString('da-DK') : 'Ingen fødselsdato'}${antal > 1 ? ` · delt med ${antal - 1}` : ''}</small>
+                <small>${c.birthDate ? new Date(c.birthDate).toLocaleDateString(locale()) : T('noBirthDateShort')}${antal > 1 ? ` · ${T('sharedWith')} ${antal - 1}` : ''}</small>
             </div>
             <div class="child-row-actions">
                 ${arkiveret
-                    ? `<button class="mini-btn" data-unarchive="${c.id}">Hent frem</button>`
-                    : (c.id === childId ? '<span class="chip-tag">Valgt</span>' : `<button class="mini-btn" data-pick="${c.id}">Vælg</button>`)}
-                ${arkiveret ? '' : `<button class="mini-btn" data-archive="${c.id}" title="Gem væk uden at slette">Gem væk</button>`}
-                <button class="mini-btn danger" data-delete="${c.id}">Slet</button>
+                    ? `<button class="mini-btn" data-unarchive="${c.id}">${T('unarchive')}</button>`
+                    : (c.id === childId ? `<span class="chip-tag">${T('selected')}</span>` : `<button class="mini-btn" data-pick="${c.id}">${T('pick')}</button>`)}
+                ${arkiveret ? '' : `<button class="mini-btn" data-archive="${c.id}" title="${T('archive')}">${T('archive')}</button>`}
+                <button class="mini-btn danger" data-delete="${c.id}">${T('del')}</button>
             </div>
         </div>`;
     };
@@ -397,7 +397,7 @@ const BIRTH_FIELDS = ['birth-time', 'birth-place', 'birth-weight', 'birth-length
 
 async function gemProfil(visKvittering) {
     if (isGuest) {
-        alert("Log ind med Google under Profil for at gemme dine oplysninger.");
+        alert(T('loginToSave'));
         return false;
     }
     try {
@@ -409,7 +409,7 @@ async function gemProfil(visKvittering) {
         if (c) Object.assign(c, { name: babyName, gender: babyGender, birthDate: babyBirthDate, dueDate: babyDueDate, birthInfo });
         applyGenderTheme(); renderTexts(); renderChildBar(); renderChildrenList(); renderShare();
         if (typeof planlaegNaesteSoevn === 'function') planlaegNaesteSoevn();
-        if (visKvittering) alert("Oplysningerne er gemt ✅");
+        if (visKvittering) alert(T('savedOk'));
         return true;
     } catch (e) { alert("Kunne ikke gemme: " + e.message); return false; }
 }
@@ -464,7 +464,7 @@ if (auth) {
         auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert("Login fejl: " + e.message));
     });
     document.getElementById('btn-logout')?.addEventListener('click', () => {
-        if (confirm("Er du sikker på, at du vil logge ud?")) auth.signOut();
+        if (confirm(T('logoutConfirm'))) auth.signOut();
     });
 
     auth.onAuthStateChanged(async (user) => {

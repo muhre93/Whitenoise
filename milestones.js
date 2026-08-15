@@ -100,7 +100,7 @@ document.getElementById('btn-add-milestone')?.addEventListener('click', async ()
 });
 
 window.sletMilepael = async function (id) {
-    if (!confirm("Slet denne milepæl?")) return;
+    if (!confirm(T('msDelete'))) return;
     milestones = milestones.filter(m => m.id !== id);
     if (await sletMilepaelData(id)) renderMilestones();
 };
@@ -114,10 +114,10 @@ function alderVedMilepael(dato) {
     const d = new Date(dato + "T00:00:00");
     const dage = Math.round((d - b) / 86400000);
     if (dage < 0) return "";
-    if (dage < 31) return `${dage} dage gammel`;
+    if (dage < 31) return `${dage} ${T('daysOld')}`;
     const mdr = dage / 30.4375;
-    if (mdr < 24) return `${Math.floor(mdr)} mdr. gammel`;
-    return `${Math.floor(mdr / 12)} år gammel`;
+    if (mdr < 24) return `${Math.floor(mdr)} ${T('monthsOld')}`;
+    return `${Math.floor(mdr / 12)} ${T('yearsOld')}`;
 }
 
 function renderMilestones() {
@@ -125,7 +125,7 @@ function renderMilestones() {
     if (!el) return;
     const liste = milestones.slice().sort((a, b) => b.date.localeCompare(a.date));
     if (!liste.length) {
-        el.innerHTML = `<p class="empty-state">Ingen milepæle endnu. Den første kommer hurtigere, end du tror.</p>`;
+        el.innerHTML = `<p class="empty-state">${T('msNone')}</p>`;
         return;
     }
     el.innerHTML = `<div class="timeline">` + liste.map(m => `
@@ -136,7 +136,7 @@ function renderMilestones() {
                     <strong>${esc(m.title)}</strong>
                     <button class="delete-btn" onclick="sletMilepael('${m.id}')">❌</button>
                 </div>
-                <div class="tl-meta">${new Date(m.date).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}${alderVedMilepael(m.date) ? ' · ' + alderVedMilepael(m.date) : ''}</div>
+                <div class="tl-meta">${new Date(m.date).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })}${alderVedMilepael(m.date) ? ' · ' + alderVedMilepael(m.date) : ''}</div>
                 ${m.note ? `<p class="tl-note">${esc(m.note)}</p>` : ''}
                 ${m.photo ? `<img src="${m.photo}" alt="${esc(m.title)}" class="tl-photo" loading="lazy">` : ''}
             </div>

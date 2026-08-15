@@ -460,13 +460,80 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
 .tegn.stop { border-left-color: var(--btn-stop); }
 @media (min-width: 700px) { .tegn-grid { grid-template-columns: repeat(3, 1fr); } }
 
+
+
+/* ==================================================
+   v8 — sprogknap, modal til sovetid, kurve-blokke
+   ================================================== */
+
+.corner-tools { position: fixed; top: 14px; right: 14px; z-index: 80; display: flex; gap: 8px; }
+.corner-btn {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--card-bg); border: 2px solid var(--nav-bg);
+    font-size: 1.2rem; cursor: pointer; line-height: 1;
+    box-shadow: 0 4px 16px rgba(0,0,0,.10);
+    display: flex; align-items: center; justify-content: center; color: var(--text-dark);
+}
+.corner-btn:hover { border-color: var(--accent-green); }
+.lang-btn { font-size: .85rem; font-weight: 700; font-family: 'Quicksand', sans-serif; }
+.theme-corner { position: static; box-shadow: none; }
+.top-header { padding-right: 112px; padding-left: 112px; }
+@media (max-width: 480px) { .top-header { padding-right: 104px; padding-left: 14px; text-align: left; } }
+
+/* PLEJE: registrér altid synlig */
+.care-quick-panel { border-left: 5px solid var(--btn-save); }
+.care-quick-panel .quick-add { margin-bottom: 20px; }
+.care-quick-panel .care-hero-grid { margin-top: 4px; }
+
+/* RET SOVETID */
+.modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1000;
+    display: none; align-items: center; justify-content: center; padding: 18px;
+}
+.modal.vis { display: flex; }
+.modal-box {
+    background: var(--card-bg); border-radius: 24px; padding: 28px 24px;
+    width: 100%; max-width: 460px; max-height: 92vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.modal-box h3 { color: var(--accent-green); font-size: 1.3rem; margin-bottom: 8px; text-align: center; }
+.nudge-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: -8px 0 18px; }
+.nudge {
+    background: var(--bg-main); border: none; color: var(--text-dark);
+    padding: 10px 4px; border-radius: 10px; font-weight: 700; font-size: .82rem;
+    cursor: pointer; font-family: 'Quicksand', sans-serif;
+}
+.nudge:hover { background: var(--accent-green); color: #fff; }
+.se-result {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg-main); border-radius: 14px; padding: 16px 18px; margin: 6px 0 20px;
+    font-weight: 700;
+}
+.se-duration { color: var(--accent-green); font-size: 1.25rem; }
+.se-duration.fejl { color: #c07a7a; font-size: .88rem; text-align: right; }
+.modal-actions { display: flex; gap: 12px; }
+.modal-actions .action-btn { flex: 1; max-width: none; }
+.modal-delete {
+    display: block; width: 100%; margin-top: 16px; background: none; border: none;
+    color: #c07a7a; font-weight: 700; font-size: .88rem; cursor: pointer;
+    font-family: 'Quicksand', sans-serif; padding: 10px;
+}
+.modal-delete:hover { text-decoration: underline; }
+
+/* VÆGT & LÆNGDE SAMLET */
+.kurve-blok { margin-bottom: 30px; }
+.kurve-blok h4 {
+    font-size: 1rem; color: var(--text-dark); margin-bottom: 10px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--bg-main);
+}
+
 @media (min-width:800px) { .sound-grid { grid-template-columns:repeat(3,1fr); } .quick-add { grid-template-columns:repeat(6,1fr); } }
 
 @media print {
     .app-nav,.top-header,.child-bar,.print-row,.chart-tabs,.period-card,.sub-tabs,
     .smart-listen-box,.control-center,.sound-grid,.global-stop-wrapper,
     .plan-card,.warning-box,.delete-btn,.measure-actions,.quick-add,.care-now,
-    .hint,.tooltip,.install-steps,.theme-corner,.autostop,.day-nav { display:none !important; }
+    .hint,.tooltip,.install-steps,.corner-tools,.autostop,.day-nav,.modal { display:none !important; }
     .sub-panel { display:block !important; }
     .panel,.history-day-card,.stat-card { box-shadow:none; border:1px solid #ddd; break-inside:avoid; }
     .view-section { display:block !important; max-width:100%; }

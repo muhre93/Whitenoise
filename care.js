@@ -8,12 +8,12 @@ let careChart = 'feeds';
 let careDagOffset = 0;   // 0 = i dag, 1 = i går ...
 
 const CARE_TYPER = {
-    amning:   { navn: "Amning",    ikon: "🤱", mad: true },
-    flaske:   { navn: "Flaske",    ikon: "🍼", mad: true },
-    mad:      { navn: "Fast føde", ikon: "🥣", mad: true },
-    ble:      { navn: "Ble",       ikon: "👶", mad: false }
+    amning:   { get navn(){return T("breastfeed");}, ikon: "🤱", mad: true },
+    flaske:   { get navn(){return T("bottle");}, ikon: "🍼", mad: true },
+    mad:      { get navn(){return T("solids");}, ikon: "🥣", mad: true },
+    ble:      { get navn(){return T("nappy");}, ikon: "👶", mad: false }
 };
-const BLE_TEKST = { vaad: "💧 Våd", afforing: "💩 Afføring", begge: "🌊 Våd + afføring" };
+function bleTekst(k){ return { vaad: T("wetShort"), afforing: T("dirtyShort"), begge: T("bothShort") }[k] || ""; }
 
 // ==========================================
 // DATA
@@ -48,7 +48,7 @@ async function tilfoejCare(entry) {
 }
 
 window.sletCare = async function (id, ym) {
-    if (!confirm("Slet denne registrering?")) return;
+    if (!confirm(T('deleteEntry'))) return;
     careData[ym] = (careData[ym] || []).filter(e => e.id !== id);
     await gemPlejeMaaned(ym);
     renderCare();
@@ -62,11 +62,11 @@ window.retCareTid = async function (id, ym) {
     const e = liste.find(x => x.id === id);
     if (!e) return;
     const nu = new Date(e.ts);
-    const svar = prompt("Hvad var klokken? (f.eks. 14:35)",
+    const svar = prompt(T('askTime'),
         String(nu.getHours()).padStart(2, '0') + ':' + String(nu.getMinutes()).padStart(2, '0'));
     if (!svar) return;
     const m = /^(\d{1,2})[:.](\d{2})$/.exec(svar.trim());
-    if (!m) { alert("Skriv tidspunktet som timer:minutter, f.eks. 14:35."); return; }
+    if (!m) { alert(T('badTime')); return; }
     const ny = new Date(e.ts);
     ny.setHours(Number(m[1]), Number(m[2]), 0, 0);
     e.ts = ny.getTime();
@@ -142,11 +142,11 @@ function careLinje(e) {
     const t = CARE_TYPER[e.type] || { navn: e.type, ikon: '•' };
     let detalje = "";
     if (e.type === 'amning') {
-        const sider = { venstre: 'venstre', hoejre: 'højre', begge: 'begge sider' };
+        const sider = { venstre: T('left').toLowerCase(), hoejre: T('right').toLowerCase(), begge: T('bothSides').toLowerCase() };
         detalje = [e.side ? sider[e.side] : '', e.min ? `${e.min} min` : ''].filter(Boolean).join(', ');
     }
     if (e.type === 'flaske' && e.ml) detalje = `${e.ml} ml`;
-    if (e.type === 'ble') detalje = BLE_TEKST[e.ble] || '';
+    if (e.type === 'ble') detalje = bleTekst(e.ble);
     return { ikon: t.ikon, navn: t.navn, detalje, note: e.note };
 }
 
@@ -158,12 +158,12 @@ function renderCareHero() {
     const s = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     s('che-feeds', maaltider);
     s('che-diapers', bleer);
-    s('che-label-feeds', maaltider === 1 ? 'måltid i dag' : 'måltider i dag');
-    s('che-label-diapers', bleer === 1 ? 'ble i dag' : 'bleer i dag');
+    s('che-label-feeds', T(maaltider === 1 ? 'feedToday' : 'feedsToday'));
+    s('che-label-diapers', T(bleer === 1 ? 'nappyToday' : 'nappiesToday'));
 
     const mad = sidsteMaaltid(), ble = sidsteBle();
-    s('che-feed-since', mad ? `Sidst kl. ${clockFromMs(mad.ts)} · for ${minTekst((Date.now() - mad.ts) / 60000)} siden` : 'Endnu ingen');
-    s('che-diaper-since', ble ? `Sidst kl. ${clockFromMs(ble.ts)} · for ${minTekst((Date.now() - ble.ts) / 60000)} siden` : 'Endnu ingen');
+    s('che-feed-since', mad ? `${T('lastAt')} ${clockFromMs(mad.ts)} · ${minTekst((Date.now() - mad.ts) / 60000)} ${T('ago')}` : T('none'));
+    s('che-diaper-since', ble ? `${T('lastAt')} ${clockFromMs(ble.ts)} · ${minTekst((Date.now() - ble.ts) / 60000)} ${T('ago')}` : T('none'));
     s('care-hero-date', formatDateDK(todayKey()).split(' den ')[0] + ' — i dag');
 
     // Kort, konkret vurdering i stedet for bare tal
@@ -173,12 +173,12 @@ function renderCareHero() {
     const vaade = idag.filter(e => e.type === 'ble' && (e.ble === 'vaad' || e.ble === 'begge')).length;
     const timer = new Date().getHours() + new Date().getMinutes() / 60;
 
-    if (!idag.length) { note.textContent = "Ingen registreringer i dag endnu. Tryk på en knap nedenfor, når det sker."; return; }
+    if (!idag.length) { note.textContent = T('noEntriesYet'); return; }
     if (alder != null && alder < 6 && timer > 18) {
         if (vaade >= 6) note.innerHTML = `✅ ${vaade} våde bleer i dag — det tyder på, at ${esc(babyName)} får rigeligt at drikke.`;
         else note.innerHTML = `Der er registreret ${vaade} våde bleer i dag. Under 6 på et helt døgn kan være værd at nævne for sundhedsplejersken — men husk kun at tælle med, hvis du har registreret hele dagen.`;
     } else {
-        note.textContent = `${maaltider} ${maaltider === 1 ? 'måltid' : 'måltider'} og ${bleer} ${bleer === 1 ? 'ble' : 'bleer'} registreret i dag.`;
+        note.textContent = `${maaltider} ${T(maaltider === 1 ? 'feedToday' : 'feedsToday')} · ${bleer} ${T(bleer === 1 ? 'nappyToday' : 'nappiesToday')}`;
     }
 }
 
@@ -209,20 +209,20 @@ function renderCareListe() {
     if (!el) return;
 
     const key = dateKeyOffset(careDagOffset);
-    if (titel) titel.textContent = careDagOffset === 0 ? "Dagens registreringer" : formatDateDK(key);
+    if (titel) titel.textContent = careDagOffset === 0 ? T('dayEntries') : formatDateDK(key);
     if (next) next.disabled = careDagOffset === 0;
-    if (prev) prev.textContent = '‹ ' + (careDagOffset === 0 ? 'I går' : 'Dagen før');
+    if (prev) prev.textContent = '‹ ' + (careDagOffset === 0 ? T('yesterday') : T('dayBefore'));
 
     const liste = careForDag(key).slice().reverse();
     if (!liste.length) {
-        el.innerHTML = `<p class="empty-state">Ingen registreringer ${careDagOffset === 0 ? 'i dag' : 'denne dag'}.</p>`;
+        el.innerHTML = `<p class="empty-state">${careDagOffset === 0 ? T('noEntriesToday') : T('noEntriesDay')}</p>`;
         return;
     }
 
     const maaltider = liste.filter(e => CARE_TYPER[e.type] && CARE_TYPER[e.type].mad).length;
     const bleer = liste.filter(e => e.type === 'ble').length;
 
-    el.innerHTML = `<p class="dag-sum">${maaltider} ${maaltider === 1 ? 'måltid' : 'måltider'} · ${bleer} ${bleer === 1 ? 'ble' : 'bleer'}</p>
+    el.innerHTML = `<p class="dag-sum">${maaltider} ${T(maaltider === 1 ? 'feedToday' : 'feedsToday').replace(/ i dag| today/,'')} · ${bleer} ${T(bleer === 1 ? 'nappyToday' : 'nappiesToday').replace(/ i dag| today/,'')}</p>
         <ul class="care-list">` + liste.map(e => {
         const l = careLinje(e);
         const ym = monthKey(isoKey(new Date(e.ts)));
@@ -235,7 +235,7 @@ function renderCareListe() {
                 ${l.note ? `<small>${esc(l.note)}</small>` : ''}
             </span>
             <span class="ci-actions">
-                <button class="mini-btn" onclick="retCareTid('${e.id}','${ym}')" title="Ret tidspunktet">🕘</button>
+                <button class="mini-btn" onclick="retCareTid('${e.id}','${ym}')" title="${T('editTime')}">🕘</button>
                 <button class="delete-btn" onclick="sletCare('${e.id}','${ym}')">❌</button>
             </span>
         </li>`;
@@ -261,10 +261,10 @@ function renderCareStats() {
     const idag = dage[dage.length - 1];
 
     const kort = [
-        { v: idag.maaltider, l: "Måltider i dag", n: gnsMad ? `Gns. ${gnsMad.toFixed(1)} pr. dag` : "" },
-        { v: idag.bleer, l: "Bleer i dag", n: gnsBle ? `Gns. ${gnsBle.toFixed(1)} pr. dag` : "" },
-        { v: idag.ml ? idag.ml + " ml" : "–", l: "Flaske i dag", n: gnsMl ? `Gns. ${Math.round(gnsMl)} ml` : "" },
-        { v: medData.length, l: "Dage med data", n: "Sidste 7 dage" }
+        { v: idag.maaltider, l: T('feedsToday'), n: gnsMad ? `${T('statAvgDay')} ${gnsMad.toFixed(1)}` : "" },
+        { v: idag.bleer, l: T('nappiesToday'), n: gnsBle ? `${T('statAvgDay')} ${gnsBle.toFixed(1)}` : "" },
+        { v: idag.ml ? idag.ml + " ml" : "–", l: T('bottleToday'), n: gnsMl ? `${T('statAvgDay')} ${Math.round(gnsMl)} ml` : "" },
+        { v: medData.length, l: T('daysWithData'), n: T('days7') }
     ];
     el.innerHTML = kort.map(k => `<div class="stat-card">
         <div class="stat-value">${k.v}</div><div class="stat-label">${k.l}</div>

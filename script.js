@@ -53,12 +53,12 @@ function dateKeyOffset(daysAgo) {
 }
 function keyToDate(key) { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); }
 function formatDateDK(key) {
-    const s = keyToDate(key).toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const s = keyToDate(key).toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
-function weekdayShort(key) { return keyToDate(key).toLocaleDateString('da-DK', { weekday: 'short' }).replace('.', ''); }
-function shortDate(key) { return keyToDate(key).toLocaleDateString('da-DK', { day: 'numeric', month: 'numeric' }); }
-function clockFromMs(ms) { return new Date(ms).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }); }
+function weekdayShort(key) { return keyToDate(key).toLocaleDateString(locale(), { weekday: 'short' }).replace('.', ''); }
+function shortDate(key) { return keyToDate(key).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' }); }
+function clockFromMs(ms) { return new Date(ms).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }); }
 
 function alderIMdr(atMs) {
     if (!babyBirthDate) return null;
@@ -78,19 +78,22 @@ function alderTekst() {
 function minTekst(min) {
     min = Math.max(0, Math.round(min));
     const t = Math.floor(min / 60), m = min % 60;
-    if (t > 0 && m > 0) return `${t} t ${m} min`;
-    if (t > 0) return `${t} time${t > 1 ? 'r' : ''}`;
+    const en = (typeof SPROG !== 'undefined' && SPROG === 'en');
+    if (t > 0 && m > 0) return en ? `${t} h ${m} min` : `${t} t ${m} min`;
+    if (t > 0) return en ? `${t} hour${t > 1 ? 's' : ''}` : `${t} time${t > 1 ? 'r' : ''}`;
     return `${m} min`;
 }
 function formatTimeText(secs) {
     if (!secs || secs <= 0) return `0:00 min`;
     const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} t`;
+    const en = (typeof SPROG !== 'undefined' && SPROG === 'en');
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} ${en ? 'h' : 't'}`;
     return `${m}:${String(s).padStart(2, '0')} min`;
 }
 function formatShort(secs) {
     const h = Math.floor(secs / 3600), m = Math.round((secs % 3600) / 60);
-    return h > 0 ? `${h}t ${m}m` : `${m}m`;
+    const en = (typeof SPROG !== 'undefined' && SPROG === 'en');
+    return h > 0 ? `${h}${en ? 'h' : 't'} ${m}m` : `${m}m`;
 }
 function esc(s) {
     return String(s == null ? "" : s).replaceAll('&', '&amp;').replaceAll('<', '&lt;')
@@ -179,7 +182,7 @@ function renderSounds() {
             <select class="sound-variant" id="variant-${c.id}">
                 ${(c.variants || []).map(v => `<option value="${esc(v.url)}">${esc(v.label)}</option>`).join('')}
             </select>
-            <button class="play-btn" data-category="${c.id}">Afspil</button>
+            <button class="play-btn" data-category="${c.id}">${T('play')}</button>
         </div>`).join('');
     if (sel) {
         const prev = sel.value;
@@ -249,8 +252,8 @@ function updateDisplay() {
 }
 function opdaterUrKnap() {
     if (!btnPauseTime) return;
-    if (urKoerer) { btnPauseTime.textContent = '⏸ Pause ur'; btnPauseTime.classList.remove('running'); }
-    else { btnPauseTime.textContent = elapsedSeconds > 0 ? '▶ Fortsæt ur' : '▶ Start ur'; btnPauseTime.classList.add('running'); }
+    if (urKoerer) { btnPauseTime.textContent = T('btnPause'); btnPauseTime.classList.remove('running'); }
+    else { btnPauseTime.textContent = elapsedSeconds > 0 ? T('btnResume') : T('btnStart'); btnPauseTime.classList.add('running'); }
 }
 function startStopwatch() {
     if (sessionStartTime === null) sessionStartTime = new Date();
@@ -263,7 +266,7 @@ function resetStopwatch() { stopStopwatch(); elapsedSeconds = 0; sessionStartTim
 
 if (btnPauseTime) btnPauseTime.addEventListener('click', () => { urKoerer ? stopStopwatch() : startStopwatch(); });
 document.getElementById('btn-reset-time')?.addEventListener('click', () => {
-    if (confirm("Vil du nulstille uret uden at gemme?")) resetStopwatch();
+    if (confirm(T('resetConfirm'))) resetStopwatch();
 });
 
 // ==========================================
@@ -275,7 +278,7 @@ const timerSelect = document.getElementById('timer-select');
 let currentlyPlayingId = null, timeoutId = null, fadeInterval = null;
 
 function resetAllButtons() {
-    document.querySelectorAll('.play-btn[data-category]').forEach(b => { b.textContent = 'Afspil'; b.classList.remove('playing'); });
+    document.querySelectorAll('.play-btn[data-category]').forEach(b => { b.textContent = T('play'); b.classList.remove('playing'); });
 }
 function stopAllSound() {
     clearTimer();
@@ -293,7 +296,7 @@ if (soundGrid) {
         if (currentlyPlayingId === cat) { stopAllSound(); return; }
         clearTimer(); resetAllButtons();
         audioPlayer.src = sel.value;
-        btn.textContent = 'Pause lyd'; btn.classList.add('playing');
+        btn.textContent = T('pauseSound'); btn.classList.add('playing');
         currentlyPlayingId = cat;
         if (!urKoerer) startStopwatch();
         setupTimer();
@@ -370,7 +373,7 @@ function setSmartStatus(txt) { if (smartStatus) smartStatus.textContent = txt; }
 
 async function startListening() {
     try { micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch (e) { setSmartStatus("Kunne ikke få adgang til mikrofonen. Tjek tilladelser."); return; }
+    catch (e) { setSmartStatus(T('smartNoMic')); return; }
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const src = audioCtx.createMediaStreamSource(micStream);
     analyser = audioCtx.createAnalyser(); analyser.fftSize = 1024;
@@ -378,8 +381,8 @@ async function startListening() {
     micBuffer = new Uint8Array(analyser.fftSize);
     listening = true; loudFrames = 0;
     smartBox?.classList.add('listening');
-    if (btnSmartListen) btnSmartListen.textContent = "Stop Smart-lyt";
-    setSmartStatus("Lytter... alt er roligt. 💤");
+    if (btnSmartListen) btnSmartListen.textContent = T('smartStop');
+    setSmartStatus(T('smartQuiet'));
     listenTimerId = setInterval(listenTick, 100);
 }
 function stopListening() {
@@ -388,16 +391,16 @@ function stopListening() {
     if (micStream) { micStream.getTracks().forEach(tr => tr.stop()); micStream = null; }
     if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
     smartBox?.classList.remove('listening');
-    if (btnSmartListen) btnSmartListen.textContent = "Start Smart-lyt";
+    if (btnSmartListen) btnSmartListen.textContent = T('smartStart');
     if (micLevel) micLevel.style.width = "0%";
-    setSmartStatus("Smart-lyt er slukket.");
+    setSmartStatus(T('smartOff'));
 }
 function listenTick() {
     if (!listening || !analyser) return;
     if (audioPlayer && !audioPlayer.paused) {
         loudFrames = 0;
         if (micLevel) micLevel.style.width = "0%";
-        setSmartStatus("Beroligende lyd kører 🎵 — lytter igen, når den stopper.");
+        setSmartStatus(T('smartPlaying'));
         return;
     }
     analyser.getByteTimeDomainData(micBuffer);
@@ -408,13 +411,13 @@ function listenTick() {
     if (micLevel) micLevel.style.width = Math.min(100, Math.round(rms * 300)) + "%";
     if (rms > 0.28 - sens * 0.024) loudFrames++; else loudFrames = Math.max(0, loudFrames - 2);
     if (loudFrames > 15) { loudFrames = 0; triggerSoothingSound(); }
-    else if (loudFrames > 5) setSmartStatus("Hører uro... 👂");
-    else setSmartStatus("Lytter... alt er roligt. 💤");
+    else if (loudFrames > 5) setSmartStatus(T('smartHears'));
+    else setSmartStatus(T('smartQuiet'));
 }
 function triggerSoothingSound() {
     const cat = smartSoundSelect ? smartSoundSelect.value : (SOUNDS[0] && SOUNDS[0].id);
     const btn = document.querySelector(`.play-btn[data-category="${cat}"]`);
-    setSmartStatus("Uro registreret! Starter beroligende lyd... 🎵");
+    setSmartStatus(T('smartTriggered'));
     if (btn && currentlyPlayingId === null) btn.click();
 }
 if (btnSmartListen) btnSmartListen.addEventListener('click', () => { listening ? stopListening() : startListening(); });
@@ -426,7 +429,7 @@ function opdaterTemaKnapper() {
     const dark = document.body.classList.contains('dark-theme');
     const stor = document.getElementById('btn-theme-toggle');
     const hjoerne = document.getElementById('btn-theme-corner');
-    if (stor) stor.textContent = dark ? 'Skift til Dagstilstand ☀️' : 'Skift til Nattilstand 🌙';
+    if (stor) stor.textContent = dark ? T('toDay') : T('toNight');
     if (hjoerne) {
         hjoerne.textContent = dark ? '☀️' : '🌙';
         hjoerne.title = dark ? 'Skift til dagstilstand' : 'Skift til nattilstand';
@@ -453,7 +456,7 @@ function applyGenderTheme() {
 // SØVNLOG: GEM
 // ==========================================
 document.getElementById('btn-save-log')?.addEventListener('click', async () => {
-    if (elapsedSeconds === 0) { alert("Søvnuret er på nul. Tryk 'Start ur' eller afspil en lyd først."); return; }
+    if (elapsedSeconds === 0) { alert(T('timerZero')); return; }
     const end = new Date();
     const start = sessionStartTime || new Date(end.getTime() - elapsedSeconds * 1000);
     const key = todayKey();
@@ -476,8 +479,8 @@ document.getElementById('btn-save-log')?.addEventListener('click', async () => {
     vaelgUnderfane('history', 'sub-overview');
 });
 
-window.deleteLogEntry = async function (key, index) {
-    if (!confirm(`Slet denne søvntid for ${babyName}?`)) return;
+window.deleteLogEntry = async function (key, index, alleredeBekraeftet) {
+    if (!alleredeBekraeftet && !confirm(`${T('deleteNap')}?`)) return;
     if (localSleepLogs[key]?.sessions[index]) {
         localSleepLogs[key].total = Math.max(0, localSleepLogs[key].total - (localSleepLogs[key].sessions[index].durationSec || 0));
         localSleepLogs[key].sessions.splice(index, 1);
@@ -498,14 +501,15 @@ function renderTodayLog() {
     const data = localSleepLogs[key];
     listEl.innerHTML = "";
     if (!data || !data.sessions.length) {
-        listEl.innerHTML = `<li>Ingen lure gemt endnu i dag.</li>`;
+        listEl.innerHTML = `<li>${T('todayNone')}</li>`;
         totalEl.textContent = "0:00 min";
         return;
     }
     data.sessions.forEach((s, i) => {
         listEl.innerHTML += `<li><span>${esc(s.timeDisplay)}</span>
-            <div style="display:flex;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
                 <span>${esc(s.durationText)}</span>
+                <button class="mini-btn" onclick="aabnSoevnRet('${key}', ${i})" title="${T('editSleep')}">✏️</button>
                 <button class="delete-btn" onclick="deleteLogEntry('${key}', ${i})">❌</button>
             </div></li>`;
     });
@@ -564,17 +568,17 @@ function renderPlanCard() {
 
     if (!babyBirthDate) {
         phaseEl.textContent = "";
-        labelEl.textContent = "Næste søvn"; timeEl.textContent = "–";
-        subEl.innerHTML = 'Indtast <strong>fødselsdato</strong> under Profil, så regner BabyRo vågetider og næste sovetid ud.';
+        labelEl.textContent = T('planNext'); timeEl.textContent = '–';
+        subEl.innerHTML = T('planNoBirth');
         noteEl.textContent = ""; return;
     }
     phaseEl.textContent = `${alderTekst()} · ${fase.navn}`;
 
     const naeste = naesteSoevnTid();
     if (!naeste) {
-        labelEl.textContent = "Næste søvn"; timeEl.textContent = "–";
-        subEl.innerHTML = `Vågetid i denne alder er <strong>${minTekst(fase.vaageMin)}-${minTekst(fase.vaageMax)}</strong>. Gem en lur, så regnes næste sovetid ud.`;
-        noteEl.textContent = `Typisk ${fase.lure} lure om dagen i denne alder.`;
+        labelEl.textContent = T('planNext'); timeEl.textContent = '–';
+        subEl.innerHTML = `${T('wakeWindowIs')} <strong>${minTekst(fase.vaageMin)}–${minTekst(fase.vaageMax)}</strong>. ${T('planNoData')}`;
+        noteEl.textContent = `${T('typically')} ${fase.lure} ${T('napsPerDayAge')}`;
         return;
     }
 
@@ -583,21 +587,21 @@ function renderPlanCard() {
     card.classList.remove('plan-now');
 
     if (nu < naeste.tidligst) {
-        labelEl.textContent = "Næste søvnvindue åbner";
+        labelEl.textContent = T('planOpens');
         timeEl.textContent = clockFromMs(naeste.tidligst);
-        subEl.innerHTML = `Om <strong>${minTekst((naeste.tidligst - nu) / 60000)}</strong>. ${esc(babyName)} har været vågen i ${minTekst(vaagen)}.`;
-        noteEl.textContent = `Vinduet er åbent fra ${clockFromMs(naeste.tidligst)} til ${clockFromMs(naeste.senest)}. Ram det, og putningen bliver meget lettere.`;
+        subEl.innerHTML = `${T('inTime')} <strong>${minTekst((naeste.tidligst - nu) / 60000)}</strong>. ${esc(babyName)} ${T('awakeFor')} ${minTekst(vaagen)}.`;
+        noteEl.textContent = `${T('windowOpenFrom')} ${clockFromMs(naeste.tidligst)} ${T('windowTo')} ${clockFromMs(naeste.senest)}. ${T('windowHit')}`;
     } else if (nu <= naeste.senest) {
         card.classList.add('plan-now');
-        labelEl.textContent = "Søvnvinduet er åbent nu 💤";
-        timeEl.textContent = `Luk senest ${clockFromMs(naeste.senest)}`;
-        subEl.innerHTML = `${esc(babyName)} har været vågen i <strong>${minTekst(vaagen)}</strong> — det er tid til at putte.`;
-        noteEl.textContent = "Kig efter tegn: gnider øjne, kigger væk, gaber, bliver fjern. Start putterutinen nu.";
+        labelEl.textContent = T('planOpenNow');
+        timeEl.textContent = `${T('planCloseBy')} ${clockFromMs(naeste.senest)}`;
+        subEl.innerHTML = `${esc(babyName)} ${T('awakeFor')} <strong>${minTekst(vaagen)}</strong> ${T('timeToSettle')}`;
+        noteEl.textContent = T('planNoteWindow');
     } else {
-        labelEl.textContent = "Vinduet er lukket";
-        timeEl.textContent = `${minTekst((nu - naeste.senest) / 60000)} over`;
-        subEl.innerHTML = `${esc(babyName)} har været vågen i <strong>${minTekst(vaagen)}</strong>, hvor ${minTekst(fase.vaageMax)} er det typiske maksimum.`;
-        noteEl.textContent = "Et overtræt barn har sværere ved at falde i søvn, ikke lettere. Dæmp lys og lyd, og prøv en rolig putning nu.";
+        labelEl.textContent = T('planClosed');
+        timeEl.textContent = `${minTekst((nu - naeste.senest) / 60000)} ${T('planOver')}`;
+        subEl.innerHTML = `${esc(babyName)} ${T('awakeFor')} <strong>${minTekst(vaagen)}</strong>, ${T('maxIs')} ${minTekst(fase.vaageMax)} ${T('isTypicalMax')}`;
+        noteEl.textContent = T('planNoteLate');
     }
 }
 
@@ -635,16 +639,6 @@ function renderLeapStatus() {
 // ==========================================
 // DATA-EKSPORT
 // ==========================================
-document.getElementById('btn-export-data')?.addEventListener('click', () => {
-    const data = { babyName, babyGender, babyBirthDate, babyDueDate, birthInfo, sleepLogs: localSleepLogs, growth: growthData, care: careData, milestones };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `babyro-${babyName.toLowerCase()}-${todayKey()}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-});
-
 // ==========================================
 // FANER
 // ==========================================

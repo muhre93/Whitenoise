@@ -27,7 +27,7 @@ document.querySelectorAll('.range-btn').forEach(btn => {
 document.getElementById('btn-apply-range')?.addEventListener('click', () => {
     const f = document.getElementById('range-from').value;
     const t = document.getElementById('range-to').value;
-    if (!f || !t) { alert("Vælg både en fra- og en til-dato."); return; }
+    if (!f || !t) { alert(T('showPeriod')); return; }
     if (f > t) { alert("Fra-datoen skal ligge før til-datoen."); return; }
     logFra = f; logTil = t;
     document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
@@ -89,11 +89,11 @@ function renderStats() {
     }
 
     const kort = [
-        { v: formatShort(gnsPrDag), l: "Gns. pr. dag", n: vurdering },
-        { v: formatShort(totalSek), l: "I alt i perioden", n: `${medSoevn.length} dage med data` },
-        { v: antalLure, l: "Lure i alt", n: medSoevn.length ? `Gns. ${(antalLure / medSoevn.length).toFixed(1)} pr. dag` : "" },
-        { v: formatShort(gnsLur), l: "Gns. lurlængde", n: laengste ? `Længste: ${formatShort(laengste)}` : "" },
-        { v: bedste && bedste.total ? formatShort(bedste.total) : "–", l: "Bedste dag", n: bedste && bedste.total ? shortDate(bedste.key) : "" }
+        { v: formatShort(gnsPrDag), l: T('statAvgDay'), n: vurdering },
+        { v: formatShort(totalSek), l: T('statTotal'), n: `${medSoevn.length} ${T('daysWithData')}` },
+        { v: antalLure, l: T('statNaps'), n: medSoevn.length ? `${T('statAvgDay')} ${(antalLure / medSoevn.length).toFixed(1)}` : "" },
+        { v: formatShort(gnsLur), l: T('statAvgNap'), n: laengste ? `${T('longest')} ${formatShort(laengste)}` : "" },
+        { v: bedste && bedste.total ? formatShort(bedste.total) : "–", l: T('statBest'), n: bedste && bedste.total ? shortDate(bedste.key) : "" }
     ];
     el.innerHTML = kort.map(k => `<div class="stat-card">
         <div class="stat-value">${k.v}</div><div class="stat-label">${k.l}</div>
@@ -169,23 +169,24 @@ function renderHistoryList() {
     const c = document.getElementById('history-container');
     if (!c) return;
     const dage = dageIPerioden().filter(d => d.sessions.length).reverse();
-    if (!dage.length) { c.innerHTML = `<div class="empty-state">Ingen gemte lure i den valgte periode.</div>`; return; }
+    if (!dage.length) { c.innerHTML = `<div class="empty-state">${T('noNapsPeriod')}</div>`; return; }
     c.innerHTML = dage.map(d => `
         <div class="history-day-card">
             <h3>${formatDateDK(d.key)}</h3>
             <ul>${d.sessions.map((s, i) => `
                 <li><span>${esc(s.timeDisplay)}</span>
-                    <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
                         <strong>${esc(s.durationText)}</strong>
+                        <button class="mini-btn" onclick="aabnSoevnRet('${d.key}', ${i})" title="${T('editSleep')}">✏️</button>
                         <button class="delete-btn" onclick="deleteLogEntry('${d.key}', ${i})">❌</button>
                     </div></li>`).join('')}</ul>
-            <div class="day-total">Dagens total: ${formatTimeText(d.total)}</div>
+            <div class="day-total">${T('dayTotal')} ${formatTimeText(d.total)}</div>
         </div>`).join('');
 }
 
 function renderLogPage() {
     const info = document.getElementById('range-info');
-    if (info) info.textContent = `Viser ${dageIPerioden().length} dage: ${formatDateDK(logFra)} – ${formatDateDK(logTil)}`;
+    if (info) info.textContent = `${dageIPerioden().length} ${T('daysWithData').split(' ')[0]}: ${formatDateDK(logFra)} – ${formatDateDK(logTil)}`;
     renderStats();
     tegnChart();
     renderHistoryList();

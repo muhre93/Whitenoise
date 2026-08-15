@@ -93,7 +93,7 @@ function renderGrowthTabs() {
     const el = document.getElementById('growth-tabs');
     if (!el) return;
     const typer = alleMaalTyper();
-    el.innerHTML = `<button class="chart-tab ${aktivtMaal === 'samlet' ? 'active' : ''}" data-maal="samlet">⚖️📏 Vægt &amp; længde</button>` +
+    el.innerHTML = `<button class="chart-tab ${aktivtMaal === 'samlet' ? 'active' : ''}" data-maal="samlet">⚖️📏 ${T('weightLength')}</button>` +
         Object.keys(typer).map(k =>
         `<button class="chart-tab ${k === aktivtMaal ? 'active' : ''}" data-maal="${k}">${typer[k].ikon || '✨'} ${esc(typer[k].navn)}</button>`
     ).join('');
@@ -113,18 +113,18 @@ function tegnVaekstChart() {
         .sort((a, b) => a.dato.localeCompare(b.dato));
 
     if (!babyBirthDate) {
-        area.innerHTML = `<div class="chart-empty">Indtast fødselsdato under Profil, så kan kurven tegnes efter alder.</div>`;
+        area.innerHTML = `<div class="chart-empty">${T('noBirthDate')}</div>`;
         return;
     }
     if (!maalinger.length) {
-        area.innerHTML = `<div class="chart-empty">Ingen målinger af ${type.navn.toLowerCase()} endnu. Tilføj den første ovenfor.</div>`;
+        area.innerHTML = `<div class="chart-empty">${T('noMeasures')}</div>`;
         return;
     }
 
     const punkter = maalinger.map(m => {
         const mdr = alderVedDato(m.dato);
         return { x: Math.max(0, mdr), y: m[aktivtMaal],
-            label: `${new Date(m.dato).toLocaleDateString('da-DK')}: ${talTilFelt(m[aktivtMaal])} ${type.enhed} (${mdr.toFixed(1)} mdr.)` };
+            label: `${new Date(m.dato).toLocaleDateString(locale())}: ${talTilFelt(m[aktivtMaal])} ${type.enhed} (${mdr.toFixed(1)} mdr.)` };
     });
     const maxAlder = Math.max(3, Math.ceil(Math.max(...punkter.map(p => p.x)) + 1));
     let legend = `<span class="c-key"><i class="c-swatch c-sw-s1"></i>${esc(babyName)}</span>`;
@@ -133,8 +133,8 @@ function tegnVaekstChart() {
         const ref = WHO_DATA[babyGender][aktivtMaal];
         const aldre = Object.keys(ref).map(Number).sort((a, b) => a - b).filter(a => a <= maxAlder + 3);
         const bands = [{ lower: aldre.map(a => ({ x: a, y: ref[a][0] })), upper: aldre.map(a => ({ x: a, y: ref[a][2] })) }];
-        legend += `<span class="c-key"><i class="c-swatch c-sw-s2"></i>WHO median</span>
-                   <span class="c-key"><i class="c-swatch c-sw-band"></i>Normalområde</span>`;
+        legend += `<span class="c-key"><i class="c-swatch c-sw-s2"></i>${T('whoMedian')}</span>
+                   <span class="c-key"><i class="c-swatch c-sw-band"></i>${T('normalRange')}</span>`;
         area.innerHTML = lineChart({
             series: [{ points: aldre.map(a => ({ x: a, y: ref[a][1] })), klasse: 'c-s2', dots: false },
                      { points: punkter, klasse: 'c-s1' }],
@@ -155,81 +155,90 @@ function tegnVaekstChart() {
     if (vurdering) area.insertAdjacentHTML('beforeend', `<p class="growth-status">${vurdering}</p>`);
 }
 
-// Vægt og længde i ét billede. Begge omregnes til "procent af
-// det typiske for alderen", så to forskellige enheder kan stå
-// på samme akse — og man kan se, om de følges ad.
+// Vægt og længde vist som to rigtige WHO-kurver under hinanden.
+// Samme udseende som de øvrige, men samlet ét sted — for det er
+// forholdet mellem dem, sundhedsplejersken kigger på.
+function enWhoKurve(maalNoegle) {
+    const type = MAAL_TYPER[maalNoegle];
+    const maalinger = (growthData.measurements || [])
+        .filter(m => m[maalNoegle] != null)
+        .sort((a, b) => a.dato.localeCompare(b.dato));
+
+    if (!maalinger.length) {
+        return `<div class="kurve-blok"><h4>${type.ikon} ${T(maalNoegle === 'vaegt' ? 'weightKg' : 'lengthCm')}</h4>
+            <div class="chart-empty">${T('noMeasures')}</div></div>`;
+    }
+
+    const punkter = maalinger.map(m => {
+        const mdr = alderVedDato(m.dato);
+        return {
+            x: Math.max(0, mdr), y: m[maalNoegle],
+            label: `${new Date(m.dato).toLocaleDateString(locale())}: ${talTilFelt(m[maalNoegle])} ${type.enhed} (${mdr.toFixed(1)} ${T('months')}.)`
+        };
+    });
+    const maxAlder = Math.max(3, Math.ceil(Math.max(...punkter.map(p => p.x)) + 1));
+    const ref = WHO_DATA[babyGender] && WHO_DATA[babyGender][maalNoegle];
+
+    let bands = [], series = [{ points: punkter, klasse: 'c-s1' }];
+    let legend = `<span class="c-key"><i class="c-swatch c-sw-s1"></i>${esc(babyName)}</span>`;
+    if (ref) {
+        const aldre = Object.keys(ref).map(Number).sort((a, b) => a - b).filter(a => a <= maxAlder + 3);
+        bands = [{ lower: aldre.map(a => ({ x: a, y: ref[a][0] })), upper: aldre.map(a => ({ x: a, y: ref[a][2] })) }];
+        series.unshift({ points: aldre.map(a => ({ x: a, y: ref[a][1] })), klasse: 'c-s2', dots: false });
+        legend += `<span class="c-key"><i class="c-swatch c-sw-s2"></i>${T('whoMedian')}</span>
+                   <span class="c-key"><i class="c-swatch c-sw-band"></i>${T('normalRange')}</span>`;
+    }
+
+    return `<div class="kurve-blok">
+        <h4>${type.ikon} ${T(maalNoegle === 'vaegt' ? 'weightKg' : 'lengthCm')}</h4>
+        ${lineChart({
+            series, bands, xMin: 0, xMax: maxAlder,
+            formatY: v => v.toFixed(1),
+            formatX: v => Math.round(v) + " " + T('months'),
+            xTicks: Math.min(6, maxAlder), legend
+        })}
+    </div>`;
+}
+
 function tegnSamletChart(area) {
     if (!babyBirthDate) {
-        area.innerHTML = `<div class="chart-empty">Indtast fødselsdato under Profil, så kan kurven tegnes efter alder.</div>`;
+        area.innerHTML = `<div class="chart-empty">${T('noBirthDate')}</div>`;
         return;
     }
-    const maalinger = (growthData.measurements || [])
-        .filter(m => m.vaegt != null || m.laengde != null)
-        .sort((a, b) => a.dato.localeCompare(b.dato));
-    if (!maalinger.length) {
-        area.innerHTML = `<div class="chart-empty">Ingen målinger endnu. Tilføj vægt og længde under "Tilføj måling".</div>`;
+    const harNoget = (growthData.measurements || []).some(m => m.vaegt != null || m.laengde != null);
+    if (!harNoget) {
+        area.innerHTML = `<div class="chart-empty">${T('noMeasures')}</div>`;
         return;
     }
 
+    area.innerHTML = enWhoKurve('vaegt') + enWhoKurve('laengde');
+
+    // Kort vurdering af, om de to følges ad
     function pctAfMedian(maal, vaerdi, mdr) {
-        const ref = WHO_DATA[babyGender]?.[maal];
+        const ref = WHO_DATA[babyGender] && WHO_DATA[babyGender][maal];
         if (!ref) return null;
         const aldre = Object.keys(ref).map(Number).sort((a, b) => a - b);
         const naermest = aldre.reduce((b, a) => Math.abs(a - mdr) < Math.abs(b - mdr) ? a : b, aldre[0]);
         return (vaerdi / ref[naermest][1]) * 100;
     }
+    const sidsteV = (growthData.measurements || []).filter(m => m.vaegt != null).sort((a, b) => a.dato.localeCompare(b.dato)).pop();
+    const sidsteL = (growthData.measurements || []).filter(m => m.laengde != null).sort((a, b) => a.dato.localeCompare(b.dato)).pop();
 
-    const vPunkter = [], lPunkter = [];
-    maalinger.forEach(m => {
-        const mdr = Math.max(0, alderVedDato(m.dato));
-        if (m.vaegt != null) {
-            const p = pctAfMedian('vaegt', m.vaegt, mdr);
-            if (p != null) vPunkter.push({ x: mdr, y: p, label: `${new Date(m.dato).toLocaleDateString('da-DK')}: ${talTilFelt(m.vaegt)} kg (${Math.round(p)} % af typisk)` });
-        }
-        if (m.laengde != null) {
-            const p = pctAfMedian('laengde', m.laengde, mdr);
-            if (p != null) lPunkter.push({ x: mdr, y: p, label: `${new Date(m.dato).toLocaleDateString('da-DK')}: ${talTilFelt(m.laengde)} cm (${Math.round(p)} % af typisk)` });
-        }
-    });
-
-    if (!vPunkter.length && !lPunkter.length) {
-        area.innerHTML = `<div class="chart-empty">Kan ikke sammenligne uden WHO-data for det valgte køn.</div>`;
-        return;
-    }
-
-    const maxAlder = Math.max(3, Math.ceil(Math.max(...[...vPunkter, ...lPunkter].map(p => p.x)) + 1));
-    const linje100 = [{ x: 0, y: 100 }, { x: maxAlder, y: 100 }];
-
-    area.innerHTML = lineChart({
-        series: [
-            { points: linje100, klasse: 'c-s3', dots: false },
-            { points: vPunkter, klasse: 'c-s1' },
-            { points: lPunkter, klasse: 'c-s2' }
-        ],
-        xMin: 0, xMax: maxAlder,
-        formatY: v => Math.round(v) + ' %',
-        formatX: v => Math.round(v) + " mdr",
-        xTicks: Math.min(6, maxAlder),
-        legend: `<span class="c-key"><i class="c-swatch c-sw-s1"></i>Vægt</span>
-                 <span class="c-key"><i class="c-swatch c-sw-s2"></i>Længde</span>
-                 <span class="c-key"><i class="c-swatch c-sw-s3"></i>Typisk for alderen (100 %)</span>`
-    });
-
-    // Kort forklaring af, hvad de to kurver fortæller sammen
-    const sidsteV = vPunkter[vPunkter.length - 1];
-    const sidsteL = lPunkter[lPunkter.length - 1];
-    let tekst = "";
     if (sidsteV && sidsteL) {
-        const forskel = Math.abs(sidsteV.y - sidsteL.y);
-        tekst = `Seneste måling: vægten ligger på <strong>${Math.round(sidsteV.y)} %</strong> og længden på <strong>${Math.round(sidsteL.y)} %</strong> af det typiske for alderen. `;
-        if (forskel < 8) tekst += `De følges pænt ad — barnet vokser proportionalt.`;
-        else if (sidsteV.y > sidsteL.y) tekst += `Vægten ligger et stykke over længden. Det ses ofte hos velnærede babyer og udjævner sig typisk, når barnet begynder at bevæge sig mere.`;
-        else tekst += `Længden ligger et stykke over vægten — altså et langt, slankt barn. Nævn det gerne ved næste besøg, hvis afstanden vokser.`;
-        tekst += ` Det vigtigste er, at begge kurver holder <em>samme</em> niveau over tid.`;
+        const pv = pctAfMedian('vaegt', sidsteV.vaegt, Math.max(0, alderVedDato(sidsteV.dato)));
+        const pl = pctAfMedian('laengde', sidsteL.laengde, Math.max(0, alderVedDato(sidsteL.dato)));
+        if (pv != null && pl != null) {
+            const forskel = Math.abs(pv - pl);
+            let tekst;
+            if (forskel < 8) tekst = T('proportional');
+            else if (pv > pl) tekst = T('heavierThanLong');
+            else tekst = T('longerThanHeavy');
+            area.insertAdjacentHTML('beforeend',
+                `<p class="growth-status">${T('latestBoth', { v: talTilFelt(sidsteV.vaegt), l: talTilFelt(sidsteL.laengde) })} ${tekst} ${T('sameLevelMatters')}</p>`);
+        }
     } else {
-        tekst = `Tilføj både vægt og længde på samme dato for at kunne sammenligne dem.`;
+        area.insertAdjacentHTML('beforeend', `<p class="growth-status">${T('needBoth')}</p>`);
     }
-    area.insertAdjacentHTML('beforeend', `<p class="growth-status">${tekst}</p>`);
 }
 
 function vurderMaaling(m) {
@@ -256,16 +265,16 @@ function renderMeasureList() {
     if (!el) return;
     const typer = alleMaalTyper();
     const m = (growthData.measurements || []).slice().sort((a, b) => b.dato.localeCompare(a.dato));
-    if (!m.length) { el.innerHTML = `<p class="empty-state">Ingen målinger gemt endnu.</p>`; return; }
+    if (!m.length) { el.innerHTML = `<p class="empty-state">${T('noMeasures')}</p>`; return; }
     const kolonner = Object.keys(typer).filter(k => m.some(x => x[k] != null));
     el.innerHTML = `<div class="table-scroll"><table class="data-table">
-        <thead><tr><th>Dato</th><th>Alder</th>
+        <thead><tr><th>${T('date')}</th><th>${T('age')}</th>
             ${kolonner.map(k => `<th>${esc(typer[k].navn)}<br><small>${esc(typer[k].enhed)}</small></th>`).join('')}
             <th>Note</th><th></th></tr></thead>
         <tbody>${m.map(x => {
             const mdr = alderVedDato(x.dato);
-            return `<tr><td>${new Date(x.dato).toLocaleDateString('da-DK')}</td>
-                <td>${mdr != null ? mdr.toFixed(1) + ' mdr' : '–'}</td>
+            return `<tr><td>${new Date(x.dato).toLocaleDateString(locale())}</td>
+                <td>${mdr != null ? mdr.toFixed(1) + ' ' + T('months') : '–'}</td>
                 ${kolonner.map(k => `<td>${x[k] != null ? talTilFelt(x[k]) : '–'}</td>`).join('')}
                 <td>${esc(x.note || '')}</td>
                 <td><button class="delete-btn" onclick="sletMaaling('${x.dato}')">❌</button></td></tr>`;
