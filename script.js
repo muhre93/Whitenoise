@@ -446,7 +446,8 @@ document.getElementById('btn-save-log')?.addEventListener('click', async () => {
     renderTodayLog(); renderPlanCard();
     if (typeof renderLogPage === 'function') renderLogPage();
     if (typeof planlaegNaesteSoevn === 'function') planlaegNaesteSoevn();
-    document.getElementById('nav-history')?.click();
+    visFane('nav-history');
+    vaelgUnderfane('history', 'sub-overview');
 });
 
 window.deleteLogEntry = async function (key, index) {
@@ -644,37 +645,35 @@ function opdaterAlt() {
     if (typeof planlaegNaesteSoevn === 'function') planlaegNaesteSoevn();
 }
 
+function visFane(navId, husk) {
+    const tab = TABS.find(t => t.id === navId) || TABS[0];
+    TABS.forEach(tt => {
+        const v = document.getElementById(tt.viewId);
+        if (v) { v.classList.remove('active-view'); v.style.display = 'none'; }
+        document.getElementById(tt.id)?.classList.remove('active');
+    });
+    const view = document.getElementById(tab.viewId);
+    if (view) { view.classList.add('active-view'); view.style.display = 'block'; }
+    document.getElementById(tab.id)?.classList.add('active');
+    if (husk !== false) huskFane('main', tab.id);
+
+    if (tab.id === 'nav-history' && typeof renderLogPage === 'function') renderLogPage();
+    if (tab.id === 'nav-care' && typeof renderCare === 'function') renderCare();
+    if (tab.id === 'nav-growth' && typeof renderGrowth === 'function') { renderGrowth(); renderMilestones(); }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     TABS.forEach(tab => {
-        const btn = document.getElementById(tab.id), view = document.getElementById(tab.viewId);
-        if (!btn || !view) return;
-        btn.addEventListener('click', () => {
-            TABS.forEach(tt => {
-                const v = document.getElementById(tt.viewId);
-                if (v) { v.classList.remove('active-view'); v.style.display = 'none'; }
-                document.getElementById(tt.id)?.classList.remove('active');
-            });
-            view.classList.add('active-view');
-            view.style.display = 'block';
-            btn.classList.add('active');
+        document.getElementById(tab.id)?.addEventListener('click', () => {
+            visFane(tab.id);
             window.scrollTo(0, 0);
-            if (tab.id === 'nav-history' && typeof renderLogPage === 'function') renderLogPage();
-            if (tab.id === 'nav-care' && typeof renderCare === 'function') renderCare();
-            if (tab.id === 'nav-growth' && typeof renderGrowth === 'function') { renderGrowth(); renderMilestones(); }
         });
     });
-    document.getElementById('view-player').style.display = 'block';
 
-    // Under-faner i Viden
-    document.querySelectorAll('.sub-tab').forEach(st => {
-        st.addEventListener('click', () => {
-            document.querySelectorAll('.sub-tab').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.sub-panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
-            st.classList.add('active');
-            const p = document.getElementById(st.dataset.sub);
-            p.classList.add('active'); p.style.display = 'block';
-        });
-    });
+    // Vis den fane man var på sidst — ikke altid Lyde
+    const gemt = huskedeFaner();
+    visFane(gemt.main || 'nav-player', false);
+    gendanFaner();
 
     renderSounds();
     opdaterUrKnap();
