@@ -13,7 +13,10 @@
 </head>
 <body>
 
-<button id="btn-theme-corner" class="theme-corner" title="Skift mellem dag og nat" aria-label="Skift mellem dag og nat">🌙</button>
+<div class="corner-tools">
+    <button id="btn-lang" class="corner-btn lang-btn" title="Switch to English">EN</button>
+    <button id="btn-theme-corner" class="corner-btn" title="Skift mellem dag og nat" aria-label="Skift mellem dag og nat">🌙</button>
+</div>
 
 <header class="top-header">
     <h1 id="txt-app-title">BabyRo</h1>
@@ -26,32 +29,32 @@
 </div>
 
 <nav class="app-nav">
-    <button id="nav-player" class="nav-item active">🎧 Lyde</button>
-    <button id="nav-care" class="nav-item">🍼 Pleje</button>
-    <button id="nav-history" class="nav-item">🌙 Søvn</button>
-    <button id="nav-growth" class="nav-item">📈 Vækst</button>
-    <button id="nav-milestones" class="nav-item">⭐ Milepæle</button>
-    <button id="nav-know" class="nav-item">📖 Viden</button>
-    <button id="nav-profile" class="nav-item">👤 Profil</button>
+    <button id="nav-player" class="nav-item active" data-i18n="navPlayer">⏱️ Søvnur</button>
+    <button id="nav-care" class="nav-item" data-i18n="navCare">🍼 Pleje</button>
+    <button id="nav-history" class="nav-item" data-i18n="navHistory">🌙 Søvn</button>
+    <button id="nav-profile" class="nav-item" data-i18n="navProfile">👤 Profil</button>
+    <button id="nav-milestones" class="nav-item" data-i18n="navMilestones">⭐ Milepæle</button>
+    <button id="nav-know" class="nav-item" data-i18n="navKnow">📖 Viden</button>
+    <button id="nav-growth" class="nav-item" data-i18n="navGrowth">📈 Vækst</button>
 </nav>
 
 <!-- ================= LYDE ================= -->
 <main id="view-player" class="view-section active-view">
 
     <section class="panel control-center">
-        <p class="timer-label" id="txt-timer-label">Søvnur</p>
+        <p class="timer-label" id="txt-timer-label" data-i18n="timerLabel">Søvnur</p>
         <div id="time-elapsed" class="time-display">00:00:00</div>
         <div class="time-actions">
             <button id="btn-pause-time" class="action-btn pause-btn">▶ Start ur</button>
-            <button id="btn-save-log" class="action-btn save-btn">Gem lur</button>
-            <button id="btn-reset-time" class="action-btn reset-btn">Nulstil</button>
+            <button id="btn-save-log" class="action-btn save-btn" data-i18n="btnSaveNap">Gem lur</button>
+            <button id="btn-reset-time" class="action-btn reset-btn" data-i18n="btnReset">Nulstil</button>
         </div>
-        <p class="mini-help">Uret kan bruges helt uden lyd. Afspiller du en lyd, starter det af sig selv.</p>
+        <p class="mini-help" data-i18n="timerHelp">Uret kan bruges helt uden lyd.</p>
     </section>
 
     <section class="panel plan-card" id="plan-card">
         <div class="plan-head">
-            <h2>Dagens plan <span class="hint" data-tip="BabyRo regner næste sovetid ud fra, hvornår sidste lur sluttede, plus den vågetid der passer til barnets alder. Kræver at fødselsdatoen er udfyldt under Profil.">?</span></h2>
+            <h2><span data-i18n="planTitle">Dagens plan</span> <span class="hint" data-i18n-tip="planTip" data-tip="">?</span></h2>
             <span class="plan-phase" id="plan-phase"></span>
         </div>
         <div class="plan-main">
@@ -60,20 +63,20 @@
             <p class="plan-sub" id="plan-sub">Gem en lur, så regner BabyRo næste sovetid ud.</p>
         </div>
         <div class="plan-stats">
-            <div class="plan-stat"><span id="plan-total">0t 0m</span><small>Søvn i dag</small></div>
-            <div class="plan-stat"><span id="plan-target">–</span><small>Anbefalet</small></div>
-            <div class="plan-stat"><span id="plan-naps">0</span><small>Lure i dag</small></div>
-            <div class="plan-stat"><span id="plan-feed">–</span><small>Siden mad</small></div>
+            <div class="plan-stat"><span id="plan-total">0t 0m</span><small data-i18n="planSleepToday">Søvn i dag</small></div>
+            <div class="plan-stat"><span id="plan-target">–</span><small data-i18n="planTarget">Anbefalet</small></div>
+            <div class="plan-stat"><span id="plan-naps">0</span><small data-i18n="planNaps">Lure i dag</small></div>
+            <div class="plan-stat"><span id="plan-feed">–</span><small data-i18n="planSinceFeed">Siden mad</small></div>
         </div>
         <div class="plan-bar"><div class="plan-bar-fill" id="plan-bar-fill"></div></div>
-        <button id="btn-enable-notif" class="action-btn save-btn full-btn" style="display:none;">🔔 Slå påmindelser til</button>
+        <button id="btn-enable-notif" class="action-btn save-btn full-btn" style="display:none;" data-i18n="enableNotif">🔔 Slå påmindelser til</button>
         <p class="plan-note" id="plan-note"></p>
     </section>
 
     <div class="sub-tabs" data-group="player">
-        <button class="sub-tab active" data-sub="sub-sounds">🎵 Lyde</button>
-        <button class="sub-tab" data-sub="sub-today">📋 I dag</button>
-        <button class="sub-tab" data-sub="sub-smart">🎙️ Smart-lyt</button>
+        <button class="sub-tab active" data-sub="sub-sounds">🎵 <span data-i18n="navPlayerSounds">Lyde</span></button>
+        <button class="sub-tab" data-sub="sub-today">📋 <span data-i18n="today">I dag</span></button>
+        <button class="sub-tab" data-sub="sub-smart">🎙️ <span data-i18n="smartShort">Smart-lyt</span></button>
     </div>
 
     <div id="sub-sounds" class="sub-panel active">
@@ -81,18 +84,18 @@
             <div class="autostop-head">
                 <span class="autostop-icon">🌙</span>
                 <div>
-                    <strong id="txt-autostop-label">Sluk lyden blødt efter</strong>
-                    <small>Tones ned over 5 minutter, så barnet ikke vågner af stilheden</small>
+                    <strong id="txt-autostop-label" data-i18n="autoStopTitle">Sluk lyden blødt efter</strong>
+                    <small data-i18n="autoStopSub">Tones ned over 5 minutter</small>
                 </div>
                 <span class="hint" data-tip="I stedet for at stoppe brat skruer BabyRo langsomt ned over de sidste 5 minutter. Et brat lydskift er en af de hyppigste grunde til, at en baby vågner.">?</span>
             </div>
             <div class="autostop-choices" id="autostop-choices">
-                <button class="as-btn active" data-min="0">Hele tiden</button>
-                <button class="as-btn" data-min="30">30 min</button>
-                <button class="as-btn" data-min="60">1 time</button>
-                <button class="as-btn" data-min="120">2 timer</button>
-                <button class="as-btn" data-min="240">4 timer</button>
-                <button class="as-btn" data-min="720">12 timer</button>
+                <button class="as-btn active" data-min="0" data-i18n="asAlways">Hele tiden</button>
+                <button class="as-btn" data-min="30" data-i18n="as30">30 min</button>
+                <button class="as-btn" data-min="60" data-i18n="as60">1 time</button>
+                <button class="as-btn" data-min="120" data-i18n="as120">2 timer</button>
+                <button class="as-btn" data-min="240" data-i18n="as240">4 timer</button>
+                <button class="as-btn" data-min="720" data-i18n="as720">12 timer</button>
             </div>
             <select id="timer-select" class="skjult-felt" aria-hidden="true" tabindex="-1">
                 <option value="0">Kør hele tiden</option>
@@ -104,12 +107,12 @@
             </select>
         </div>
         <section class="sound-grid" id="sound-grid"></section>
-        <div class="global-stop-wrapper"><button id="stop-all" class="stop-btn">Sluk alt lyd</button></div>
+        <div class="global-stop-wrapper"><button id="stop-all" class="stop-btn" data-i18n="stopAll">Sluk alt lyd</button></div>
     </div>
 
     <div id="sub-today" class="sub-panel" style="display:none;">
         <section class="panel today-log-box">
-            <h2 id="txt-today-title">Søvn i dag</h2>
+            <h2 id="txt-today-title" data-i18n="todayTitle">Søvn i dag</h2>
             <p class="date-subtitle" id="today-date-text">I dag</p>
             <ul class="log-list" id="today-log-list"></ul>
             <div class="log-total">Samlet sovetid: <span id="today-total-time">0:00 min</span></div>
@@ -118,20 +121,20 @@
 
     <div id="sub-smart" class="sub-panel" style="display:none;">
         <section class="panel smart-listen-box">
-            <h2 id="txt-smart-title">🎙️ Smart-lyt <span class="hint" data-tip="Telefonen lytter via mikrofonen. Hører den vedvarende gråd i ca. 1,5 sekund, starter den automatisk din valgte lyd. Skærmen må gerne slukke.">?</span></h2>
+            <h2 id="txt-smart-title"><span data-i18n="smartTitle">🎙️ Smart-lyt</span> <span class="hint" data-i18n-tip="smartTip" data-tip="">?</span></h2>
             <p class="smart-desc" id="txt-smart-desc"></p>
             <div class="smart-row">
-                <label for="smart-sound-select" id="txt-smart-sound-label">Lyd der startes:</label>
+                <label for="smart-sound-select" id="txt-smart-sound-label" data-i18n="smartSound">Lyd der startes:</label>
                 <select id="smart-sound-select"></select>
             </div>
             <div class="smart-row">
-                <label for="smart-sensitivity" id="txt-smart-sens-label">Følsomhed:</label>
+                <label for="smart-sensitivity" id="txt-smart-sens-label" data-i18n="smartSens">Følsomhed:</label>
                 <input type="range" id="smart-sensitivity" min="1" max="10" value="6">
-                <span class="hint" data-tip="Høj følsomhed reagerer på små lyde — godt i et stille rum. Lav følsomhed kræver kraftigere gråd og undgår falsk alarm.">?</span>
+                <span class="hint" data-i18n-tip="smartSensTip" data-tip="">?</span>
             </div>
             <div class="mic-meter"><div id="mic-level" class="mic-level"></div></div>
-            <p id="smart-status" class="smart-status">Smart-lyt er slukket.</p>
-            <button id="btn-smart-listen" class="action-btn save-btn full-btn">Start Smart-lyt</button>
+            <p id="smart-status" class="smart-status" data-i18n="smartOff">Smart-lyt er slukket.</p>
+            <button id="btn-smart-listen" class="action-btn save-btn full-btn" data-i18n="smartStart">Start Smart-lyt</button>
         </section>
     </div>
 </main>
@@ -139,7 +142,7 @@
 <!-- ================= SØVN ================= -->
 <main id="view-history" class="view-section" style="display:none;">
     <div class="page-header">
-        <h2 id="txt-history-title">Søvnlog</h2>
+        <h2 id="txt-history-title" data-i18n="historyTitle">Søvnlog</h2>
         <p id="txt-history-sub"></p>
     </div>
     <div id="guest-warning" class="warning-box"></div>
@@ -154,25 +157,25 @@
         <div class="date-range">
             <label class="field"><span>Fra</span><input type="date" id="range-from"></label>
             <label class="field"><span>Til</span><input type="date" id="range-to"></label>
-            <button id="btn-apply-range" class="action-btn save-btn">Vis periode</button>
+            <button id="btn-apply-range" class="action-btn save-btn" data-i18n="showPeriod">Vis periode</button>
         </div>
         <p class="range-info" id="range-info"></p>
     </section>
 
     <div class="sub-tabs" data-group="history">
-        <button class="sub-tab active" data-sub="sub-overview">📊 Overblik</button>
-        <button class="sub-tab" data-sub="sub-diary">📅 Dagbog</button>
+        <button class="sub-tab active" data-sub="sub-overview" data-i18n="tabOverview">📊 Overblik</button>
+        <button class="sub-tab" data-sub="sub-diary" data-i18n="tabDiary">📅 Dagbog</button>
     </div>
 
     <div id="sub-overview" class="sub-panel active">
         <section class="stat-grid" id="stat-grid"></section>
         <section class="panel">
             <div class="chart-tabs">
-                <button class="chart-tab active" data-chart="total">Søvn pr. dag</button>
-                <button class="chart-tab" data-chart="trend">Udvikling</button>
-                <button class="chart-tab" data-chart="naps">Antal lure</button>
-                <button class="chart-tab" data-chart="length">Lurlængde</button>
-                <button class="chart-tab" data-chart="clock">Døgnkort</button>
+                <button class="chart-tab active" data-chart="total" data-i18n="chTotal">Søvn pr. dag</button>
+                <button class="chart-tab" data-chart="trend" data-i18n="chTrend">Udvikling</button>
+                <button class="chart-tab" data-chart="naps" data-i18n="chNaps">Antal lure</button>
+                <button class="chart-tab" data-chart="length" data-i18n="chLength">Lurlængde</button>
+                <button class="chart-tab" data-chart="clock" data-i18n="chClock">Døgnkort</button>
             </div>
             <div id="chart-area"></div>
             <p class="chart-help" id="chart-help"></p>
@@ -180,6 +183,7 @@
     </div>
 
     <div id="sub-diary" class="sub-panel" style="display:none;">
+        <button id="btn-add-sleep" class="action-btn save-btn full-btn" style="margin-bottom:20px;" data-i18n="addSleep">+ Tilføj søvn manuelt</button>
         <div class="log-container" id="history-container"></div>
     </div>
 
@@ -188,86 +192,47 @@
 <!-- ================= PLEJE ================= -->
 <main id="view-care" class="view-section" style="display:none;">
     <div class="page-header">
-        <h2>Mad &amp; bleer</h2>
-        <p>Ét tryk, når det sker — så husker BabyRo resten.</p>
+        <h2 data-i18n="careTitle">Mad &amp; bleer</h2>
+        <p data-i18n="careSub">Ét tryk, når det sker — så husker BabyRo resten.</p>
     </div>
 
-    <!-- DAGENS OVERBLIK: hvad er sket, og hvor længe siden -->
-    <section class="panel care-hero">
+    <!-- ALTID SYNLIG: registrér med ét tryk -->
+    <section class="panel care-quick-panel">
         <div class="care-hero-head">
-            <h3 id="care-hero-date">I dag</h3>
-            <span class="hint" data-tip="Tallene tæller kun i dag og nulstilles ved midnat. 'Siden' viser, hvor længe der er gået, siden det sidst skete — også hvis det var i går.">?</span>
+            <h3 data-i18n="careRegister">Registrér nu</h3>
+            <span class="hint" data-i18n-tip="careRegHelp" data-tip="">?</span>
+        </div>
+        <div class="quick-add">
+            <button class="qa-btn" data-quick="amning">🤱<span data-i18n="breastfeed">Amning</span></button>
+            <button class="qa-btn" data-quick="flaske">🍼<span data-i18n="bottle">Flaske</span></button>
+            <button class="qa-btn" data-quick="mad">🥣<span data-i18n="solids">Fast føde</span></button>
+            <button class="qa-btn" data-quick="vaad">💧<span data-i18n="wet">Våd ble</span></button>
+            <button class="qa-btn" data-quick="afforing">💩<span data-i18n="dirty">Afføring</span></button>
+            <button class="qa-btn" data-quick="begge">🌊<span data-i18n="both">Våd + afføring</span></button>
         </div>
         <div class="care-hero-grid">
             <div class="care-hero-box">
                 <span class="che-icon">🍼</span>
                 <span class="che-count" id="che-feeds">0</span>
                 <span class="che-label" id="che-label-feeds">måltider i dag</span>
-                <span class="che-since" id="che-feed-since">Endnu ingen</span>
+                <span class="che-since" id="che-feed-since">–</span>
             </div>
             <div class="care-hero-box">
                 <span class="che-icon">👶</span>
                 <span class="che-count" id="che-diapers">0</span>
                 <span class="che-label" id="che-label-diapers">bleer i dag</span>
-                <span class="che-since" id="che-diaper-since">Endnu ingen</span>
+                <span class="che-since" id="che-diaper-since">–</span>
             </div>
         </div>
         <p class="care-hero-note" id="care-hero-note"></p>
     </section>
 
     <div class="sub-tabs" data-group="care">
-        <button class="sub-tab active" data-sub="sub-quick">📋 Dagen</button>
-        <button class="sub-tab" data-sub="sub-carestats">📊 Overblik</button>
+        <button class="sub-tab active" data-sub="sub-quick" data-i18n="tabDiary">📅 Dagbog</button>
+        <button class="sub-tab" data-sub="sub-carestats" data-i18n="tabOverview">📊 Overblik</button>
     </div>
 
-    <!-- DAGEN: registrér + ret i ét -->
     <div id="sub-quick" class="sub-panel active">
-        <section class="panel">
-            <h3>Registrér nu</h3>
-            <p class="field-label">Tryk, når det sker. Tidspunktet sættes automatisk — du kan rette det bagefter.</p>
-            <div class="quick-add">
-                <button class="qa-btn" data-quick="amning">🤱<span>Amning</span></button>
-                <button class="qa-btn" data-quick="flaske">🍼<span>Flaske</span></button>
-                <button class="qa-btn" data-quick="mad">🥣<span>Fast føde</span></button>
-                <button class="qa-btn" data-quick="vaad">💧<span>Våd ble</span></button>
-                <button class="qa-btn" data-quick="afforing">💩<span>Afføring</span></button>
-                <button class="qa-btn" data-quick="begge">🌊<span>Våd + afføring</span></button>
-            </div>
-            <button id="btn-toggle-detail" class="action-btn reset-btn full-btn" style="margin-top:16px;">✏️ Tilføj med eget tidspunkt og detaljer</button>
-
-            <div id="care-detail" style="display:none; margin-top:20px;">
-                <div class="measure-form">
-                    <label class="field"><span>Type</span>
-                        <select id="care-type">
-                            <option value="amning">🤱 Amning</option>
-                            <option value="flaske">🍼 Flaske</option>
-                            <option value="mad">🥣 Fast føde</option>
-                            <option value="ble">👶 Ble</option>
-                        </select>
-                    </label>
-                    <label class="field"><span>Tidspunkt</span><input type="datetime-local" id="care-time"></label>
-                    <label class="field" id="wrap-care-side"><span>Side</span>
-                        <select id="care-side">
-                            <option value="venstre">Venstre</option>
-                            <option value="hoejre">Højre</option>
-                            <option value="begge">Begge</option>
-                        </select>
-                    </label>
-                    <label class="field" id="wrap-care-min"><span>Minutter</span><input type="text" inputmode="decimal" id="care-min" placeholder="15"></label>
-                    <label class="field" id="wrap-care-ml"><span>Mængde (ml)</span><input type="text" inputmode="decimal" id="care-ml" placeholder="120"></label>
-                    <label class="field" id="wrap-care-diaper"><span>Bleen indeholdt</span>
-                        <select id="care-diaper">
-                            <option value="vaad">💧 Våd</option>
-                            <option value="afforing">💩 Afføring</option>
-                            <option value="begge">🌊 Begge dele</option>
-                        </select>
-                    </label>
-                </div>
-                <label class="field"><span>Note (valgfri)</span><input type="text" id="care-note" placeholder="F.eks. sov undervejs"></label>
-                <button id="btn-add-care" class="action-btn save-btn full-btn">Gem registrering</button>
-            </div>
-        </section>
-
         <section class="panel">
             <div class="care-day-head">
                 <h3 id="care-list-title">Dagens registreringer</h3>
@@ -277,6 +242,39 @@
                 </div>
             </div>
             <div id="care-today"></div>
+            <button id="btn-toggle-detail" class="action-btn reset-btn full-btn" style="margin-top:16px;" data-i18n="detailToggle">✏️ Tilføj med eget tidspunkt og detaljer</button>
+
+            <div id="care-detail" style="display:none; margin-top:20px;">
+                <div class="measure-form">
+                    <label class="field"><span data-i18n="careType">Type</span>
+                        <select id="care-type">
+                            <option value="amning">🤱 <span></span>Amning</option>
+                            <option value="flaske">🍼 Flaske</option>
+                            <option value="mad">🥣 Fast føde</option>
+                            <option value="ble">👶 Ble</option>
+                        </select>
+                    </label>
+                    <label class="field"><span data-i18n="time">Tidspunkt</span><input type="datetime-local" id="care-time"></label>
+                    <label class="field" id="wrap-care-side"><span data-i18n="careSide">Side</span>
+                        <select id="care-side">
+                            <option value="venstre">Venstre</option>
+                            <option value="hoejre">Højre</option>
+                            <option value="begge">Begge</option>
+                        </select>
+                    </label>
+                    <label class="field" id="wrap-care-min"><span data-i18n="minutes">Minutter</span><input type="text" inputmode="decimal" id="care-min" placeholder="15"></label>
+                    <label class="field" id="wrap-care-ml"><span data-i18n="amountMl">Mængde (ml)</span><input type="text" inputmode="decimal" id="care-ml" placeholder="120"></label>
+                    <label class="field" id="wrap-care-diaper"><span data-i18n="nappyHeld">Bleen indeholdt</span>
+                        <select id="care-diaper">
+                            <option value="vaad">💧 Våd</option>
+                            <option value="afforing">💩 Afføring</option>
+                            <option value="begge">🌊 Begge dele</option>
+                        </select>
+                    </label>
+                </div>
+                <label class="field"><span data-i18n="note">Note (valgfri)</span><input type="text" id="care-note"></label>
+                <button id="btn-add-care" class="action-btn save-btn full-btn" data-i18n="saveEntry">Gem registrering</button>
+            </div>
         </section>
     </div>
 
@@ -284,10 +282,10 @@
         <section class="stat-grid" id="care-stats"></section>
         <section class="panel">
             <div class="chart-tabs">
-                <button class="chart-tab active" data-carechart="feeds">Måltider pr. dag</button>
-                <button class="chart-tab" data-carechart="diapers">Bleer pr. dag</button>
-                <button class="chart-tab" data-carechart="ml">Mælk (ml)</button>
-                <button class="chart-tab" data-carechart="clock">Døgnkort</button>
+                <button class="chart-tab active" data-carechart="feeds" data-i18n="feedsPerDay">Måltider pr. dag</button>
+                <button class="chart-tab" data-carechart="diapers" data-i18n="nappiesPerDay">Bleer pr. dag</button>
+                <button class="chart-tab" data-carechart="ml" data-i18n="milkMl">Mælk (ml)</button>
+                <button class="chart-tab" data-carechart="clock" data-i18n="chClock">Døgnkort</button>
             </div>
             <div id="care-chart"></div>
             <p class="chart-help" id="care-chart-help"></p>
@@ -298,7 +296,7 @@
 <!-- ================= VÆKST ================= -->
 <main id="view-growth" class="view-section" style="display:none;">
     <div class="page-header">
-        <h2>Vækst</h2>
+        <h2 data-i18n="growthTitle">Vækst</h2>
         <p>Følg <span class="b-name">Baby</span>s kurver mellem besøgene.</p>
     </div>
 
@@ -308,8 +306,8 @@
     </div>
 
     <div class="sub-tabs" data-group="growth">
-        <button class="sub-tab active" data-sub="sub-curves">📈 Mål &amp; kurver</button>
-        <button class="sub-tab" data-sub="sub-measures">📋 Alle målinger</button>
+        <button class="sub-tab active" data-sub="sub-curves" data-i18n="tabCurves">📈 Mål &amp; kurver</button>
+        <button class="sub-tab" data-sub="sub-measures" data-i18n="tabMeasures">📋 Alle målinger</button>
     </div>
 
     <div id="sub-curves" class="sub-panel active">
@@ -324,8 +322,8 @@
             <div id="custom-fields"></div>
             <label class="field"><span>Note (valgfri)</span><input type="text" id="m-note" placeholder="F.eks. besøg hos sundhedsplejersken"></label>
             <div class="measure-actions">
-                <button id="btn-add-measure" class="action-btn save-btn">Gem måling</button>
-                <button id="btn-add-custom" class="action-btn reset-btn">+ Tilføj egen måling</button>
+                <button id="btn-add-measure" class="action-btn save-btn" data-i18n="saveMeasure">Gem måling</button>
+                <button id="btn-add-custom" class="action-btn reset-btn" data-i18n="addOwn">+ Tilføj egen måling</button>
             </div>
         </section>
 
@@ -338,7 +336,7 @@
 
     <div id="sub-measures" class="sub-panel" style="display:none;">
         <section class="panel">
-            <h3>Alle målinger</h3>
+            <h3 data-i18n="allMeasures">Alle målinger</h3>
             <div id="measure-list"></div>
         </section>
         <p class="disclaimer">BabyRo erstatter ikke sundhedsplejersken eller lægen. Er du i tvivl om dit barns vækst eller trivsel, så tag altid kontakt.</p>
@@ -348,7 +346,7 @@
 <!-- ================= MILEPÆLE ================= -->
 <main id="view-milestones" class="view-section" style="display:none;">
     <div class="page-header">
-        <h2>Milepæle</h2>
+        <h2 data-i18n="msTitle">Milepæle</h2>
         <p>De øjeblikke, man tror man husker — men ikke gør.</p>
     </div>
 
@@ -358,7 +356,7 @@
     </div>
 
     <section class="panel">
-        <h3>Ny milepæl</h3>
+        <h3 data-i18n="msNew">Ny milepæl</h3>
         <div class="measure-form">
             <label class="field"><span>Hvad skete der?</span>
                 <input type="text" id="ms-title" list="ms-suggestions" placeholder="F.eks. Første smil">
@@ -369,11 +367,11 @@
         <label class="field"><span>Fortæl om det (valgfri)</span><textarea id="ms-note" rows="3" placeholder="Hvor var I? Hvem så det?"></textarea></label>
         <label class="field"><span>Billede (valgfri) <span class="hint" data-tip="Billedet skaleres automatisk ned i din browser til ca. 40 KB, før det gemmes. Originalen bliver ikke sendt nogen steder.">?</span></span><input type="file" id="ms-photo" accept="image/*"></label>
         <div id="ms-preview"></div>
-        <button id="btn-add-milestone" class="action-btn save-btn full-btn">Gem milepæl</button>
+        <button id="btn-add-milestone" class="action-btn save-btn full-btn" data-i18n="msSave">Gem milepæl</button>
     </section>
 
     <section class="panel">
-        <h3>Tidslinje</h3>
+        <h3 data-i18n="msTimeline">Tidslinje</h3>
         <div id="milestone-list"></div>
     </section>
 </main>
@@ -381,9 +379,9 @@
 <!-- ================= VIDEN ================= -->
 <main id="view-know" class="view-section" style="display:none;">
     <div class="sub-tabs" data-group="know">
-        <button class="sub-tab active" data-sub="sub-plan-explain">🧭 Søvnplanen</button>
-        <button class="sub-tab" data-sub="sub-sleep">👶 Søvn</button>
-        <button class="sub-tab" data-sub="sub-leaps">🐯 Tigerspring</button>
+        <button class="sub-tab active" data-sub="sub-plan-explain" data-i18n="tabPlanExplain">🧭 Søvnplanen</button>
+        <button class="sub-tab" data-sub="sub-sleep" data-i18n="tabSleepKnow">👶 Søvn</button>
+        <button class="sub-tab" data-sub="sub-leaps" data-i18n="tabLeaps">🐯 Tigerspring</button>
     </div>
 
     <div id="sub-plan-explain" class="sub-panel active">
@@ -498,16 +496,16 @@
 <!-- ================= PROFIL ================= -->
 <main id="view-profile" class="view-section" style="display:none;">
     <div class="sub-tabs" data-group="profile">
-        <button class="sub-tab active" data-sub="sub-child">👶 Barnet</button>
-        <button class="sub-tab" data-sub="sub-children">👨‍👩‍👧 Børn &amp; deling</button>
-        <button class="sub-tab" data-sub="sub-notif">🔔 Påmindelser</button>
-        <button class="sub-tab" data-sub="sub-app">⚙️ App &amp; konto</button>
+        <button class="sub-tab active" data-sub="sub-child" data-i18n="tabChild">👶 Barnet</button>
+        <button class="sub-tab" data-sub="sub-children" data-i18n="tabChildren">👨‍👩‍👧 Børn &amp; deling</button>
+        <button class="sub-tab" data-sub="sub-notif" data-i18n="tabNotif">🔔 Påmindelser</button>
+        <button class="sub-tab" data-sub="sub-app" data-i18n="tabApp">⚙️ App &amp; konto</button>
     </div>
 
     <!-- BARNET -->
     <div id="sub-child" class="sub-panel active">
         <div class="profile-card">
-            <h3>Dit barn</h3>
+            <h3 data-i18n="yourChild">Dit barn</h3>
             <div id="profile-locked-note" class="warning-box" style="text-align:left; display:none;">
                 <strong>🔒 Log ind for at gemme</strong><br>Felterne herunder kan først gemmes, når du er logget ind.
             </div>
@@ -520,11 +518,11 @@
             </div>
             <label class="field"><span>Fødselsdato <span class="hint" data-tip="Bruges til vågetider, søvnplan, vækstkurver og barnets alder. Uden den kan BabyRo ikke regne næste sovetid ud.">?</span></span><input type="date" id="profile-birthdate-input"></label>
             <label class="field"><span>Terminsdato <span class="hint" data-tip="Tigerspring regnes altid fra terminsdatoen, ikke fødselsdagen. Et barn født før tid rammer springene tilsvarende senere.">?</span></span><input type="date" id="profile-duedate-input"></label>
-            <button id="btn-update-name" class="action-btn save-btn full-btn">Gem oplysninger</button>
+            <button id="btn-update-name" class="action-btn save-btn full-btn" data-i18n="saveDetails">Gem oplysninger</button>
         </div>
 
         <div class="profile-card">
-            <h3>Fødslen</h3>
+            <h3 data-i18n="birthTitle">Fødslen</h3>
             <p class="field-label">De oplysninger, man aldrig kan huske bagefter.</p>
             <div class="measure-form">
                 <label class="field"><span>Fødselstidspunkt</span><input type="time" id="birth-time"></label>
@@ -537,7 +535,7 @@
             <label class="field"><span>Forælder 1</span><input type="text" id="parent-1" placeholder="Navn"></label>
             <label class="field"><span>Forælder 2</span><input type="text" id="parent-2" placeholder="Navn"></label>
             <label class="field"><span>Historien om fødslen (valgfri)</span><textarea id="birth-story" rows="4" placeholder="Skriv det ned, mens I husker det..."></textarea></label>
-            <button id="btn-save-birth" class="action-btn save-btn full-btn">Gem fødselsoplysninger</button>
+            <button id="btn-save-birth" class="action-btn save-btn full-btn" data-i18n="saveBirth">Gem fødselsoplysninger</button>
         </div>
 
         <div class="profile-card">
@@ -558,16 +556,16 @@
                 <select id="rep-compare"><option value="">Ingen sammenligning</option></select>
             </label>
             <p class="range-info" id="rep-info"></p>
-            <button id="btn-open-report" class="action-btn save-btn full-btn">📄 Lav rapporten</button>
+            <button id="btn-open-report" class="action-btn save-btn full-btn" data-i18n="reportMake">📄 Lav rapporten</button>
         </div>
     </div>
 
     <!-- BØRN & DELING -->
     <div id="sub-children" class="sub-panel" style="display:none;">
         <div class="profile-card" id="children-card">
-            <h3>Dine børn</h3>
+            <h3 data-i18n="yourChildren">Dine børn</h3>
             <div id="children-list"></div>
-            <button id="btn-new-child" class="action-btn reset-btn full-btn">+ Tilføj et barn til</button>
+            <button id="btn-new-child" class="action-btn reset-btn full-btn" data-i18n="addChild">+ Tilføj et barn til</button>
         </div>
 
         <div class="profile-card" id="archived-card" style="display:none;">
@@ -581,7 +579,7 @@
             <div id="share-area"></div>
             <div class="share-join">
                 <label class="field"><span>Har du fået en kode?</span><input type="text" id="join-code" placeholder="F.eks. BABY-4K7Q" maxlength="12"></label>
-                <button id="btn-join-child" class="action-btn save-btn full-btn">Tilslut mig barnet</button>
+                <button id="btn-join-child" class="action-btn save-btn full-btn" data-i18n="joinChild">Tilslut mig barnet</button>
             </div>
         </div>
     </div>
@@ -592,46 +590,85 @@
             <h3>Påmindelser <span class="hint" data-tip="BabyRo sender en besked, inden søvnvinduet åbner, så barnet når at falde til ro. På iPhone kræver det, at appen er lagt på hjemmeskærmen fra Safari.">?</span></h3>
             <p class="field-label">Du får besked, inden det er tid til næste lur.</p>
             <label class="field"><span>Varsel før sovetid (minutter)</span><input type="text" inputmode="numeric" id="notif-lead" value="15"></label>
-            <button id="btn-notif-toggle" class="action-btn save-btn full-btn">🔔 Slå påmindelser til</button>
+            <button id="btn-notif-toggle" class="action-btn save-btn full-btn" data-i18n="enableNotif">🔔 Slå påmindelser til</button>
             <p class="field-label" id="notif-status" style="margin-top:12px;"></p>
-            <button id="btn-notif-test" class="action-btn reset-btn full-btn" style="margin-top:10px; display:none;">Send en testbesked</button>
+            <button id="btn-notif-test" class="action-btn reset-btn full-btn" style="margin-top:10px; display:none;" data-i18n="notifTest">Send en testbesked</button>
         </div>
     </div>
 
     <!-- APP & KONTO -->
     <div id="sub-app" class="sub-panel" style="display:none;">
         <div class="profile-card" id="install-card">
-            <h3>📱 Installér BabyRo</h3>
+            <h3 data-i18n="installTitle">📱 Installér BabyRo</h3>
             <p class="field-label" id="install-text">Læg BabyRo på hjemmeskærmen, så den åbner som en rigtig app — og så påmindelserne virker.</p>
-            <button id="btn-install" class="action-btn save-btn full-btn" style="display:none;">Installér appen</button>
+            <button id="btn-install" class="action-btn save-btn full-btn" style="display:none;" data-i18n="installBtn">Installér appen</button>
             <div id="install-steps" class="install-steps"></div>
         </div>
 
         <div id="profile-guest-section" class="profile-card">
-            <h3>Log ind for at gemme</h3>
+            <h3 data-i18n="loginTitle">Log ind for at gemme</h3>
             <p class="field-label">Du kan bruge alle lyde, søvnuret og loggen med det samme. Log ind, hvis du vil gemme det sikkert, dele med den anden forælder og have det med på tværs af telefoner.</p>
             <button id="btn-google-login" class="google-btn"><span class="btn-icon">G</span> Log ind med Google</button>
         </div>
 
         <div id="profile-logged-in-section" class="profile-card" style="display:none;">
-            <h3>Din konto</h3>
+            <h3 data-i18n="yourAccount">Din konto</h3>
             <p id="logged-in-email" class="field-label"></p>
-            <button id="btn-logout" class="action-btn reset-btn full-btn">Log ud af BabyRo</button>
+            <button id="btn-logout" class="action-btn reset-btn full-btn" data-i18n="logout">Log ud af BabyRo</button>
         </div>
 
         <div class="profile-card">
-            <h3>Tema &amp; Design</h3>
+            <h3 data-i18n="themeTitle">Tema &amp; Design</h3>
             <p class="field-label">Skån øjnene om natten.</p>
             <button id="btn-theme-toggle" class="action-btn pause-btn full-btn">Skift til Nattilstand 🌙</button>
         </div>
 
         <div class="profile-card">
-            <h3>Dine data</h3>
-            <p class="field-label">Hent alt, hvad BabyRo har gemt om dit barn.</p>
-            <button id="btn-export-data" class="action-btn reset-btn full-btn">💾 Download alle mine data</button>
+            <h3 data-i18n="summaryTitle">Oversigt over alt</h3>
+            <p class="field-label" data-i18n="summarySub">Åbn en samlet, læsbar side med alt om dit barn — klar til print eller PDF.</p>
+            <button id="btn-open-summary" class="action-btn reset-btn full-btn" data-i18n="summaryBtn">📖 Åbn min oversigt</button>
         </div>
     </div>
 </main>
+
+<!-- RET SOVETID -->
+<div id="sleep-edit" class="modal">
+    <div class="modal-box">
+        <h3 id="se-title">Ret sovetid</h3>
+        <p class="field-label" data-i18n="editSleepHelp">Ret tidspunkterne, hvis uret blev startet eller stoppet for sent. Varigheden regnes automatisk.</p>
+
+        <label class="field"><span data-i18n="fellAsleep">Faldt i søvn</span>
+            <input type="datetime-local" id="se-start">
+        </label>
+        <div class="nudge-row">
+            <button class="nudge" data-nudge="start:-15">−15 min</button>
+            <button class="nudge" data-nudge="start:-5">−5 min</button>
+            <button class="nudge" data-nudge="start:5">+5 min</button>
+            <button class="nudge" data-nudge="start:15">+15 min</button>
+        </div>
+
+        <label class="field"><span data-i18n="wokeUp">Vågnede</span>
+            <input type="datetime-local" id="se-end">
+        </label>
+        <div class="nudge-row">
+            <button class="nudge" data-nudge="end:-15">−15 min</button>
+            <button class="nudge" data-nudge="end:-5">−5 min</button>
+            <button class="nudge" data-nudge="end:5">+5 min</button>
+            <button class="nudge" data-nudge="end:15">+15 min</button>
+        </div>
+
+        <div class="se-result">
+            <span data-i18n="durationLabel">Sov i alt</span>
+            <strong class="se-duration" id="se-duration">–</strong>
+        </div>
+
+        <div class="modal-actions">
+            <button id="se-save" class="action-btn save-btn" data-i18n="save">Gem</button>
+            <button id="se-cancel" class="action-btn reset-btn" data-i18n="cancel">Annullér</button>
+        </div>
+        <button id="se-delete" class="modal-delete" data-i18n="deleteNap">Slet denne lur</button>
+    </div>
+</div>
 
 <div id="tooltip" class="tooltip"></div>
 <audio id="global-audio-player" loop></audio>
@@ -642,6 +679,7 @@
 
 <script src="firebase-config.js"></script>
 <script src="cloudflare-config.js"></script>
+<script src="i18n.js"></script>
 <script src="defaults.js"></script>
 <script src="growth-data.js"></script>
 <script src="charts.js"></script>
@@ -653,6 +691,7 @@
 <script src="growth.js"></script>
 <script src="milestones.js"></script>
 <script src="planforklaring.js"></script>
+<script src="sleepedit.js"></script>
 <script src="report.js"></script>
 <script src="notify.js"></script>
 </body>
