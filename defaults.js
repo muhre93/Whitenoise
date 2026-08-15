@@ -115,5 +115,15 @@ const DEFAULT_TEXTS = {
     profileTitle: "Profil & Indstillinger",
     planTitle: "Dagens plan",
     growthTitle: "Vækst & udvikling",
-    navGrowth: "📈 Vækst"
+    navGrowth: "📈 Vækst",
+    navCare: "🍼 Pleje",
+    navKnow: "📖 Viden",
+
+    // Forslag i milepæle-feltet — kan redigeres i admin
+    milestoneSuggestions: [
+        "Første smil", "Første grin", "Løfter hovedet", "Griber om ting",
+        "Triller om på maven", "Sover igennem", "Første tand", "Sidder selv",
+        "Første ord", "Kravler", "Står selv", "Første skridt",
+        "Vinker farvel", "Drikker af kop", "Første sætning", "Løber"
+    ]
 };
