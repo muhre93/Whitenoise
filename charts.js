@@ -26,6 +26,7 @@ function niceMax(value) {
     return step * exp;
 }
 
+let clipTaeller = 0;
 function chartWrap(inner, legend) {
     return `<div class="chart-box">
         <svg viewBox="0 0 ${CHART_W} ${CHART_H}" class="chart-svg" preserveAspectRatio="xMidYMid meet" role="img">${inner}</svg>
@@ -122,6 +123,10 @@ function lineChart(opts) {
         grid += `<text x="${X(v).toFixed(1)}" y="${pad.top + h + 20}" class="c-axis" text-anchor="middle">${chartEsc(fmtX(v))}</text>`;
     }
 
+    // Alt der tegnes, klippes til selve grafområdet
+    const clipId = "clip" + (++clipTaeller) + "-" + Math.random().toString(36).slice(2, 7);
+    const clipDef = `<defs><clipPath id="${clipId}"><rect x="${pad.left}" y="${pad.top - 4}" width="${w}" height="${h + 8}"/></clipPath></defs>`;
+
     // Normalområde som skygge
     let bandSvg = "";
     (opts.bands || []).forEach(b => {
@@ -142,7 +147,8 @@ function lineChart(opts) {
         }
     });
 
-    return chartWrap(bandSvg + grid + lines + dots, opts.legend);
+    const tegnet = `<g clip-path="url(#${clipId})">${bandSvg}${lines}${dots}</g>`;
+    return chartWrap(clipDef + grid + tegnet, opts.legend);
 }
 
 // ==================================================
