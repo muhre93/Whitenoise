@@ -142,7 +142,8 @@ function vaelgUnderfane(gruppe, subId, husk) {
     if (subId === 'sub-carestats' && typeof tegnCareChart === 'function') tegnCareChart();
     if (subId === 'sub-overview' && typeof tegnChart === 'function') tegnChart();
     if (subId === 'sub-curves' && typeof tegnVaekstChart === 'function') tegnVaekstChart();
-    if (subId === 'sub-report' && typeof opdaterRapportInfo === 'function') opdaterRapportInfo();
+    if (subId === 'sub-quick' && typeof renderCare === 'function') renderCare();
+    if (subId === 'sub-plan-explain' && typeof renderPlanForklaring === 'function') renderPlanForklaring();
 }
 
 function gendanFaner() {
