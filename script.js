@@ -334,6 +334,26 @@ function clearTimer() {
 }
 if (timerSelect) timerSelect.addEventListener('change', () => { if (currentlyPlayingId) setupTimer(); });
 
+// Pæne knapper i stedet for en rullemenu
+document.querySelectorAll('.as-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.as-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (timerSelect) timerSelect.value = btn.dataset.min;
+        localStorage.setItem('babyRoAutoStop', btn.dataset.min);
+        if (currentlyPlayingId) setupTimer();
+    });
+});
+(function gendanAutoStop() {
+    const gemt = localStorage.getItem('babyRoAutoStop');
+    if (!gemt) return;
+    const knap = document.querySelector(`.as-btn[data-min="${gemt}"]`);
+    if (!knap) return;
+    document.querySelectorAll('.as-btn').forEach(b => b.classList.remove('active'));
+    knap.classList.add('active');
+    if (timerSelect) timerSelect.value = gemt;
+})();
+
 // ==========================================
 // SMART-LYT
 // ==========================================
@@ -402,19 +422,25 @@ if (btnSmartListen) btnSmartListen.addEventListener('click', () => { listening ?
 // ==========================================
 // TEMA
 // ==========================================
-const btnThemeToggle = document.getElementById('btn-theme-toggle');
-if (btnThemeToggle) {
-    if (localStorage.getItem('babyRoTheme') === 'dark') {
-        document.body.classList.add('dark-theme');
-        btnThemeToggle.textContent = 'Skift til Dagstilstand ☀️';
+function opdaterTemaKnapper() {
+    const dark = document.body.classList.contains('dark-theme');
+    const stor = document.getElementById('btn-theme-toggle');
+    const hjoerne = document.getElementById('btn-theme-corner');
+    if (stor) stor.textContent = dark ? 'Skift til Dagstilstand ☀️' : 'Skift til Nattilstand 🌙';
+    if (hjoerne) {
+        hjoerne.textContent = dark ? '☀️' : '🌙';
+        hjoerne.title = dark ? 'Skift til dagstilstand' : 'Skift til nattilstand';
     }
-    btnThemeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-theme');
-        const dark = document.body.classList.contains('dark-theme');
-        localStorage.setItem('babyRoTheme', dark ? 'dark' : 'light');
-        btnThemeToggle.textContent = dark ? 'Skift til Dagstilstand ☀️' : 'Skift til Nattilstand 🌙';
-    });
 }
+function skiftTema() {
+    document.body.classList.toggle('dark-theme');
+    localStorage.setItem('babyRoTheme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+    opdaterTemaKnapper();
+}
+if (localStorage.getItem('babyRoTheme') === 'dark') document.body.classList.add('dark-theme');
+document.getElementById('btn-theme-toggle')?.addEventListener('click', skiftTema);
+document.getElementById('btn-theme-corner')?.addEventListener('click', skiftTema);
+opdaterTemaKnapper();
 function applyGenderTheme() {
     document.body.classList.remove('theme-dreng', 'theme-pige');
     if (babyGender === 'dreng') document.body.classList.add('theme-dreng');
@@ -624,9 +650,10 @@ document.getElementById('btn-export-data')?.addEventListener('click', () => {
 // ==========================================
 const TABS = [
     { id: 'nav-player', viewId: 'view-player' },
-    { id: 'nav-history', viewId: 'view-history' },
     { id: 'nav-care', viewId: 'view-care' },
+    { id: 'nav-history', viewId: 'view-history' },
     { id: 'nav-growth', viewId: 'view-growth' },
+    { id: 'nav-milestones', viewId: 'view-milestones' },
     { id: 'nav-know', viewId: 'view-know' },
     { id: 'nav-profile', viewId: 'view-profile' }
 ];
@@ -643,6 +670,7 @@ function opdaterAlt() {
     if (typeof renderGrowth === 'function') renderGrowth();
     if (typeof renderMilestones === 'function') renderMilestones();
     if (typeof planlaegNaesteSoevn === 'function') planlaegNaesteSoevn();
+    if (typeof renderPlanForklaring === 'function') renderPlanForklaring();
 }
 
 function visFane(navId, husk) {
@@ -659,7 +687,9 @@ function visFane(navId, husk) {
 
     if (tab.id === 'nav-history' && typeof renderLogPage === 'function') renderLogPage();
     if (tab.id === 'nav-care' && typeof renderCare === 'function') renderCare();
-    if (tab.id === 'nav-growth' && typeof renderGrowth === 'function') { renderGrowth(); renderMilestones(); }
+    if (tab.id === 'nav-growth' && typeof renderGrowth === 'function') renderGrowth();
+    if (tab.id === 'nav-milestones' && typeof renderMilestones === 'function') renderMilestones();
+    if (tab.id === 'nav-know' && typeof renderPlanForklaring === 'function') renderPlanForklaring();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
