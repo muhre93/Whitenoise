@@ -273,6 +273,8 @@ function renderMeasureList() {
 }
 
 function renderGrowth() {
+    const msLock = document.getElementById('ms-locked');
+    if (msLock) msLock.style.display = isGuest ? 'block' : 'none';
     const locked = document.getElementById('growth-locked');
     const content = document.getElementById('growth-content');
     if (locked) locked.style.display = isGuest ? 'block' : 'none';
