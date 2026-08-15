@@ -14,7 +14,7 @@ body.dark-theme.theme-dreng { --bg-main:#0F141A; --card-bg:#1A222B; --accent-gre
 body.dark-theme.theme-pige  { --bg-main:#1A1216; --card-bg:#251B20; --accent-green:#A86C80; --btn-save:#96687A; --nav-bg:#382831; --band:rgba(168,108,128,.22); }
 
 * { box-sizing:border-box; margin:0; padding:0; font-family:'Quicksand',sans-serif; }
-body { background:var(--bg-main); color:var(--text-dark); line-height:1.6; padding:15px; padding-top:0; transition:background-color .3s,color .3s; }
+body { position: relative; background:var(--bg-main); color:var(--text-dark); line-height:1.6; padding:15px; padding-top:0; transition:background-color .3s,color .3s; }
 
 .top-header { text-align:center; padding:25px 0 10px; }
 .top-header h1 { font-size:2.5rem; color:var(--accent-green); font-weight:700; letter-spacing:1px; }
@@ -466,7 +466,7 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
    v8 — sprogknap, modal til sovetid, kurve-blokke
    ================================================== */
 
-.corner-tools { position: fixed; top: 14px; right: 14px; z-index: 80; display: flex; gap: 8px; }
+.corner-tools { position: absolute; top: 14px; right: 14px; z-index: 80; display: flex; gap: 8px; }
 .corner-btn {
     width: 46px; height: 46px; border-radius: 50%;
     background: var(--card-bg); border: 2px solid var(--nav-bg);
@@ -486,6 +486,10 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
 .care-quick-panel .care-hero-grid { margin-top: 4px; }
 
 /* RET SOVETID */
+.se-blok { background: var(--bg-main); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+.se-label { display: block; font-size: .85rem; font-weight: 700; color: var(--text-light); margin-bottom: 10px; }
+.se-felter { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-bottom: 12px; }
+.se-felter input { background: var(--card-bg); }
 .modal {
     position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1000;
     display: none; align-items: center; justify-content: center; padding: 18px;
@@ -497,7 +501,8 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
     box-shadow: 0 20px 60px rgba(0,0,0,.3);
 }
 .modal-box h3 { color: var(--accent-green); font-size: 1.3rem; margin-bottom: 8px; text-align: center; }
-.nudge-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: -8px 0 18px; }
+.nudge-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.nudge-row .nudge { background: var(--card-bg); }
 .nudge {
     background: var(--bg-main); border: none; color: var(--text-dark);
     padding: 10px 4px; border-radius: 10px; font-weight: 700; font-size: .82rem;
@@ -539,3 +544,9 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
     .view-section { display:block !important; max-width:100%; }
     body { background:#fff; color:#000; padding:0; }
 }
+
+
+/* Barnet sover lige nu */
+.plan-card.plan-sleeping { border-left-color: var(--btn-save); background: linear-gradient(180deg, rgba(164,195,210,.12), transparent 60%); }
+.plan-card.plan-sleeping .plan-time { font-variant-numeric: tabular-nums; }
+body.ur-koerer .time-display { color: var(--accent-green); }

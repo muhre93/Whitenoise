@@ -198,18 +198,10 @@ function renderTexts() {
     fill('txt-app-subtitle', 'appSubtitle');
     document.querySelectorAll('.b-name').forEach(el => el.textContent = babyName);
 
-    fill('txt-timer-label', 'timerLabel');
-    fill('txt-autostop-label', 'autoStopLabel');
-    const stopBtn = document.getElementById('stop-all');
-    if (stopBtn) stopBtn.textContent = t('stopAllLabel');
-    fill('txt-today-title', 'todayBoxTitle');
     fill('txt-smart-title', 'smartTitle');
     fill('txt-smart-desc', 'smartDesc');
-    fill('txt-smart-sound-label', 'smartSoundLabel');
-    fill('txt-smart-sens-label', 'smartSensitivityLabel');
-    fill('txt-history-title', 'historyTitle');
-    fill('txt-history-sub', 'historySub');
-    fill('guest-warning', 'guestWarning');
+    const hs = document.getElementById('txt-history-sub'); if (hs) hs.textContent = T('historySub');
+    const gw = document.getElementById('guest-warning'); if (gw) gw.innerHTML = T('guestWarning');
     fill('txt-sleep-title', 'sleepTitle');
     fill('txt-sleep-sub', 'sleepSub');
 
@@ -232,42 +224,140 @@ function renderTexts() {
             ${(c.body || '').replaceAll('{navn}', babyName)}
         </div>`).join('');
 
-    fill('txt-profile-title', 'profileTitle');
     renderLeapStatus();
 }
 
 // ==========================================
 // SØVNUR — start / pause / fortsæt
+//
+// VIGTIGT: Uret tæller IKKE sekunder ét ad gangen.
+// Det regner altid ud fra rigtige klokkeslæt. Derfor
+// bliver det ved med at køre, selv om siden opdateres,
+// telefonen låses, eller browseren sætter fanen på pause.
 // ==========================================
-let elapsedSeconds = 0, intervalId = null, sessionStartTime = null, urKoerer = false;
+const UR_NOEGLE = 'babyRoUr';
+
+let urStart = null;        // hvornår den nuværende kørsel begyndte (ms)
+let urOpsparet = 0;        // sekunder fra tidligere kørsler
+let sessionStartTime = null;
+let urKoerer = false;
+let visInterval = null;
+
 const timeDisplay = document.getElementById('time-elapsed');
 const btnPauseTime = document.getElementById('btn-pause-time');
 
+function forloebetSek() {
+    return Math.floor(urOpsparet + (urKoerer && urStart ? (Date.now() - urStart) / 1000 : 0));
+}
+
+function gemUr() {
+    if (!urKoerer && urOpsparet === 0 && !sessionStartTime) {
+        localStorage.removeItem(UR_NOEGLE);
+        return;
+    }
+    localStorage.setItem(UR_NOEGLE, JSON.stringify({
+        urStart, urOpsparet, urKoerer,
+        sessionStart: sessionStartTime ? sessionStartTime.getTime() : null,
+        barn: childId
+    }));
+}
+
+function gendanUr() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(UR_NOEGLE)); } catch (e) {}
+    if (!d) { opdaterUrKnap(); return; }
+
+    urOpsparet = d.urOpsparet || 0;
+    urKoerer = !!d.urKoerer;
+    urStart = d.urStart || null;
+    sessionStartTime = d.sessionStart ? new Date(d.sessionStart) : null;
+
+    // Er uret løbet i mere end et døgn, er det glemt at blive stoppet
+    if (forloebetSek() > 86400) { nulstilUr(); return; }
+
+    updateDisplay();
+    opdaterUrKnap();
+    if (urKoerer) startVisning();
+}
+
+function startVisning() {
+    clearInterval(visInterval);
+    visInterval = setInterval(() => {
+        updateDisplay();
+        if (typeof renderPlanCard === 'function') renderPlanCard();
+    }, 1000);
+}
+
 function updateDisplay() {
     if (!timeDisplay) return;
-    const h = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
-    const m = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
-    const s = String(elapsedSeconds % 60).padStart(2, '0');
+    const sek = forloebetSek();
+    const h = String(Math.floor(sek / 3600)).padStart(2, '0');
+    const m = String(Math.floor((sek % 3600) / 60)).padStart(2, '0');
+    const s = String(sek % 60).padStart(2, '0');
     timeDisplay.textContent = `${h}:${m}:${s}`;
 }
+
 function opdaterUrKnap() {
     if (!btnPauseTime) return;
     if (urKoerer) { btnPauseTime.textContent = T('btnPause'); btnPauseTime.classList.remove('running'); }
-    else { btnPauseTime.textContent = elapsedSeconds > 0 ? T('btnResume') : T('btnStart'); btnPauseTime.classList.add('running'); }
+    else { btnPauseTime.textContent = forloebetSek() > 0 ? T('btnResume') : T('btnStart'); btnPauseTime.classList.add('running'); }
+    document.body.classList.toggle('ur-koerer', urKoerer);
 }
+
 function startStopwatch() {
-    if (sessionStartTime === null) sessionStartTime = new Date();
-    clearInterval(intervalId);
-    intervalId = setInterval(() => { elapsedSeconds++; updateDisplay(); }, 1000);
-    urKoerer = true; opdaterUrKnap();
+    if (urKoerer) return;
+    const nu = Date.now();
+    if (sessionStartTime === null) sessionStartTime = new Date(nu);
+    else if (urOpsparet > 0) {
+        // Efter en pause: ryk starttidspunktet frem, så de viste
+        // klokkeslæt altid passer med den viste varighed
+        sessionStartTime = new Date(nu - urOpsparet * 1000);
+    }
+    urStart = nu;
+    urKoerer = true;
+    startVisning();
+    updateDisplay();
+    opdaterUrKnap();
+    gemUr();
+    if (typeof renderPlanCard === 'function') renderPlanCard();
 }
-function stopStopwatch() { clearInterval(intervalId); urKoerer = false; opdaterUrKnap(); }
-function resetStopwatch() { stopStopwatch(); elapsedSeconds = 0; sessionStartTime = null; updateDisplay(); opdaterUrKnap(); }
+
+function stopStopwatch() {
+    if (urKoerer && urStart) urOpsparet += (Date.now() - urStart) / 1000;
+    urKoerer = false;
+    urStart = null;
+    clearInterval(visInterval);
+    updateDisplay();
+    opdaterUrKnap();
+    gemUr();
+    if (typeof renderPlanCard === 'function') renderPlanCard();
+}
+
+function nulstilUr() {
+    clearInterval(visInterval);
+    urKoerer = false; urStart = null; urOpsparet = 0; sessionStartTime = null;
+    localStorage.removeItem(UR_NOEGLE);
+    updateDisplay();
+    opdaterUrKnap();
+    if (typeof renderPlanCard === 'function') renderPlanCard();
+}
+const resetStopwatch = nulstilUr;
 
 if (btnPauseTime) btnPauseTime.addEventListener('click', () => { urKoerer ? stopStopwatch() : startStopwatch(); });
 document.getElementById('btn-reset-time')?.addEventListener('click', () => {
-    if (confirm(T('resetConfirm'))) resetStopwatch();
+    if (forloebetSek() === 0) return;
+    if (confirm(T('resetConfirm'))) nulstilUr();
 });
+
+// Når siden kommer frem igen, indhentes den tid der er gået
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        updateDisplay();
+        opdaterUrKnap();
+        if (urKoerer) startVisning();
+    }
+});
+window.addEventListener('pageshow', () => { updateDisplay(); opdaterUrKnap(); });
 
 // ==========================================
 // LYDAFSPILLER
@@ -280,6 +370,8 @@ let currentlyPlayingId = null, timeoutId = null, fadeInterval = null;
 function resetAllButtons() {
     document.querySelectorAll('.play-btn[data-category]').forEach(b => { b.textContent = T('play'); b.classList.remove('playing'); });
 }
+// Stopper KUN lyden. Søvnuret kører ubemærket videre —
+// man slukker tit lyden, længe før barnet vågner.
 function stopAllSound() {
     clearTimer();
     if (audioPlayer) audioPlayer.pause();
@@ -456,13 +548,16 @@ function applyGenderTheme() {
 // SØVNLOG: GEM
 // ==========================================
 document.getElementById('btn-save-log')?.addEventListener('click', async () => {
+    const elapsedSeconds = forloebetSek();
     if (elapsedSeconds === 0) { alert(T('timerZero')); return; }
     const end = new Date();
-    const start = sessionStartTime || new Date(end.getTime() - elapsedSeconds * 1000);
+    // Starttidspunktet regnes altid ud fra den faktiske varighed,
+    // så de viste klokkeslæt og minuttallet ikke kan komme ud af trit
+    const start = new Date(end.getTime() - elapsedSeconds * 1000);
     const key = todayKey();
     if (!localSleepLogs[key]) localSleepLogs[key] = { sessions: [], total: 0 };
     localSleepLogs[key].sessions.push({
-        timeDisplay: `Kl. ${clockFromMs(start.getTime())} - ${clockFromMs(end.getTime())}`,
+        timeDisplay: `${T('atClock')} ${clockFromMs(start.getTime())} - ${clockFromMs(end.getTime())}`,
         durationText: formatTimeText(elapsedSeconds),
         durationSec: elapsedSeconds,
         startMs: start.getTime(),
@@ -471,7 +566,7 @@ document.getElementById('btn-save-log')?.addEventListener('click', async () => {
     localSleepLogs[key].total += elapsedSeconds;
 
     await gemSoevnMaaned(monthKey(key));
-    stopAllSound(); resetStopwatch();
+    stopAllSound(); nulstilUr();
     renderTodayLog(); renderPlanCard();
     if (typeof renderLogPage === 'function') renderLogPage();
     if (typeof planlaegNaesteSoevn === 'function') planlaegNaesteSoevn();
@@ -573,6 +668,21 @@ function renderPlanCard() {
         noteEl.textContent = ""; return;
     }
     phaseEl.textContent = `${alderTekst()} · ${fase.navn}`;
+
+    // Kører uret, sover barnet lige nu — så er vågetiden irrelevant
+    if (urKoerer || forloebetSek() > 0) {
+        card.classList.remove('plan-now');
+        card.classList.add('plan-sleeping');
+        labelEl.textContent = urKoerer ? T('sleepingNow') : T('napPaused');
+        timeEl.textContent = formatTimeText(forloebetSek());
+        const slutTidligst = Date.now() + Math.max(0, (fase.vaageMin * 0) );
+        subEl.innerHTML = sessionStartTime
+            ? T('sleepingSince', { tid: clockFromMs(sessionStartTime.getTime()) })
+            : T('napRunning');
+        noteEl.textContent = urKoerer ? T('sleepingNote') : T('napPausedNote');
+        return;
+    }
+    card.classList.remove('plan-sleeping');
 
     const naeste = naesteSoevnTid();
     if (!naeste) {
@@ -700,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gendanFaner();
 
     renderSounds();
-    opdaterUrKnap();
+    gendanUr();
     loadContentFromCloud();
     setInterval(renderPlanCard, 60000);
 });

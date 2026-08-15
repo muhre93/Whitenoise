@@ -83,9 +83,9 @@ function renderStats() {
     let vurdering = "";
     if (fase && gnsPrDag > 0) {
         const timer = gnsPrDag / 3600;
-        if (timer < fase.soevnMin) vurdering = `Under anbefalet (${fase.soevnMin}-${fase.soevnMax} t)`;
-        else if (timer > fase.soevnMax) vurdering = `Over anbefalet (${fase.soevnMin}-${fase.soevnMax} t)`;
-        else vurdering = `Inden for anbefalet (${fase.soevnMin}-${fase.soevnMax} t)`;
+        if (timer < fase.soevnMin) vurdering = `${T('belowRec')} (${fase.soevnMin}-${fase.soevnMax} t)`;
+        else if (timer > fase.soevnMax) vurdering = `${T('aboveRec')} (${fase.soevnMin}-${fase.soevnMax} t)`;
+        else vurdering = `${T('withinRec')} (${fase.soevnMin}-${fase.soevnMax} t)`;
     }
 
     const kort = [
@@ -110,7 +110,7 @@ function tegnChart() {
     if (aktivtChart === 'total') {
         area.innerHTML = barChart(dage.map(d => ({ label: shortDate(d.key), value: d.total / 3600, highlight: d.key === iDag })),
             { format: v => v.toFixed(1) + 't' });
-        help.textContent = "Samlet søvn pr. dag i timer. Den stiplede linje er dit gennemsnit for perioden.";
+        help.textContent = T('helpSleepTotal');
     }
     else if (aktivtChart === 'trend') {
         const fase = soevnFaseForAlder(alderIMdr());
@@ -135,13 +135,13 @@ function tegnChart() {
                      <span class="c-key"><i class="c-swatch c-sw-s2"></i>3-dages gennemsnit</span>
                      ${fase ? `<span class="c-key"><i class="c-swatch c-sw-band"></i>Anbefalet ${fase.soevnMin}-${fase.soevnMax} t</span>` : ''}`
         });
-        help.textContent = "Den lyse linje viser den enkelte dag, den mørke jævner udsvingene ud. Se efter retningen, ikke enkeltdage.";
+        help.textContent = T('helpTrend');
     }
     else if (aktivtChart === 'naps') {
         area.innerHTML = barChart(dage.map(d => ({ label: shortDate(d.key), value: d.sessions.length, highlight: d.key === iDag })),
             { format: v => Math.round(v) });
         const fase = soevnFaseForAlder(alderIMdr());
-        help.textContent = fase ? `Antal gemte lure pr. dag. I ${babyName}s alder er ${fase.lure} lure typisk.` : "Antal gemte lure pr. dag.";
+        help.textContent = fase ? T('helpNaps') + ' ' + T('napsTypical', { antal: fase.lure }) : T('helpNaps');
     }
     else if (aktivtChart === 'length') {
         area.innerHTML = barChart(dage.map(d => ({
@@ -149,7 +149,7 @@ function tegnChart() {
             value: d.sessions.length ? (d.total / d.sessions.length) / 60 : 0,
             highlight: d.key === iDag
         })), { format: v => Math.round(v) + 'm' });
-        help.textContent = "Gennemsnitlig længde pr. lur i minutter. Korte lure under 45 min. kan betyde, at barnet vågner mellem søvncyklusserne.";
+        help.textContent = T('helpNapLength');
     }
     else if (aktivtChart === 'clock') {
         const rows = dage.map(d => ({
@@ -161,7 +161,7 @@ function tegnChart() {
             }).filter(Boolean)
         })).filter(r => r.blocks.length);
         area.innerHTML = dayTimeline(rows);
-        help.textContent = "Hvornår på døgnet der blev sovet. Her ser du hurtigt, om rytmen er ved at falde på plads.";
+        help.textContent = T('helpSleepClock');
     }
 }
 
@@ -186,7 +186,7 @@ function renderHistoryList() {
 
 function renderLogPage() {
     const info = document.getElementById('range-info');
-    if (info) info.textContent = `${dageIPerioden().length} ${T('daysWithData').split(' ')[0]}: ${formatDateDK(logFra)} – ${formatDateDK(logTil)}`;
+    if (info) info.textContent = `${T('showing')} ${dageIPerioden().length} ${T('days')}: ${formatDateDK(logFra)} – ${formatDateDK(logTil)}`;
     renderStats();
     tegnChart();
     renderHistoryList();

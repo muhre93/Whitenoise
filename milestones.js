@@ -73,11 +73,11 @@ document.getElementById('ms-photo')?.addEventListener('change', async (e) => {
 // GEM
 // ==========================================
 document.getElementById('btn-add-milestone')?.addEventListener('click', async () => {
-    if (isGuest) { alert("Log ind for at gemme milepæle."); return; }
+    if (isGuest) { alert(T('loginToSaveMs')); return; }
     const titel = document.getElementById('ms-title').value.trim();
     const dato = document.getElementById('ms-date').value;
-    if (!titel) { alert("Skriv hvad der skete."); return; }
-    if (!dato) { alert("Vælg en dato."); return; }
+    if (!titel) { alert(T('msWhatHappened')); return; }
+    if (!dato) { alert(T('pickDate')); return; }
 
     const m = {
         id: 'm' + Date.now(),

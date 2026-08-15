@@ -316,17 +316,17 @@ ${sammenlignHtml}
 
 async function aabnRapport() {
     const knap = document.getElementById('btn-open-report');
-    if (knap) { knap.disabled = true; knap.textContent = "Bygger rapporten..."; }
+    if (knap) { knap.disabled = true; knap.textContent = T('reportBuilding'); }
     try {
         const html = await byggeRapport();
         const vindue = window.open('', '_blank');
-        if (!vindue) { alert("Browseren blokerede vinduet. Tillad pop op-vinduer for denne side og prøv igen."); return; }
+        if (!vindue) { alert(T('popupBlocked')); return; }
         vindue.document.write(html);
         vindue.document.close();
     } catch (e) {
         alert("Kunne ikke lave rapporten: " + e.message);
     } finally {
-        if (knap) { knap.disabled = false; knap.textContent = "📄 Lav rapporten"; }
+        if (knap) { knap.disabled = false; knap.textContent = T('reportMake'); }
     }
 }
 
@@ -479,7 +479,7 @@ ${soevn}
 
 document.getElementById('btn-open-summary')?.addEventListener('click', () => {
     const v = window.open('', '_blank');
-    if (!v) { alert("Browseren blokerede vinduet. Tillad pop op-vinduer for denne side."); return; }
+    if (!v) { alert(T('popupBlocked')); return; }
     v.document.write(byggeOversigt());
     v.document.close();
 });

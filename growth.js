@@ -21,9 +21,9 @@ function alderVedDato(dato) {
 }
 
 document.getElementById('btn-add-measure')?.addEventListener('click', async () => {
-    if (isGuest) { alert("Log ind med Google under Profil for at gemme målinger."); return; }
+    if (isGuest) { alert(T('loginToSaveGrowth')); return; }
     const dato = document.getElementById('m-date').value;
-    if (!dato) { alert("Vælg en dato for målingen."); return; }
+    if (!dato) { alert(T('pickDate')); return; }
 
     const maaling = { dato, note: document.getElementById('m-note').value.trim() || "" };
     let noget = false;
@@ -35,7 +35,7 @@ document.getElementById('btn-add-measure')?.addEventListener('click', async () =
         const v = talFraFelt('m-custom-' + c.id);
         if (!isNaN(v)) { maaling[c.id] = v; noget = true; }
     });
-    if (!noget) { alert("Udfyld mindst én måling."); return; }
+    if (!noget) { alert(T('fillOne')); return; }
 
     growthData.measurements = (growthData.measurements || []).filter(m => m.dato !== dato);
     growthData.measurements.push(maaling);
@@ -52,7 +52,7 @@ document.getElementById('btn-add-measure')?.addEventListener('click', async () =
 });
 
 document.getElementById('btn-add-custom')?.addEventListener('click', async () => {
-    if (isGuest) { alert("Log ind for at tilføje egne målinger."); return; }
+    if (isGuest) { alert(T('loginToSaveGrowth')); return; }
     const navn = prompt("Hvad vil du måle? (f.eks. Fodlængde, Maveomfang)");
     if (!navn || !navn.trim()) return;
     const enhed = prompt("Hvilken enhed? (f.eks. cm, kg, ml)", "cm");

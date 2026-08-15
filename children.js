@@ -37,12 +37,12 @@ function indlaesGaestData() {
 }
 
 window.nulstilGaest = function () {
-    if (!confirm("Slet alt i BabyRo på denne telefon?\n\nSøvnlog, pleje, vækst og milepæle forsvinder. Det kan ikke fortrydes.")) return;
+    if (!confirm(T('resetAsk'))) return;
     ['profile', 'sleep', 'growth', 'care', 'milestones'].forEach(k => localStorage.removeItem(gaestNoegle(k)));
     localStorage.removeItem('babyRoLogs');
     indlaesGaestData();
     opdaterAlt();
-    alert("Alt er nulstillet. Du starter forfra. 👶");
+    alert(T('resetDone'));
 };
 
 function gemGaestProfil() {
@@ -199,12 +199,12 @@ document.getElementById('btn-add-child')?.addEventListener('click', tilfoejBarn)
 document.getElementById('btn-new-child')?.addEventListener('click', tilfoejBarn);
 
 async function tilfoejBarn() {
-    if (isGuest) { alert("Log ind for at have flere børn i BabyRo."); return; }
-    const navn = prompt("Hvad hedder barnet?");
+    if (isGuest) { alert(T('loginForChildren')); return; }
+    const navn = prompt(T('askChildName'));
     if (!navn || !navn.trim()) return;
     const cid = await opretBarn(navn.trim(), false);
     await skiftBarn(cid);
-    alert(`${navn.trim()} er tilføjet. Udfyld fødselsdato under Profil, så virker søvnplan og vækstkurver.`);
+    alert(T('childAdded', { navn: navn.trim() }));
 }
 
 // ==========================================
@@ -217,8 +217,8 @@ function renderChildrenList() {
     if (!el) return;
 
     if (isGuest) {
-        el.innerHTML = `<p class="field-label">Log ind for at oprette og skifte mellem flere børn.</p>
-            <button class="action-btn reset-btn full-btn" onclick="nulstilGaest()" style="margin-top:10px;">🗑 Nulstil alt og start forfra</button>`;
+        el.innerHTML = `<p class="field-label">${T('loginForMulti')}</p>
+            <button class="action-btn reset-btn full-btn" onclick="nulstilGaest()" style="margin-top:10px;">${T('resetGuest')}</button>`;
         if (arkivKort) arkivKort.style.display = 'none';
         return;
     }
@@ -258,7 +258,7 @@ async function arkiverBarn(id, skjul) {
     const c = childList.find(x => x.id === id);
     if (!c) return;
     if (skjul && aktiveBoern().length <= 1) {
-        alert("Du kan ikke gemme dit eneste barn væk. Tilføj et andet først, eller slet barnet i stedet.");
+        alert(T('cantArchiveOnly'));
         return;
     }
     try {
@@ -266,7 +266,7 @@ async function arkiverBarn(id, skjul) {
         c.archived = !!skjul;
         if (skjul && childId === id) await skiftBarn(aktiveBoern()[0].id);
         else { renderChildBar(); renderChildrenList(); }
-    } catch (e) { alert("Kunne ikke ændre: " + e.message); }
+    } catch (e) { alert(T('couldNotSave') + e.message); }
 }
 
 // Slet helt: undermapperne først, så selve barnet
@@ -303,7 +303,7 @@ async function sletBarnHelt(id) {
             else { renderChildBar(); renderChildrenList(); }
             alert(`${navn} er slettet.`);
         }
-    } catch (e) { alert("Kunne ikke slette: " + e.message); }
+    } catch (e) { alert(T('couldNotDelete') + e.message); }
 }
 
 // ==========================================
@@ -320,20 +320,20 @@ function renderShare() {
     const el = document.getElementById('share-area');
     if (!el) return;
     if (isGuest) {
-        el.innerHTML = `<p class="field-label">Log ind for at kunne dele.</p>`;
+        el.innerHTML = `<p class="field-label">${T('loginToShare')}</p>`;
         return;
     }
     const c = childList.find(x => x.id === childId);
     const antal = Object.keys(c?.members || {}).length;
 
     el.innerHTML = `
-        <p class="field-label">Deler nu <strong>${esc(babyName)}</strong> med ${antal - 1 > 0 ? `${antal - 1} anden${antal - 1 > 1 ? 'e' : ''}` : 'ingen endnu'}.</p>
+        <p class="field-label">${T('sharingNow', { navn: esc(babyName) })} ${antal - 1 > 0 ? (antal - 1) : T('nobodyYet')}.</p>
         ${inviteCode
             ? `<div class="code-box"><span id="code-value">${esc(inviteCode)}</span>
-                   <button class="mini-btn" id="btn-copy-code">Kopiér</button></div>
-               <p class="field-label">Send koden til den anden forælder. Den virker, indtil du laver en ny.</p>
-               <button class="action-btn reset-btn full-btn" id="btn-new-code">Lav en ny kode</button>`
-            : `<button class="action-btn save-btn full-btn" id="btn-make-code">Lav delingskode</button>`}
+                   <button class="mini-btn" id="btn-copy-code">${T('copy')}</button></div>
+               <p class="field-label">${T('codeHelp')}</p>
+               <button class="action-btn reset-btn full-btn" id="btn-new-code">${T('newCode')}</button>`
+            : `<button class="action-btn save-btn full-btn" id="btn-make-code">${T('makeCode')}</button>`}
     `;
 
     document.getElementById('btn-make-code')?.addEventListener('click', lavDelingskode);
@@ -341,13 +341,13 @@ function renderShare() {
     document.getElementById('btn-copy-code')?.addEventListener('click', () => {
         navigator.clipboard.writeText(inviteCode);
         const b = document.getElementById('btn-copy-code');
-        b.textContent = "Kopieret!";
-        setTimeout(() => { b.textContent = "Kopiér"; }, 1500);
+        b.textContent = T('copied');
+        setTimeout(() => { b.textContent = T('copy'); }, 1500);
     });
 }
 
 async function lavDelingskode() {
-    if (isGuest) { alert("Log ind først."); return; }
+    if (isGuest) { alert(T('loginFirst')); return; }
     const kode = lavKode();
     try {
         if (inviteCode) await db.collection("invites").doc(inviteCode).delete().catch(() => {});
@@ -357,18 +357,18 @@ async function lavDelingskode() {
         const c = childList.find(x => x.id === childId);
         if (c) c.inviteCode = kode;
         renderShare();
-    } catch (e) { alert("Kunne ikke lave kode: " + e.message); }
+    } catch (e) { alert(T('couldNotSave') + e.message); }
 }
 
 document.getElementById('btn-join-child')?.addEventListener('click', async () => {
-    if (isGuest) { alert("Log ind, før du tilslutter dig et barn."); return; }
+    if (isGuest) { alert(T('loginToJoin')); return; }
     const kode = document.getElementById('join-code').value.trim().toUpperCase();
-    if (!kode) { alert("Skriv koden, du har fået."); return; }
+    if (!kode) { alert(T('writeCode')); return; }
     try {
         const inv = await db.collection("invites").doc(kode).get();
-        if (!inv.exists) { alert("Koden findes ikke. Tjek stavemåden."); return; }
+        if (!inv.exists) { alert(T('codeNotFound')); return; }
         const cid = inv.data().childId;
-        if (childList.some(c => c.id === cid)) { alert("Du er allerede tilsluttet det barn."); return; }
+        if (childList.some(c => c.id === cid)) { alert(T('alreadyJoined')); return; }
 
         // joinedWith beviser over for Firestore-reglerne, at vi kender koden
         await db.collection("children").doc(cid).set({
@@ -383,8 +383,8 @@ document.getElementById('btn-join-child')?.addEventListener('click', async () =>
         childList.push(Object.assign({ id: cid }, d.data()));
         document.getElementById('join-code').value = '';
         await skiftBarn(cid);
-        alert(`Du deler nu ${d.data().name || 'barnet'} 🎉\nI ser begge de samme data fremover.`);
-    } catch (e) { alert("Kunne ikke tilslutte: " + e.message); }
+        alert(T('joinedOk', { navn: d.data().name || '' }));
+    } catch (e) { alert(T('couldNotSave') + e.message); }
 });
 
 // ==========================================

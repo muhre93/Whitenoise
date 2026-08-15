@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<div class="corner-tools">
+<div class="corner-tools" id="corner-tools">
     <button id="btn-lang" class="corner-btn lang-btn" title="Switch to English">EN</button>
     <button id="btn-theme-corner" class="corner-btn" title="Skift mellem dag og nat" aria-label="Skift mellem dag og nat">🌙</button>
 </div>
@@ -279,6 +279,20 @@
     </div>
 
     <div id="sub-carestats" class="sub-panel" style="display:none;">
+        <section class="panel period-card">
+            <div class="quick-range">
+                <button class="crange-btn active" data-cdays="7" data-i18n="days7">7 dage</button>
+                <button class="crange-btn" data-cdays="14" data-i18n="days14">14 dage</button>
+                <button class="crange-btn" data-cdays="21" data-i18n="days21">21 dage</button>
+                <button class="crange-btn" data-cdays="28" data-i18n="days28">28 dage</button>
+            </div>
+            <div class="date-range">
+                <label class="field"><span data-i18n="from">Fra</span><input type="date" id="crange-from"></label>
+                <label class="field"><span data-i18n="to">Til</span><input type="date" id="crange-to"></label>
+                <button id="btn-apply-crange" class="action-btn save-btn" data-i18n="showPeriod">Vis periode</button>
+            </div>
+            <p class="range-info" id="crange-info"></p>
+        </section>
         <section class="stat-grid" id="care-stats"></section>
         <section class="panel">
             <div class="chart-tabs">
@@ -297,7 +311,7 @@
 <main id="view-growth" class="view-section" style="display:none;">
     <div class="page-header">
         <h2 data-i18n="growthTitle">Vækst</h2>
-        <p>Følg <span class="b-name">Baby</span>s kurver mellem besøgene.</p>
+        <p id="growth-sub">Følg <span class="b-name">Baby</span>s kurver mellem besøgene.</p>
     </div>
 
     <div id="growth-locked" class="warning-box" style="display:none;">
@@ -312,15 +326,15 @@
 
     <div id="sub-curves" class="sub-panel active">
         <section class="panel">
-            <h3>Tilføj måling <span class="hint" data-tip="Brug komma som decimaltegn — f.eks. 7,45. Du behøver ikke udfylde alle felter; udfyld kun det, du har målt.">?</span></h3>
+            <h3><span data-i18n="addMeasure">Tilføj måling</span> <span class="hint" data-tip="Brug komma som decimaltegn — f.eks. 7,45. Du behøver ikke udfylde alle felter; udfyld kun det, du har målt.">?</span></h3>
             <div class="measure-form">
-                <label class="field"><span>Dato</span><input type="date" id="m-date"></label>
-                <label class="field"><span>Vægt (kg)</span><input type="text" inputmode="decimal" id="m-vaegt" placeholder="7,45"></label>
-                <label class="field"><span>Længde (cm)</span><input type="text" inputmode="decimal" id="m-laengde" placeholder="68,5"></label>
-                <label class="field"><span>Hovedomfang (cm)</span><input type="text" inputmode="decimal" id="m-hoved" placeholder="44,0"></label>
+                <label class="field"><span data-i18n="date">Dato</span><input type="date" id="m-date"></label>
+                <label class="field"><span data-i18n="weightKg">Vægt (kg)</span><input type="text" inputmode="decimal" id="m-vaegt" placeholder="7,45"></label>
+                <label class="field"><span data-i18n="lengthCm">Længde (cm)</span><input type="text" inputmode="decimal" id="m-laengde" placeholder="68,5"></label>
+                <label class="field"><span data-i18n="headCm">Hovedomfang (cm)</span><input type="text" inputmode="decimal" id="m-hoved" placeholder="44,0"></label>
             </div>
             <div id="custom-fields"></div>
-            <label class="field"><span>Note (valgfri)</span><input type="text" id="m-note" placeholder="F.eks. besøg hos sundhedsplejersken"></label>
+            <label class="field"><span data-i18n="note">Note (valgfri)</span><input type="text" id="m-note" placeholder="F.eks. besøg hos sundhedsplejersken"></label>
             <div class="measure-actions">
                 <button id="btn-add-measure" class="action-btn save-btn" data-i18n="saveMeasure">Gem måling</button>
                 <button id="btn-add-custom" class="action-btn reset-btn" data-i18n="addOwn">+ Tilføj egen måling</button>
@@ -330,7 +344,7 @@
         <section class="panel">
             <div class="chart-tabs" id="growth-tabs"></div>
             <div id="growth-chart"></div>
-            <p class="chart-help">Det skyggede felt er, hvor ca. 95 % af alle raske børn ligger (WHO). Ligger dit barn uden for, betyder det ikke i sig selv noget galt — det er kurvens <em>form</em> over tid, der er interessant.</p>
+            <p class="chart-help" data-i18n-html="whoHelp">Det skyggede felt er, hvor ca. 95 % af alle raske børn ligger (WHO). Ligger dit barn uden for, betyder det ikke i sig selv noget galt — det er kurvens <em>form</em> over tid, der er interessant.</p>
         </section>
     </div>
 
@@ -339,7 +353,7 @@
             <h3 data-i18n="allMeasures">Alle målinger</h3>
             <div id="measure-list"></div>
         </section>
-        <p class="disclaimer">BabyRo erstatter ikke sundhedsplejersken eller lægen. Er du i tvivl om dit barns vækst eller trivsel, så tag altid kontakt.</p>
+        <p class="disclaimer" data-i18n="disclaimer">BabyRo erstatter ikke sundhedsplejersken eller lægen.</p>
     </div>
 </main>
 
@@ -347,7 +361,7 @@
 <main id="view-milestones" class="view-section" style="display:none;">
     <div class="page-header">
         <h2 data-i18n="msTitle">Milepæle</h2>
-        <p>De øjeblikke, man tror man husker — men ikke gør.</p>
+        <p data-i18n="msSub">De øjeblikke, man tror man husker — men ikke gør.</p>
     </div>
 
     <div id="ms-locked" class="warning-box" style="display:none;">
@@ -358,14 +372,14 @@
     <section class="panel">
         <h3 data-i18n="msNew">Ny milepæl</h3>
         <div class="measure-form">
-            <label class="field"><span>Hvad skete der?</span>
+            <label class="field"><span data-i18n="msWhat">Hvad skete der?</span>
                 <input type="text" id="ms-title" list="ms-suggestions" placeholder="F.eks. Første smil">
                 <datalist id="ms-suggestions"></datalist>
             </label>
-            <label class="field"><span>Dato</span><input type="date" id="ms-date"></label>
+            <label class="field"><span data-i18n="date">Dato</span><input type="date" id="ms-date"></label>
         </div>
-        <label class="field"><span>Fortæl om det (valgfri)</span><textarea id="ms-note" rows="3" placeholder="Hvor var I? Hvem så det?"></textarea></label>
-        <label class="field"><span>Billede (valgfri) <span class="hint" data-tip="Billedet skaleres automatisk ned i din browser til ca. 40 KB, før det gemmes. Originalen bliver ikke sendt nogen steder.">?</span></span><input type="file" id="ms-photo" accept="image/*"></label>
+        <label class="field"><span data-i18n="msNote">Fortæl om det (valgfri)</span><textarea id="ms-note" rows="3" placeholder="Hvor var I? Hvem så det?"></textarea></label>
+        <label class="field"><span><span data-i18n="msPhoto">Billede (valgfri)</span> <span class="hint" data-tip="Billedet skaleres automatisk ned i din browser til ca. 40 KB, før det gemmes. Originalen bliver ikke sendt nogen steder.">?</span></span><input type="file" id="ms-photo" accept="image/*"></label>
         <div id="ms-preview"></div>
         <button id="btn-add-milestone" class="action-btn save-btn full-btn" data-i18n="msSave">Gem milepæl</button>
     </section>
@@ -509,50 +523,50 @@
             <div id="profile-locked-note" class="warning-box" style="text-align:left; display:none;">
                 <strong>🔒 Log ind for at gemme</strong><br>Felterne herunder kan først gemmes, når du er logget ind.
             </div>
-            <label class="field"><span>Navn</span><input type="text" id="profile-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="20"></label>
-            <p class="field-label">Dreng eller pige? (skifter farver og vækstkurver)</p>
+            <label class="field"><span data-i18n="name">Navn</span><input type="text" id="profile-name-input" placeholder="F.eks. Emil, Sofia..." maxlength="20"></label>
+            <p class="field-label" data-i18n="genderQ">Dreng eller pige?</p>
             <div class="gender-picker">
-                <button class="gender-btn" data-gender="dreng">👦 Dreng</button>
-                <button class="gender-btn" data-gender="pige">👧 Pige</button>
-                <button class="gender-btn" data-gender="neutral">🌿 Neutral</button>
+                <button class="gender-btn" data-gender="dreng" data-i18n="boy">👦 Dreng</button>
+                <button class="gender-btn" data-gender="pige" data-i18n="girl">👧 Pige</button>
+                <button class="gender-btn" data-gender="neutral" data-i18n="neutral">🌿 Neutral</button>
             </div>
-            <label class="field"><span>Fødselsdato <span class="hint" data-tip="Bruges til vågetider, søvnplan, vækstkurver og barnets alder. Uden den kan BabyRo ikke regne næste sovetid ud.">?</span></span><input type="date" id="profile-birthdate-input"></label>
-            <label class="field"><span>Terminsdato <span class="hint" data-tip="Tigerspring regnes altid fra terminsdatoen, ikke fødselsdagen. Et barn født før tid rammer springene tilsvarende senere.">?</span></span><input type="date" id="profile-duedate-input"></label>
+            <label class="field"><span><span data-i18n="birthDate">Fødselsdato</span> <span class="hint" data-tip="Bruges til vågetider, søvnplan, vækstkurver og barnets alder. Uden den kan BabyRo ikke regne næste sovetid ud.">?</span></span><input type="date" id="profile-birthdate-input"></label>
+            <label class="field"><span><span data-i18n="dueDate">Terminsdato</span> <span class="hint" data-tip="Tigerspring regnes altid fra terminsdatoen, ikke fødselsdagen. Et barn født før tid rammer springene tilsvarende senere.">?</span></span><input type="date" id="profile-duedate-input"></label>
             <button id="btn-update-name" class="action-btn save-btn full-btn" data-i18n="saveDetails">Gem oplysninger</button>
         </div>
 
         <div class="profile-card">
             <h3 data-i18n="birthTitle">Fødslen</h3>
-            <p class="field-label">De oplysninger, man aldrig kan huske bagefter.</p>
+            <p class="field-label" data-i18n="birthSub">De oplysninger, man aldrig kan huske bagefter.</p>
             <div class="measure-form">
-                <label class="field"><span>Fødselstidspunkt</span><input type="time" id="birth-time"></label>
-                <label class="field"><span>Fødested</span><input type="text" id="birth-place" placeholder="F.eks. Rigshospitalet"></label>
-                <label class="field"><span>Fødselsvægt (g)</span><input type="text" inputmode="decimal" id="birth-weight" placeholder="3450"></label>
-                <label class="field"><span>Fødselslængde (cm)</span><input type="text" inputmode="decimal" id="birth-length" placeholder="51"></label>
-                <label class="field"><span>Hovedomfang (cm)</span><input type="text" inputmode="decimal" id="birth-head" placeholder="35"></label>
-                <label class="field"><span>Graviditetsuge</span><input type="text" id="birth-week" placeholder="40+2"></label>
+                <label class="field"><span data-i18n="birthTime">Fødselstidspunkt</span><input type="time" id="birth-time"></label>
+                <label class="field"><span data-i18n="birthPlace">Fødested</span><input type="text" id="birth-place" placeholder="F.eks. Rigshospitalet"></label>
+                <label class="field"><span data-i18n="birthWeight">Fødselsvægt (g)</span><input type="text" inputmode="decimal" id="birth-weight" placeholder="3450"></label>
+                <label class="field"><span data-i18n="birthLength">Fødselslængde (cm)</span><input type="text" inputmode="decimal" id="birth-length" placeholder="51"></label>
+                <label class="field"><span data-i18n="headCm">Hovedomfang (cm)</span><input type="text" inputmode="decimal" id="birth-head" placeholder="35"></label>
+                <label class="field"><span data-i18n="gestWeek">Graviditetsuge</span><input type="text" id="birth-week" placeholder="40+2"></label>
             </div>
-            <label class="field"><span>Forælder 1</span><input type="text" id="parent-1" placeholder="Navn"></label>
-            <label class="field"><span>Forælder 2</span><input type="text" id="parent-2" placeholder="Navn"></label>
-            <label class="field"><span>Historien om fødslen (valgfri)</span><textarea id="birth-story" rows="4" placeholder="Skriv det ned, mens I husker det..."></textarea></label>
+            <label class="field"><span data-i18n="parent1">Forælder 1</span><input type="text" id="parent-1" placeholder="Navn"></label>
+            <label class="field"><span data-i18n="parent2">Forælder 2</span><input type="text" id="parent-2" placeholder="Navn"></label>
+            <label class="field"><span data-i18n="birthStory">Historien om fødslen (valgfri)</span><textarea id="birth-story" rows="4" placeholder="Skriv det ned, mens I husker det..."></textarea></label>
             <button id="btn-save-birth" class="action-btn save-btn full-btn" data-i18n="saveBirth">Gem fødselsoplysninger</button>
         </div>
 
         <div class="profile-card">
-            <h3>📄 Rapport til sundhedsplejersken <span class="hint" data-tip="Samler søvn, mad, bleer, vækstkurver og milepæle på én side, klar til print eller PDF. Vælg selv perioden.">?</span></h3>
-            <p class="field-label">Vælg hvor lang en periode rapporten skal dække.</p>
+            <h3><span data-i18n="reportTitle">📄 Rapport til sundhedsplejersken</span> <span class="hint" data-tip="Samler søvn, mad, bleer, vækstkurver og milepæle på én side, klar til print eller PDF. Vælg selv perioden.">?</span></h3>
+            <p class="field-label" data-i18n="reportPeriod">Vælg hvor lang en periode rapporten skal dække.</p>
             <div class="quick-range">
-                <button class="rep-btn" data-repdays="7">7 dage</button>
-                <button class="rep-btn active" data-repdays="30">30 dage</button>
-                <button class="rep-btn" data-repdays="60">60 dage</button>
-                <button class="rep-btn" data-repdays="90">90 dage</button>
+                <button class="rep-btn" data-repdays="7" data-i18n="days7">7 dage</button>
+                <button class="rep-btn active" data-repdays="30" data-i18n="days30">30 dage</button>
+                <button class="rep-btn" data-repdays="60" data-i18n="days60">60 dage</button>
+                <button class="rep-btn" data-repdays="90" data-i18n="days90">90 dage</button>
             </div>
             <div class="date-range">
-                <label class="field"><span>Eller fra</span><input type="date" id="rep-from"></label>
-                <label class="field"><span>Til</span><input type="date" id="rep-to"></label>
+                <label class="field"><span data-i18n="reportOr">Eller fra</span><input type="date" id="rep-from"></label>
+                <label class="field"><span data-i18n="to">Til</span><input type="date" id="rep-to"></label>
             </div>
             <label class="field" id="rep-compare-wrap" style="display:none;">
-                <span>Sammenlign med et andet barn (valgfrit)</span>
+                <span data-i18n="reportCompare">Sammenlign med et andet barn (valgfrit)</span>
                 <select id="rep-compare"><option value="">Ingen sammenligning</option></select>
             </label>
             <p class="range-info" id="rep-info"></p>
@@ -569,16 +583,16 @@
         </div>
 
         <div class="profile-card" id="archived-card" style="display:none;">
-            <h3>Gemt væk <span class="hint" data-tip="Et gemt barn forsvinder fra vælgeren øverst, men alle data er i behold. Du kan hente det frem igen når som helst.">?</span></h3>
+            <h3><span data-i18n="archived">Gemt væk</span> <span class="hint" data-tip="Et gemt barn forsvinder fra vælgeren øverst, men alle data er i behold. Du kan hente det frem igen når som helst.">?</span></h3>
             <div id="archived-list"></div>
         </div>
 
         <div class="profile-card" id="share-card">
-            <h3>Del med den anden forælder</h3>
-            <p class="field-label">Lav en kode og send den. Så ser I begge de samme data — søvn, mad, vækst og milepæle opdateres for jer begge.</p>
+            <h3 data-i18n="shareTitle">Del med den anden forælder</h3>
+            <p class="field-label" data-i18n="shareSub">Lav en kode og send den.</p>
             <div id="share-area"></div>
             <div class="share-join">
-                <label class="field"><span>Har du fået en kode?</span><input type="text" id="join-code" placeholder="F.eks. BABY-4K7Q" maxlength="12"></label>
+                <label class="field"><span data-i18n="gotCode">Har du fået en kode?</span><input type="text" id="join-code" placeholder="F.eks. BABY-4K7Q" maxlength="12"></label>
                 <button id="btn-join-child" class="action-btn save-btn full-btn" data-i18n="joinChild">Tilslut mig barnet</button>
             </div>
         </div>
@@ -587,9 +601,9 @@
     <!-- PÅMINDELSER -->
     <div id="sub-notif" class="sub-panel" style="display:none;">
         <div class="profile-card">
-            <h3>Påmindelser <span class="hint" data-tip="BabyRo sender en besked, inden søvnvinduet åbner, så barnet når at falde til ro. På iPhone kræver det, at appen er lagt på hjemmeskærmen fra Safari.">?</span></h3>
-            <p class="field-label">Du får besked, inden det er tid til næste lur.</p>
-            <label class="field"><span>Varsel før sovetid (minutter)</span><input type="text" inputmode="numeric" id="notif-lead" value="15"></label>
+            <h3><span data-i18n="notifTitle">Påmindelser</span> <span class="hint" data-tip="BabyRo sender en besked, inden søvnvinduet åbner, så barnet når at falde til ro. På iPhone kræver det, at appen er lagt på hjemmeskærmen fra Safari.">?</span></h3>
+            <p class="field-label" data-i18n="notifSub">Du får besked, inden det er tid til næste lur.</p>
+            <label class="field"><span data-i18n="notifLead">Varsel før sovetid (minutter)</span><input type="text" inputmode="numeric" id="notif-lead" value="15"></label>
             <button id="btn-notif-toggle" class="action-btn save-btn full-btn" data-i18n="enableNotif">🔔 Slå påmindelser til</button>
             <p class="field-label" id="notif-status" style="margin-top:12px;"></p>
             <button id="btn-notif-test" class="action-btn reset-btn full-btn" style="margin-top:10px; display:none;" data-i18n="notifTest">Send en testbesked</button>
@@ -600,15 +614,15 @@
     <div id="sub-app" class="sub-panel" style="display:none;">
         <div class="profile-card" id="install-card">
             <h3 data-i18n="installTitle">📱 Installér BabyRo</h3>
-            <p class="field-label" id="install-text">Læg BabyRo på hjemmeskærmen, så den åbner som en rigtig app — og så påmindelserne virker.</p>
+            <p class="field-label" id="install-text" data-i18n="installText">Læg BabyRo på hjemmeskærmen.</p>
             <button id="btn-install" class="action-btn save-btn full-btn" style="display:none;" data-i18n="installBtn">Installér appen</button>
             <div id="install-steps" class="install-steps"></div>
         </div>
 
         <div id="profile-guest-section" class="profile-card">
             <h3 data-i18n="loginTitle">Log ind for at gemme</h3>
-            <p class="field-label">Du kan bruge alle lyde, søvnuret og loggen med det samme. Log ind, hvis du vil gemme det sikkert, dele med den anden forælder og have det med på tværs af telefoner.</p>
-            <button id="btn-google-login" class="google-btn"><span class="btn-icon">G</span> Log ind med Google</button>
+            <p class="field-label" data-i18n="loginSub">Du kan bruge alle lyde, søvnuret og loggen med det samme.</p>
+            <button id="btn-google-login" class="google-btn"><span class="btn-icon">G</span> <span data-i18n="loginGoogle">Log ind med Google</span></button>
         </div>
 
         <div id="profile-logged-in-section" class="profile-card" style="display:none;">
@@ -619,7 +633,7 @@
 
         <div class="profile-card">
             <h3 data-i18n="themeTitle">Tema &amp; Design</h3>
-            <p class="field-label">Skån øjnene om natten.</p>
+            <p class="field-label" data-i18n="themeSub">Skån øjnene om natten.</p>
             <button id="btn-theme-toggle" class="action-btn pause-btn full-btn">Skift til Nattilstand 🌙</button>
         </div>
 
@@ -635,26 +649,34 @@
 <div id="sleep-edit" class="modal">
     <div class="modal-box">
         <h3 id="se-title">Ret sovetid</h3>
-        <p class="field-label" data-i18n="editSleepHelp">Ret tidspunkterne, hvis uret blev startet eller stoppet for sent. Varigheden regnes automatisk.</p>
+        <p class="field-label" data-i18n="editSleepHelp">Ret tidspunkterne, hvis uret blev startet eller stoppet for sent.</p>
 
-        <label class="field"><span data-i18n="fellAsleep">Faldt i søvn</span>
-            <input type="datetime-local" id="se-start">
-        </label>
-        <div class="nudge-row">
-            <button class="nudge" data-nudge="start:-15">−15 min</button>
-            <button class="nudge" data-nudge="start:-5">−5 min</button>
-            <button class="nudge" data-nudge="start:5">+5 min</button>
-            <button class="nudge" data-nudge="start:15">+15 min</button>
+        <div class="se-blok">
+            <span class="se-label" data-i18n="fellAsleep">Faldt i søvn</span>
+            <div class="se-felter">
+                <input type="date" id="se-start-date">
+                <input type="time" id="se-start-time">
+            </div>
+            <div class="nudge-row">
+                <button type="button" class="nudge" data-nudge="start:-15">−15</button>
+                <button type="button" class="nudge" data-nudge="start:-5">−5</button>
+                <button type="button" class="nudge" data-nudge="start:5">+5</button>
+                <button type="button" class="nudge" data-nudge="start:15">+15</button>
+            </div>
         </div>
 
-        <label class="field"><span data-i18n="wokeUp">Vågnede</span>
-            <input type="datetime-local" id="se-end">
-        </label>
-        <div class="nudge-row">
-            <button class="nudge" data-nudge="end:-15">−15 min</button>
-            <button class="nudge" data-nudge="end:-5">−5 min</button>
-            <button class="nudge" data-nudge="end:5">+5 min</button>
-            <button class="nudge" data-nudge="end:15">+15 min</button>
+        <div class="se-blok">
+            <span class="se-label" data-i18n="wokeUp">Vågnede</span>
+            <div class="se-felter">
+                <input type="date" id="se-end-date">
+                <input type="time" id="se-end-time">
+            </div>
+            <div class="nudge-row">
+                <button type="button" class="nudge" data-nudge="end:-15">−15</button>
+                <button type="button" class="nudge" data-nudge="end:-5">−5</button>
+                <button type="button" class="nudge" data-nudge="end:5">+5</button>
+                <button type="button" class="nudge" data-nudge="end:15">+15</button>
+            </div>
         </div>
 
         <div class="se-result">
@@ -663,10 +685,10 @@
         </div>
 
         <div class="modal-actions">
-            <button id="se-save" class="action-btn save-btn" data-i18n="save">Gem</button>
-            <button id="se-cancel" class="action-btn reset-btn" data-i18n="cancel">Annullér</button>
+            <button type="button" id="se-save" class="action-btn save-btn" data-i18n="save">Gem</button>
+            <button type="button" id="se-cancel" class="action-btn reset-btn" data-i18n="cancel">Annullér</button>
         </div>
-        <button id="se-delete" class="modal-delete" data-i18n="deleteNap">Slet denne lur</button>
+        <button type="button" id="se-delete" class="modal-delete" data-i18n="deleteNap">Slet denne lur</button>
     </div>
 </div>
 

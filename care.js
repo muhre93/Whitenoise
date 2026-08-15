@@ -6,6 +6,8 @@
 
 let careChart = 'feeds';
 let careDagOffset = 0;   // 0 = i dag, 1 = i går ...
+let careFra = dateKeyOffset(6);
+let careTil = todayKey();
 
 const CARE_TYPER = {
     amning:   { get navn(){return T("breastfeed");}, ikon: "🤱", mad: true },
@@ -182,6 +184,61 @@ function renderCareHero() {
     }
 }
 
+// Dagene i den valgte periode på Overblik-fanen
+function carePeriodeDage() {
+    const out = [];
+    const d = keyToDate(careFra), slut = keyToDate(careTil);
+    let vagt = 0;
+    while (d <= slut && vagt < 400) {
+        const key = isoKey(d);
+        const e = careForDag(key);
+        out.push({
+            key,
+            maaltider: e.filter(x => CARE_TYPER[x.type] && CARE_TYPER[x.type].mad).length,
+            bleer: e.filter(x => x.type === 'ble').length,
+            ml: e.reduce((s, x) => s + (x.ml || 0), 0),
+            entries: e
+        });
+        d.setDate(d.getDate() + 1);
+        vagt++;
+    }
+    return out;
+}
+
+function saetCarePeriode(dage) {
+    careFra = dateKeyOffset(dage - 1);
+    careTil = todayKey();
+    const f = document.getElementById('crange-from'), t = document.getElementById('crange-to');
+    if (f) f.value = careFra;
+    if (t) t.value = careTil;
+    renderCareStats();
+    tegnCareChart();
+    opdaterCareInfo();
+}
+
+function opdaterCareInfo() {
+    const el = document.getElementById('crange-info');
+    if (!el) return;
+    const n = carePeriodeDage().length;
+    el.textContent = `${T('showing')} ${n} ${T('days')}: ${formatDateDK(careFra)} – ${formatDateDK(careTil)}`;
+}
+
+document.querySelectorAll('.crange-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.crange-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        saetCarePeriode(Number(btn.dataset.cdays));
+    });
+});
+document.getElementById('btn-apply-crange')?.addEventListener('click', () => {
+    const f = document.getElementById('crange-from').value;
+    const t = document.getElementById('crange-to').value;
+    if (!f || !t || f > t) { alert(T('endBeforeStart')); return; }
+    careFra = f; careTil = t;
+    document.querySelectorAll('.crange-btn').forEach(b => b.classList.remove('active'));
+    renderCareStats(); tegnCareChart(); opdaterCareInfo();
+});
+
 function careDage(antal) {
     const out = [];
     for (let i = antal - 1; i >= 0; i--) {
@@ -253,18 +310,20 @@ document.getElementById('care-next')?.addEventListener('click', () => {
 function renderCareStats() {
     const el = document.getElementById('care-stats');
     if (!el) return;
-    const dage = careDage(7);
+    const dage = carePeriodeDage();
     const medData = dage.filter(d => d.entries.length);
     const gnsMad = medData.length ? dage.reduce((s, d) => s + d.maaltider, 0) / medData.length : 0;
     const gnsBle = medData.length ? dage.reduce((s, d) => s + d.bleer, 0) / medData.length : 0;
     const gnsMl = medData.length ? dage.reduce((s, d) => s + d.ml, 0) / medData.length : 0;
-    const idag = dage[dage.length - 1];
+    const totalMad = dage.reduce((s, d) => s + d.maaltider, 0);
+    const totalBle = dage.reduce((s, d) => s + d.bleer, 0);
+    const totalMl = dage.reduce((s, d) => s + d.ml, 0);
 
     const kort = [
-        { v: idag.maaltider, l: T('feedsToday'), n: gnsMad ? `${T('statAvgDay')} ${gnsMad.toFixed(1)}` : "" },
-        { v: idag.bleer, l: T('nappiesToday'), n: gnsBle ? `${T('statAvgDay')} ${gnsBle.toFixed(1)}` : "" },
-        { v: idag.ml ? idag.ml + " ml" : "–", l: T('bottleToday'), n: gnsMl ? `${T('statAvgDay')} ${Math.round(gnsMl)} ml` : "" },
-        { v: medData.length, l: T('daysWithData'), n: T('days7') }
+        { v: gnsMad ? gnsMad.toFixed(1) : "–", l: T('feedsPerDay'), n: `${totalMad} ${T('statTotal').toLowerCase()}` },
+        { v: gnsBle ? gnsBle.toFixed(1) : "–", l: T('nappiesPerDay'), n: `${totalBle} ${T('statTotal').toLowerCase()}` },
+        { v: gnsMl ? Math.round(gnsMl) + " ml" : "–", l: T('milkMl'), n: totalMl ? `${totalMl} ml ${T('statTotal').toLowerCase()}` : "" },
+        { v: medData.length, l: T('daysWithData'), n: "" }
     ];
     el.innerHTML = kort.map(k => `<div class="stat-card">
         <div class="stat-value">${k.v}</div><div class="stat-label">${k.l}</div>
@@ -275,18 +334,18 @@ function tegnCareChart() {
     const area = document.getElementById('care-chart');
     const help = document.getElementById('care-chart-help');
     if (!area) return;
-    const dage = careDage(14);
+    const dage = carePeriodeDage();
     const iDag = todayKey();
 
     if (careChart === 'feeds') {
         area.innerHTML = barChart(dage.map(d => ({ label: shortDate(d.key), value: d.maaltider, highlight: d.key === iDag })), { format: v => Math.round(v) });
-        help.textContent = "Antal måltider pr. dag. Nyfødte spiser typisk 8-12 gange i døgnet; det falder gradvist med alderen.";
+        help.textContent = T('helpFeeds');
     } else if (careChart === 'diapers') {
         area.innerHTML = barChart(dage.map(d => ({ label: shortDate(d.key), value: d.bleer, highlight: d.key === iDag })), { format: v => Math.round(v) });
-        help.textContent = "Antal bleer pr. dag. Mindst 6 våde bleer i døgnet tyder på, at barnet får nok at drikke.";
+        help.textContent = T('helpNappies');
     } else if (careChart === 'ml') {
         area.innerHTML = barChart(dage.map(d => ({ label: shortDate(d.key), value: d.ml, highlight: d.key === iDag })), { format: v => Math.round(v) + ' ml' });
-        help.textContent = "Mælk fra flaske pr. dag. Amning kan ikke måles i ml og tælles derfor ikke med her.";
+        help.textContent = T('helpMl');
     } else if (careChart === 'clock') {
         const rows = dage.map(d => ({
             label: shortDate(d.key),
@@ -298,7 +357,7 @@ function tegnCareChart() {
             })
         })).filter(r => r.blocks.length);
         area.innerHTML = dayTimeline(rows);
-        help.textContent = "Hvornår på døgnet der blev spist og skiftet. Her ser du hurtigt, om der er ved at komme rytme i det.";
+        help.textContent = T('helpCareClock');
     }
 }
 
@@ -321,8 +380,12 @@ function renderCare() {
     opdaterCareFelter();
     renderCareHero();
     renderCareListe();
+    const f = document.getElementById('crange-from'), t = document.getElementById('crange-to');
+    if (f && !f.value) f.value = careFra;
+    if (t && !t.value) t.value = careTil;
     renderCareStats();
     tegnCareChart();
+    opdaterCareInfo();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
