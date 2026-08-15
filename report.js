@@ -1,81 +1,222 @@
 // ==================================================
 // BabyRo — report.js
-// Én side med de sidste fire ugers søvn, mad, bleer,
-// vækstkurver og milepæle — klar til print eller PDF.
+// Rapport til sundhedsplejersken.
+// Standard 30 dage, men perioden kan vælges frit,
+// og to børn kan stilles op ved siden af hinanden.
 // ==================================================
 
-function rapportDage(antal) {
+let repDage = 30;
+let repFra = "", repTil = "";
+let repSammenlign = "";
+
+document.querySelectorAll('.rep-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.rep-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        repDage = Number(btn.dataset.repdays);
+        repFra = ""; repTil = "";
+        const f = document.getElementById('rep-from'), t = document.getElementById('rep-to');
+        if (f) f.value = ""; if (t) t.value = "";
+        opdaterRapportInfo();
+    });
+});
+
+['rep-from', 'rep-to'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => {
+        repFra = document.getElementById('rep-from').value;
+        repTil = document.getElementById('rep-to').value;
+        if (repFra && repTil) document.querySelectorAll('.rep-btn').forEach(b => b.classList.remove('active'));
+        opdaterRapportInfo();
+    });
+});
+
+document.getElementById('rep-compare')?.addEventListener('change', (e) => {
+    repSammenlign = e.target.value;
+});
+
+function rapportPeriode() {
+    if (repFra && repTil && repFra <= repTil) {
+        const dage = Math.round((keyToDate(repTil) - keyToDate(repFra)) / 86400000) + 1;
+        return { fra: repFra, til: repTil, antal: Math.min(dage, 400) };
+    }
+    return { fra: dateKeyOffset(repDage - 1), til: todayKey(), antal: repDage };
+}
+
+function opdaterRapportInfo() {
+    const vaelger = document.getElementById('rep-compare');
+    const wrap = document.getElementById('rep-compare-wrap');
+
+    // Sammenligning giver kun mening med mere end ét barn
+    if (vaelger && wrap && typeof childList !== 'undefined') {
+        const andre = childList.filter(c => c.id !== childId);
+        wrap.style.display = andre.length ? 'block' : 'none';
+        const nuvaerende = vaelger.value;
+        vaelger.innerHTML = `<option value="">Ingen sammenligning</option>` +
+            andre.map(c => `<option value="${c.id}">${esc(c.name || 'Baby')}</option>`).join('');
+        if (andre.some(c => c.id === nuvaerende)) vaelger.value = nuvaerende;
+        else repSammenlign = "";
+    }
+
+    const el = document.getElementById('rep-info');
+    if (!el) return;
+    const p = rapportPeriode();
+    el.textContent = `Rapporten dækker ${p.antal} dage: ${formatDateDK(p.fra)} – ${formatDateDK(p.til)}`;
+}
+
+// ==========================================
+// DATA
+// ==========================================
+function rapportDage(periode, logs, careListe) {
     const out = [];
-    for (let i = antal - 1; i >= 0; i--) {
-        const key = dateKeyOffset(i);
-        const s = localSleepLogs[key] || { sessions: [], total: 0 };
-        const c = typeof careForDag === 'function' ? careForDag(key) : [];
+    const d = keyToDate(periode.fra), slut = keyToDate(periode.til);
+    let vagt = 0;
+    while (d <= slut && vagt < 400) {
+        const key = isoKey(d);
+        const s = (logs && logs[key]) || { sessions: [], total: 0 };
+        const c = (careListe || []).filter(e => isoKey(new Date(e.ts)) === key);
         out.push({
-            key,
-            total: s.total || 0,
-            lure: s.sessions.length,
-            maaltider: c.filter(x => CARE_TYPER[x.type]?.mad).length,
+            key, total: s.total || 0, lure: (s.sessions || []).length,
+            maaltider: c.filter(x => CARE_TYPER[x.type] && CARE_TYPER[x.type].mad).length,
             bleer: c.filter(x => x.type === 'ble').length
         });
+        d.setDate(d.getDate() + 1);
+        vagt++;
     }
     return out;
 }
 
-function byggeRapport() {
-    const dage = rapportDage(28);
+// Henter et andet barns data, så to søskende kan stilles op ved siden af hinanden
+async function hentBarnData(cid) {
+    if (!db || isGuest) return null;
+    try {
+        const base = db.collection("children").doc(cid);
+        const [barn, sleepSnap, growthDoc, careSnap] = await Promise.all([
+            base.get(), base.collection("sleep").get(),
+            base.collection("data").doc("growth").get(), base.collection("care").get()
+        ]);
+        const logs = {};
+        sleepSnap.forEach(doc => Object.assign(logs, doc.data().days || {}));
+        const care = [];
+        careSnap.forEach(doc => care.push(...(doc.data().entries || [])));
+        return {
+            info: barn.exists ? barn.data() : {},
+            logs, care,
+            growth: growthDoc.exists ? growthDoc.data() : { measurements: [] }
+        };
+    } catch (e) {
+        console.log("Kunne ikke hente det andet barn:", e);
+        return null;
+    }
+}
+
+function noegletal(dage, fodselsdato) {
     const medSoevn = dage.filter(d => d.total > 0);
     const totalSek = dage.reduce((s, d) => s + d.total, 0);
     const antalLure = dage.reduce((s, d) => s + d.lure, 0);
-    const gnsPrDag = medSoevn.length ? totalSek / medSoevn.length : 0;
-    const fase = soevnFaseForAlder(alderIMdr());
-
     const medPleje = dage.filter(d => d.maaltider || d.bleer);
-    const gnsMad = medPleje.length ? dage.reduce((s, d) => s + d.maaltider, 0) / medPleje.length : 0;
-    const gnsBle = medPleje.length ? dage.reduce((s, d) => s + d.bleer, 0) / medPleje.length : 0;
+    let fase = null;
+    if (fodselsdato) {
+        const mdr = (Date.now() - new Date(fodselsdato + "T00:00:00")) / (1000 * 60 * 60 * 24 * 30.4375);
+        fase = soevnFaseForAlder(mdr);
+    }
+    return {
+        gnsPrDag: medSoevn.length ? totalSek / medSoevn.length : 0,
+        totalSek, antalLure,
+        lurePrDag: medSoevn.length ? antalLure / medSoevn.length : 0,
+        gnsLur: antalLure ? totalSek / antalLure : 0,
+        dageMedData: medSoevn.length,
+        gnsMad: medPleje.length ? dage.reduce((s, d) => s + d.maaltider, 0) / medPleje.length : 0,
+        gnsBle: medPleje.length ? dage.reduce((s, d) => s + d.bleer, 0) / medPleje.length : 0,
+        plejeDage: medPleje.length,
+        fase
+    };
+}
 
-    // Søvndiagram
-    const soevnChart = barChart(
-        dage.map(d => ({ label: shortDate(d.key), value: d.total / 3600 })),
-        { format: v => v.toFixed(1) + 't' }
-    );
+function alderVedDatoFor(fodselsdato, dato) {
+    if (!fodselsdato) return null;
+    return (new Date(dato + "T00:00:00") - new Date(fodselsdato + "T00:00:00")) / (1000 * 60 * 60 * 24 * 30.4375);
+}
 
-    // Vækstkurver for de tre standardmål
-    let vaekstHtml = "";
+function vaekstKurver(growth, koen, fodselsdato) {
+    let html = "";
     ['vaegt', 'laengde', 'hoved'].forEach(k => {
-        const maal = (growthData.measurements || []).filter(m => m[k] != null)
-            .sort((a, b) => a.dato.localeCompare(b.dato));
-        if (!maal.length || !babyBirthDate) return;
+        const maal = ((growth && growth.measurements) || []).filter(m => m[k] != null).sort((a, b) => a.dato.localeCompare(b.dato));
+        if (!maal.length || !fodselsdato) return;
         const type = MAAL_TYPER[k];
-        const punkter = maal.map(m => ({ x: Math.max(0, alderVedDato(m.dato)), y: m[k] }));
+        const punkter = maal.map(m => ({ x: Math.max(0, alderVedDatoFor(fodselsdato, m.dato)), y: m[k] }));
         const maxAlder = Math.max(3, Math.ceil(Math.max(...punkter.map(p => p.x)) + 1));
-        const ref = WHO_DATA[babyGender]?.[k];
+        const ref = WHO_DATA[koen] && WHO_DATA[koen][k];
         let bands = [], series = [{ points: punkter, klasse: 'c-s1' }];
         if (ref) {
             const aldre = Object.keys(ref).map(Number).sort((a, b) => a - b).filter(a => a <= maxAlder + 3);
             bands = [{ lower: aldre.map(a => ({ x: a, y: ref[a][0] })), upper: aldre.map(a => ({ x: a, y: ref[a][2] })) }];
             series.unshift({ points: aldre.map(a => ({ x: a, y: ref[a][1] })), klasse: 'c-s2', dots: false });
         }
-        vaekstHtml += `<div class="rap-chart"><h4>${type.ikon} ${type.navn} (${type.enhed})</h4>${
+        html += `<div class="rap-chart"><h4>${type.ikon} ${type.navn} (${type.enhed})</h4>${
             lineChart({ series, bands, xMin: 0, xMax: maxAlder, formatY: v => v.toFixed(1), formatX: v => Math.round(v) + " mdr", xTicks: Math.min(6, maxAlder) })
         }</div>`;
     });
+    return html;
+}
 
-    // Måletabel
-    const maalinger = (growthData.measurements || []).slice().sort((a, b) => b.dato.localeCompare(a.dato)).slice(0, 8);
+// ==========================================
+// BYG RAPPORTEN
+// ==========================================
+async function byggeRapport() {
+    const p = rapportPeriode();
+    const careListe = typeof alleCareEntries === 'function' ? alleCareEntries() : [];
+    const dage = rapportDage(p, localSleepLogs, careListe);
+    const n = noegletal(dage, babyBirthDate);
+
+    const soevnChart = barChart(dage.map(d => ({ label: shortDate(d.key), value: d.total / 3600 })), { format: v => v.toFixed(1) + 't' });
+    const vaekstHtml = vaekstKurver(growthData, babyGender, babyBirthDate);
+
+    const maalinger = (growthData.measurements || []).slice().sort((a, b) => b.dato.localeCompare(a.dato)).slice(0, 10);
     const maalTabel = maalinger.length ? `<table class="rap-table">
         <tr><th>Dato</th><th>Alder</th><th>Vægt</th><th>Længde</th><th>Hoved</th><th>Note</th></tr>
         ${maalinger.map(m => `<tr>
             <td>${new Date(m.dato).toLocaleDateString('da-DK')}</td>
-            <td>${alderVedDato(m.dato) != null ? alderVedDato(m.dato).toFixed(1) + ' mdr' : '–'}</td>
-            <td>${m.vaegt ?? '–'}</td><td>${m.laengde ?? '–'}</td><td>${m.hoved ?? '–'}</td>
+            <td>${alderVedDatoFor(babyBirthDate, m.dato) != null ? alderVedDatoFor(babyBirthDate, m.dato).toFixed(1) + ' mdr' : '–'}</td>
+            <td>${m.vaegt != null ? talTilFelt(m.vaegt) : '–'}</td>
+            <td>${m.laengde != null ? talTilFelt(m.laengde) : '–'}</td>
+            <td>${m.hoved != null ? talTilFelt(m.hoved) : '–'}</td>
             <td>${esc(m.note || '')}</td></tr>`).join('')}
     </table>` : `<p class="rap-tom">Ingen målinger registreret.</p>`;
 
-    // Milepæle
-    const ms = milestones.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+    const ms = milestones.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12);
     const msHtml = ms.length ? `<ul class="rap-list">${ms.map(m =>
         `<li><strong>${esc(m.title)}</strong> — ${new Date(m.date).toLocaleDateString('da-DK')}${alderVedMilepael(m.date) ? ` (${alderVedMilepael(m.date)})` : ''}</li>`
     ).join('')}</ul>` : `<p class="rap-tom">Ingen milepæle registreret.</p>`;
+
+    // Eventuel sammenligning med et søskendebarn
+    let sammenlignHtml = "";
+    if (repSammenlign) {
+        const andet = await hentBarnData(repSammenlign);
+        if (andet) {
+            const aDage = rapportDage(p, andet.logs, andet.care);
+            const aN = noegletal(aDage, andet.info.birthDate);
+            const aNavn = esc(andet.info.name || 'Barn 2');
+            const raekke = (etiket, a, b) => `<tr><td>${etiket}</td><td>${a}</td><td>${b}</td></tr>`;
+            sammenlignHtml = `
+                <h2>Sammenligning: ${esc(babyName)} og ${aNavn}</h2>
+                <p class="rap-sub">Samme periode for begge. Husk at børnene kan være i forskellig alder — det betyder mere end noget andet for tallene.</p>
+                <table class="rap-table">
+                    <tr><th>Nøgletal</th>
+                        <th>${esc(babyName)}${babyBirthDate ? ` (${alderTekst()})` : ''}</th>
+                        <th>${aNavn}</th></tr>
+                    ${raekke('Søvn pr. døgn', formatShort(n.gnsPrDag), formatShort(aN.gnsPrDag))}
+                    ${raekke('Lure pr. dag', n.lurePrDag ? n.lurePrDag.toFixed(1) : '–', aN.lurePrDag ? aN.lurePrDag.toFixed(1) : '–')}
+                    ${raekke('Gns. lurlængde', n.gnsLur ? formatShort(n.gnsLur) : '–', aN.gnsLur ? formatShort(aN.gnsLur) : '–')}
+                    ${raekke('Måltider pr. dag', n.gnsMad ? n.gnsMad.toFixed(1) : '–', aN.gnsMad ? aN.gnsMad.toFixed(1) : '–')}
+                    ${raekke('Bleer pr. dag', n.gnsBle ? n.gnsBle.toFixed(1) : '–', aN.gnsBle ? aN.gnsBle.toFixed(1) : '–')}
+                    ${raekke('Dage med data', n.dageMedData, aN.dageMedData)}
+                </table>
+                <div class="rap-chart"><h4>${aNavn}: søvn pr. dag</h4>${
+                    barChart(aDage.map(d => ({ label: shortDate(d.key), value: d.total / 3600 })), { format: v => v.toFixed(1) + 't' })
+                }</div>
+                ${vaekstKurver(andet.growth, andet.info.gender || 'neutral', andet.info.birthDate)}`;
+        }
+    }
 
     const f = birthInfo || {};
     const foedsel = [
@@ -86,9 +227,9 @@ function byggeRapport() {
     ].filter(Boolean).join(' · ');
 
     return `<!DOCTYPE html><html lang="da"><head><meta charset="UTF-8">
-<title>Søvnrapport — ${esc(babyName)}</title>
+<title>Rapport — ${esc(babyName)}</title>
 <style>
-:root{--accent-green:#8DA399;--btn-save:#A4C3D2;--bg-main:#F4F2ED;--text-light:#777;--text-dark:#333;--card-bg:#fff;--band:rgba(141,163,153,.18);}
+:root{--accent-green:#8DA399;--btn-save:#A4C3D2;--bg-main:#F4F2ED;--text-light:#777;--text-dark:#333;--band:rgba(141,163,153,.18);}
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
 body{padding:28px;color:var(--text-dark);line-height:1.5;max-width:900px;margin:0 auto;}
 h1{font-size:1.6rem;color:var(--accent-green);margin-bottom:4px;}
@@ -114,11 +255,13 @@ h4{font-size:.92rem;color:var(--text-light);margin-bottom:6px;}
 .c-band{fill:var(--band);}
 .c-line{stroke-width:2.5;fill:none;}.c-line.c-s1{stroke:var(--btn-save);}
 .c-line.c-s2{stroke:var(--accent-green);stroke-dasharray:6 4;}
+.c-line.c-s3{stroke:var(--text-light);stroke-dasharray:3 4;stroke-width:1.5;}
 .c-dot{stroke:#fff;stroke-width:2;}.c-dot.c-s1{fill:var(--btn-save);}.c-dot.c-s2{fill:var(--accent-green);}
 .chart-legend{display:flex;gap:14px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
 .c-key{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;color:var(--text-light);}
 .c-swatch{width:12px;height:12px;border-radius:3px;display:inline-block;}
 .c-sw-bar,.c-sw-s1{background:var(--btn-save);}.c-sw-s2{background:var(--accent-green);}
+.c-sw-s3{background:var(--text-light);}
 .c-sw-avg{background:var(--text-light);height:3px;}.c-sw-band{background:var(--band);border:1px solid var(--accent-green);}
 .chart-empty{color:var(--text-light);font-style:italic;padding:16px;}
 .rap-foot{margin-top:30px;padding-top:14px;border-top:2px solid var(--bg-main);font-size:.78rem;color:var(--text-light);}
@@ -130,29 +273,29 @@ h4{font-size:.92rem;color:var(--text-light);margin-bottom:6px;}
 
 <h1>${esc(babyName)}</h1>
 <p class="rap-sub">
-    ${babyBirthDate ? `Født ${new Date(babyBirthDate).toLocaleDateString('da-DK')}${f['birth-time'] ? ' kl. ' + f['birth-time'] : ''}${f['birth-place'] ? ', ' + esc(f['birth-place']) : ''} · ${alderTekst()}` : 'Fødselsdato ikke angivet'}
+    ${babyBirthDate ? `Født ${new Date(babyBirthDate).toLocaleDateString('da-DK')}${f['birth-time'] ? ' kl. ' + esc(f['birth-time']) : ''}${f['birth-place'] ? ', ' + esc(f['birth-place']) : ''} · ${alderTekst()}` : 'Fødselsdato ikke angivet'}
     ${foedsel ? `<br>Ved fødslen: ${esc(foedsel)}` : ''}
     ${(f['parent-1'] || f['parent-2']) ? `<br>Forældre: ${esc([f['parent-1'], f['parent-2']].filter(Boolean).join(' og '))}` : ''}
 </p>
-<p class="rap-sub">Rapport dannet ${new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })} · perioden ${formatDateDK(dage[0].key)} til ${formatDateDK(dage[dage.length - 1].key)}</p>
+<p class="rap-sub">Rapport dannet ${new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })} · perioden ${formatDateDK(p.fra)} til ${formatDateDK(p.til)} (${p.antal} dage)</p>
 
-<h2>Søvn — de sidste 4 uger</h2>
+<h2>Søvn</h2>
 <div class="rap-grid">
-    <div class="rap-kpi"><b>${formatShort(gnsPrDag)}</b><small>Gns. pr. døgn</small></div>
-    <div class="rap-kpi"><b>${fase ? fase.soevnMin + '-' + fase.soevnMax + ' t' : '–'}</b><small>Anbefalet for alderen</small></div>
-    <div class="rap-kpi"><b>${medSoevn.length ? (antalLure / medSoevn.length).toFixed(1) : '–'}</b><small>Lure pr. dag</small></div>
-    <div class="rap-kpi"><b>${antalLure ? formatShort(totalSek / antalLure) : '–'}</b><small>Gns. lurlængde</small></div>
-    <div class="rap-kpi"><b>${medSoevn.length}</b><small>Dage med data</small></div>
+    <div class="rap-kpi"><b>${formatShort(n.gnsPrDag)}</b><small>Gns. pr. døgn</small></div>
+    <div class="rap-kpi"><b>${n.fase ? n.fase.soevnMin + '-' + n.fase.soevnMax + ' t' : '–'}</b><small>Anbefalet for alderen</small></div>
+    <div class="rap-kpi"><b>${n.lurePrDag ? n.lurePrDag.toFixed(1) : '–'}</b><small>Lure pr. dag</small></div>
+    <div class="rap-kpi"><b>${n.gnsLur ? formatShort(n.gnsLur) : '–'}</b><small>Gns. lurlængde</small></div>
+    <div class="rap-kpi"><b>${n.dageMedData}</b><small>Dage med data</small></div>
 </div>
 ${soevnChart}
 
-<h2>Mad og bleer — de sidste 4 uger</h2>
+<h2>Mad og bleer</h2>
 <div class="rap-grid">
-    <div class="rap-kpi"><b>${gnsMad ? gnsMad.toFixed(1) : '–'}</b><small>Måltider pr. dag</small></div>
-    <div class="rap-kpi"><b>${gnsBle ? gnsBle.toFixed(1) : '–'}</b><small>Bleer pr. dag</small></div>
-    <div class="rap-kpi"><b>${medPleje.length}</b><small>Dage med data</small></div>
+    <div class="rap-kpi"><b>${n.gnsMad ? n.gnsMad.toFixed(1) : '–'}</b><small>Måltider pr. dag</small></div>
+    <div class="rap-kpi"><b>${n.gnsBle ? n.gnsBle.toFixed(1) : '–'}</b><small>Bleer pr. dag</small></div>
+    <div class="rap-kpi"><b>${n.plejeDage}</b><small>Dage med data</small></div>
 </div>
-${medPleje.length ? '' : '<p class="rap-tom">Ingen registreringer af mad og bleer i perioden.</p>'}
+${n.plejeDage ? '' : '<p class="rap-tom">Ingen registreringer af mad og bleer i perioden.</p>'}
 
 <h2>Vækst</h2>
 ${vaekstHtml || '<p class="rap-tom">Ingen vækstkurver — der mangler målinger eller fødselsdato.</p>'}
@@ -160,6 +303,8 @@ ${maalTabel}
 
 <h2>Milepæle</h2>
 ${msHtml}
+
+${sammenlignHtml}
 
 <p class="rap-foot">
     Dannet i BabyRo. Tallene er registreret af forældrene og er ikke en journal.
@@ -169,12 +314,21 @@ ${msHtml}
 </body></html>`;
 }
 
-function aabnRapport() {
-    const vindue = window.open('', '_blank');
-    if (!vindue) { alert("Browseren blokerede vinduet. Tillad pop op-vinduer for denne side og prøv igen."); return; }
-    vindue.document.write(byggeRapport());
-    vindue.document.close();
+async function aabnRapport() {
+    const knap = document.getElementById('btn-open-report');
+    if (knap) { knap.disabled = true; knap.textContent = "Bygger rapporten..."; }
+    try {
+        const html = await byggeRapport();
+        const vindue = window.open('', '_blank');
+        if (!vindue) { alert("Browseren blokerede vinduet. Tillad pop op-vinduer for denne side og prøv igen."); return; }
+        vindue.document.write(html);
+        vindue.document.close();
+    } catch (e) {
+        alert("Kunne ikke lave rapporten: " + e.message);
+    } finally {
+        if (knap) { knap.disabled = false; knap.textContent = "📄 Lav rapporten"; }
+    }
 }
 
 document.getElementById('btn-open-report')?.addEventListener('click', aabnRapport);
-document.getElementById('btn-open-report2')?.addEventListener('click', aabnRapport);
+document.addEventListener('DOMContentLoaded', opdaterRapportInfo);
