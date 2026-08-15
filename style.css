@@ -128,8 +128,12 @@ body.dark-theme .play-btn.playing { color:#fff; }
 .page-header h2 { font-size:1.8rem; color:var(--accent-green); }
 .page-header p { color:var(--text-light); }
 .quick-range { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
-.range-btn { flex:1; min-width:70px; background:var(--bg-main); border:2px solid transparent; color:var(--text-dark); padding:12px 8px; border-radius:12px; font-weight:700; cursor:pointer; transition:.2s; }
-.range-btn.active { background:var(--accent-green); color:#fff; }
+.range-btn, .crange-btn, .rep-btn {
+    flex:1; min-width:70px; background:var(--bg-main); border:2px solid transparent;
+    color:var(--text-dark); padding:12px 8px; border-radius:12px; font-weight:700;
+    cursor:pointer; transition:.2s; font-family:'Quicksand',sans-serif; font-size:.92rem;
+}
+.range-btn.active, .crange-btn.active, .rep-btn.active { background:var(--accent-green); color:#fff; }
 .date-range { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
 .date-range .field { flex:1; min-width:140px; margin-bottom:0; }
 .range-info { margin-top:14px; color:var(--text-light); font-size:.9rem; }
@@ -321,12 +325,6 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
 .steps { padding-left: 22px; margin-bottom: 10px; }
 .steps li { margin-bottom: 8px; font-size: .93rem; }
 
-/* RAPPORT-PERIODE */
-.rep-btn {
-    flex: 1; min-width: 70px; background: var(--bg-main); border: 2px solid transparent;
-    color: var(--text-dark); padding: 12px 8px; border-radius: 12px; font-weight: 700; cursor: pointer;
-}
-.rep-btn.active { background: var(--accent-green); color: #fff; }
 
 /* KOMBINERET VÆKSTKURVE */
 .c-line.c-s3 { stroke: var(--text-light); stroke-width: 1.5; stroke-dasharray: 3 4; }
@@ -550,3 +548,18 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
 .plan-card.plan-sleeping { border-left-color: var(--btn-save); background: linear-gradient(180deg, rgba(164,195,210,.12), transparent 60%); }
 .plan-card.plan-sleeping .plan-time { font-variant-numeric: tabular-nums; }
 body.ur-koerer .time-display { color: var(--accent-green); }
+
+
+/* Alder i hjørnet af Dagens plan */
+.plan-age { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
+.plan-age small {
+    font-size: .68rem; font-weight: 700; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.plan-age .plan-phase { font-size: .85rem; }
+
+/* Klokkeslættet under nedtællingen */
+.plan-clock {
+    font-size: 1.05rem; font-weight: 700; color: var(--text-light);
+    margin: -4px 0 8px; letter-spacing: .3px;
+}

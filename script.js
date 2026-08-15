@@ -151,6 +151,16 @@ async function sletMilepaelData(id) {
 // ==========================================
 // INDHOLD
 // ==========================================
+// Artiklerne under Viden findes både på dansk (dine egne fra admin)
+// og engelsk (den indbyggede oversættelse)
+function indhold(key) {
+    if (typeof SPROG !== 'undefined' && SPROG === 'en' &&
+        typeof INDHOLD_EN !== 'undefined' && INDHOLD_EN[key] !== undefined) {
+        return INDHOLD_EN[key];
+    }
+    return TEXTS[key];
+}
+
 function t(key) {
     const raw = TEXTS[key];
     return typeof raw === 'string' ? raw.replaceAll('{navn}', babyName) : '';
@@ -202,25 +212,28 @@ function renderTexts() {
     fill('txt-smart-desc', 'smartDesc');
     const hs = document.getElementById('txt-history-sub'); if (hs) hs.textContent = T('historySub');
     const gw = document.getElementById('guest-warning'); if (gw) gw.innerHTML = T('guestWarning');
-    fill('txt-sleep-title', 'sleepTitle');
-    fill('txt-sleep-sub', 'sleepSub');
+
+    const sleepTitleEl = document.getElementById('txt-sleep-title');
+    if (sleepTitleEl) sleepTitleEl.textContent = String(indhold('sleepTitle') || '').replaceAll('{navn}', babyName);
+    const sleepSubEl = document.getElementById('txt-sleep-sub');
+    if (sleepSubEl) sleepSubEl.textContent = String(indhold('sleepSub') || '').replaceAll('{navn}', babyName);
 
     const sleepEl = document.getElementById('sleep-cards');
-    if (sleepEl) sleepEl.innerHTML = (TEXTS.sleepCards || []).map(c =>
+    if (sleepEl) sleepEl.innerHTML = (indhold('sleepCards') || []).map(c =>
         `<div class="info-card"><h3>${(c.title || '').replaceAll('{navn}', babyName)}</h3>${(c.body || '').replaceAll('{navn}', babyName)}</div>`).join('');
 
-    fill('txt-leap-title', 'leapTitle');
-    fill('txt-leap-sub', 'leapSub');
-    fill('txt-leap-status-title', 'leapStatusTitle');
-    fill('txt-leap-intro-title', 'leapIntroTitle');
-    fill('txt-leap-intro-body', 'leapIntroBody');
-    fill('txt-leap-outro-title', 'leapOutroTitle');
-    fill('txt-leap-outro-body', 'leapOutroBody');
+    ['txt-leap-title:leapTitle', 'txt-leap-sub:leapSub', 'txt-leap-status-title:leapStatusTitle',
+     'txt-leap-intro-title:leapIntroTitle', 'txt-leap-intro-body:leapIntroBody',
+     'txt-leap-outro-title:leapOutroTitle', 'txt-leap-outro-body:leapOutroBody'].forEach(par => {
+        const [id, key] = par.split(':');
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = String(indhold(key) || '').replaceAll('{navn}', babyName);
+    });
 
     const leapEl = document.getElementById('leap-cards');
-    if (leapEl) leapEl.innerHTML = (TEXTS.leapCards || []).map(c =>
+    if (leapEl) leapEl.innerHTML = (indhold('leapCards') || []).map(c =>
         `<div class="info-card leap-card" id="leap-${c.nr}">
-            <h3><span class="leap-badge">Spring ${c.nr}</span> Uge ${c.from}-${c.to}: ${(c.title || '').replaceAll('{navn}', babyName)}</h3>
+            <h3><span class="leap-badge">${T('leapWord')} ${c.nr}</span> ${T('weekWord')} ${c.from}-${c.to}: ${(c.title || '').replaceAll('{navn}', babyName)}</h3>
             ${(c.body || '').replaceAll('{navn}', babyName)}
         </div>`).join('');
 
@@ -660,6 +673,8 @@ function renderPlanCard() {
     const timeEl = document.getElementById('plan-time');
     const subEl = document.getElementById('plan-sub');
     const noteEl = document.getElementById('plan-note');
+    const clockEl = document.getElementById('plan-clock');
+    if (clockEl) clockEl.textContent = '';
 
     if (!babyBirthDate) {
         phaseEl.textContent = "";
@@ -667,7 +682,7 @@ function renderPlanCard() {
         subEl.innerHTML = T('planNoBirth');
         noteEl.textContent = ""; return;
     }
-    phaseEl.textContent = `${alderTekst()} · ${fase.navn}`;
+    phaseEl.textContent = alderTekst();
 
     // Kører uret, sover barnet lige nu — så er vågetiden irrelevant
     if (urKoerer || forloebetSek() > 0) {
@@ -697,14 +712,16 @@ function renderPlanCard() {
     card.classList.remove('plan-now');
 
     if (nu < naeste.tidligst) {
-        labelEl.textContent = T('planOpens');
-        timeEl.textContent = clockFromMs(naeste.tidligst);
-        subEl.innerHTML = `${T('inTime')} <strong>${minTekst((naeste.tidligst - nu) / 60000)}</strong>. ${esc(babyName)} ${T('awakeFor')} ${minTekst(vaagen)}.`;
+        labelEl.textContent = T('planOpensIn');
+        timeEl.textContent = minTekst((naeste.tidligst - nu) / 60000);
+        if (clockEl) clockEl.textContent = `${T('atClockWord')} ${clockFromMs(naeste.tidligst)}`;
+        subEl.innerHTML = `${esc(babyName)} ${T('awakeFor')} <strong>${minTekst(vaagen)}</strong>.`;
         noteEl.textContent = `${T('windowOpenFrom')} ${clockFromMs(naeste.tidligst)} ${T('windowTo')} ${clockFromMs(naeste.senest)}. ${T('windowHit')}`;
     } else if (nu <= naeste.senest) {
         card.classList.add('plan-now');
         labelEl.textContent = T('planOpenNow');
-        timeEl.textContent = `${T('planCloseBy')} ${clockFromMs(naeste.senest)}`;
+        timeEl.textContent = minTekst((naeste.senest - nu) / 60000);
+        if (clockEl) clockEl.textContent = `${T('planCloseBy')} ${clockFromMs(naeste.senest)}`;
         subEl.innerHTML = `${esc(babyName)} ${T('awakeFor')} <strong>${minTekst(vaagen)}</strong> ${T('timeToSettle')}`;
         noteEl.textContent = T('planNoteWindow');
     } else {
@@ -722,27 +739,26 @@ function renderLeapStatus() {
     const el = document.getElementById('leap-status-text');
     if (!el) return;
     document.querySelectorAll('.leap-card').forEach(c => c.classList.remove('active-leap'));
-    const leaps = (TEXTS.leapCards || []).slice().sort((a, b) => a.from - b.from);
+    const leaps = (indhold('leapCards') || []).slice().sort((a, b) => a.from - b.from);
     if (!babyDueDate) {
-        el.innerHTML = `Indtast terminsdatoen under <strong>Profil</strong>, så viser BabyRo automatisk, hvilket spring ${esc(babyName)} er i.`;
+        el.innerHTML = T('leapNoDue');
         return;
     }
     const weeks = Math.floor((Date.now() - new Date(babyDueDate + "T00:00:00").getTime()) / (7 * 86400000));
     if (weeks < 0) {
-        el.textContent = `Der er ca. ${Math.abs(weeks)} uger til termin. Det første spring kommer omkring uge ${leaps[0]?.from || 4}. 💛`;
+        el.innerHTML = T('leapBeforeDue', { uger: Math.abs(weeks), foerste: leaps[0]?.from || 4 });
         return;
     }
     const cur = leaps.find(l => weeks >= l.from && weeks <= l.to);
     const next = leaps.find(l => l.from > weeks);
-    let msg = `${esc(babyName)} er ca. <strong>${weeks} uger</strong> (fra termin). `;
+    let msg = T('leapAge', { uger: weeks }) + ' ';
     if (cur) {
-        msg += `I er sandsynligvis midt i <strong>Spring ${cur.nr}</strong> (uge ${cur.from}-${cur.to}). Hold ud — der er en solskinsperiode på vej! ⭐`;
+        msg += T('leapInNow', { nr: cur.nr, fra: cur.from, til: cur.to });
         document.getElementById(`leap-${cur.nr}`)?.classList.add('active-leap');
     } else if (next) {
-        const d = next.from - weeks;
-        msg += `I er i en rolig periode. Næste er <strong>Spring ${next.nr}</strong> om ca. ${d} uge${d === 1 ? '' : 'r'}. ☀️`;
+        msg += T('leapNext', { nr: next.nr, uger: next.from - weeks });
         document.getElementById(`leap-${next.nr}`)?.classList.add('active-leap');
-    } else msg += `Alle tigerspring er overstået — godt klaret! 🎉`;
+    } else msg += T('leapDone');
     el.innerHTML = msg;
 }
 

@@ -55,11 +55,15 @@
     <section class="panel plan-card" id="plan-card">
         <div class="plan-head">
             <h2><span data-i18n="planTitle">Dagens plan</span> <span class="hint" data-i18n-tip="planTip" data-tip="">?</span></h2>
-            <span class="plan-phase" id="plan-phase"></span>
+            <span class="plan-age">
+                <small data-i18n="age">Alder</small>
+                <span class="plan-phase" id="plan-phase"></span>
+            </span>
         </div>
         <div class="plan-main">
             <p class="plan-label" id="plan-label">Næste søvn</p>
             <div class="plan-time" id="plan-time">–</div>
+            <p class="plan-clock" id="plan-clock"></p>
             <p class="plan-sub" id="plan-sub">Gem en lur, så regner BabyRo næste sovetid ud.</p>
         </div>
         <div class="plan-stats">
@@ -400,77 +404,77 @@
 
     <div id="sub-plan-explain" class="sub-panel active">
         <div class="page-header">
-            <h2>Sådan virker Dagens plan</h2>
-            <p>Hvorfor BabyRo tror, den ved hvornår <span class="b-name">Baby</span> skal sove.</p>
+            <h2 data-i18n="peTitle">Sådan virker Dagens plan</h2>
+            <p data-i18n="peSub">Hvorfor BabyRo tror, den ved hvornår barnet skal sove.</p>
         </div>
 
         <div class="info-section">
             <div class="panel">
-                <h3>Den korte version</h3>
-                <p>BabyRo gætter ikke. Den regner sådan her:</p>
+                <h3 data-i18n="peShortTitle">Den korte version</h3>
+                <p data-i18n="peShortBody">BabyRo gætter ikke. Den regner sådan her:</p>
                 <div class="formel">
-                    <span>Sidste lur sluttede</span><i>+</i>
-                    <span>Vågetid for alderen</span><i>=</i>
-                    <strong>Næste søvnvindue</strong>
+                    <span data-i18n="peF1">Sidste lur sluttede</span><i>+</i>
+                    <span data-i18n="peF2">Vågetid for alderen</span><i>=</i>
+                    <strong data-i18n="peF3">Næste søvnvindue</strong>
                 </div>
-                <p>Det eneste, appen selv skal bruge, er <strong>fødselsdatoen</strong> og at du trykker <strong>Gem lur</strong>. Resten regner den ud.</p>
+                <p data-i18n-html="peShortNote"></p>
             </div>
 
             <div class="panel">
-                <h3>Hvad er en vågetid?</h3>
-                <p>En baby kan kun holde til at være vågen et bestemt stykke tid, før hjernen bliver overstimuleret. Det stykke tid kaldes <strong>vågetiden</strong>, og det er den vigtigste enkeltfaktor for, om putningen bliver let eller svær.</p>
-                <p>Rammer du vinduet, falder barnet i søvn på få minutter. Rammer du ved siden af, kæmper I begge to.</p>
+                <h3 data-i18n="peWakeTitle">Hvad er en vågetid?</h3>
+                <p data-i18n-html="peWakeBody1"></p>
+                <p data-i18n="peWakeBody2"></p>
                 <div id="wake-visual"></div>
             </div>
 
             <div class="panel">
-                <h3>Derfor er det svært at putte et overtræt barn</h3>
-                <p>Det virker bagvendt, men et barn, der har været vågent for længe, sover <em>dårligere</em> — ikke bedre. Når vinduet lukker, udskiller kroppen stresshormonerne kortisol og adrenalin for at holde barnet i gang. De hormoner er stik modsatte af det, der skal til for at falde i søvn.</p>
-                <p>Resultatet kender de fleste forældre: et barn der er hektisk, buer ryggen, griner skingert — og så pludselig græder utrøsteligt.</p>
+                <h3 data-i18n="peTiredTitle">Derfor er det svært at putte et overtræt barn</h3>
+                <p data-i18n-html="peTiredBody1"></p>
+                <p data-i18n="peTiredBody2"></p>
                 <div id="tired-visual"></div>
             </div>
 
             <div class="panel">
-                <h3>Tallene BabyRo bruger</h3>
-                <p>Vågetiderne følger de gængse anbefalinger fra bl.a. Sundhedsstyrelsen og American Academy of Sleep Medicine. Den række, der gælder for <span class="b-name">Baby</span> lige nu, er markeret.</p>
+                <h3 data-i18n="peNumbersTitle">Tallene BabyRo bruger</h3>
+                <p data-i18n-html="peNumbersBody"></p>
                 <div id="phase-table"></div>
-                <p class="mini-help">Alle tal er vejledende. Nogle børn kan mere, andre mindre — se dem som et udgangspunkt, ikke en facitliste.</p>
+                <p class="mini-help" data-i18n="peNumbersNote"></p>
             </div>
 
             <div class="panel">
-                <h3>Sådan læser du kortet på forsiden</h3>
+                <h3 data-i18n="peCardTitle">Sådan læser du kortet på forsiden</h3>
                 <ul class="leap-list">
-                    <li><strong>Næste søvnvindue åbner kl. …</strong> — der er stadig tid. Brug den på leg, mad og frisk luft.</li>
-                    <li><strong>Søvnvinduet er åbent nu</strong> — kortet bliver gult. Start putterutinen. Det er her, det er lettest.</li>
-                    <li><strong>Vinduet er lukket</strong> — I er forbi det gode tidspunkt. Dæmp lys og lyd, og put roligt alligevel.</li>
+                    <li data-i18n-html="peCard1"></li>
+                    <li data-i18n-html="peCard2"></li>
+                    <li data-i18n-html="peCard3"></li>
                 </ul>
-                <p>Bjælken nederst viser dagens samlede søvn mod det anbefalede. Den fyldes op i løbet af dagen og bliver grøn, når I er inde i det anbefalede spænd.</p>
+                <p data-i18n="peCardBar"></p>
             </div>
 
             <div class="panel">
-                <h3>Tegn på træthed — bedre end uret</h3>
-                <p>Uret er en hjælp, ikke en chef. Barnets signaler slår altid tabellen:</p>
+                <h3 data-i18n="peSignsTitle">Tegn på træthed</h3>
+                <p data-i18n="peSignsBody"></p>
                 <div class="tegn-grid">
-                    <div class="tegn ok"><strong>Tidligt (put nu)</strong><span>Kigger væk · gaber · bliver stille · gnider øjne og ører</span></div>
-                    <div class="tegn advarsel"><strong>Sent (skynd dig)</strong><span>Pylret · klynker · mister interessen for leg</span></div>
-                    <div class="tegn stop"><strong>For sent (overtræt)</strong><span>Hektisk · buer ryggen · skingert grin · utrøstelig gråd</span></div>
+                    <div class="tegn ok"><strong data-i18n="peSign1"></strong><span data-i18n="peSign1b"></span></div>
+                    <div class="tegn advarsel"><strong data-i18n="peSign2"></strong><span data-i18n="peSign2b"></span></div>
+                    <div class="tegn stop"><strong data-i18n="peSign3"></strong><span data-i18n="peSign3b"></span></div>
                 </div>
             </div>
 
             <div class="panel">
-                <h3>Hvad påmindelsen gør</h3>
-                <p>Slår du påmindelser til, sender BabyRo en besked <strong>15 minutter før</strong> vinduet åbner (du kan selv ændre varslet). Kvarteret er ikke tilfældigt: det er nogenlunde den tid, det tager at afslutte legen, skifte ble, dæmpe lyset og få barnet ned uden hastværk.</p>
-                <p class="mini-help">Beskeden sendes fra en server, så den kommer, selv når telefonen er lukket — hvis appen er lagt på hjemmeskærmen.</p>
+                <h3 data-i18n="peNotifTitle">Hvad påmindelsen gør</h3>
+                <p data-i18n-html="peNotifBody"></p>
+                <p class="mini-help" data-i18n="peNotifNote"></p>
             </div>
 
             <div class="panel">
-                <h3>Når planen ikke passer</h3>
-                <p>Er der noget, der ikke stemmer, er det næsten altid én af disse:</p>
+                <h3 data-i18n="peWrongTitle">Når planen ikke passer</h3>
+                <p data-i18n="peWrongBody"></p>
                 <ul class="leap-list">
-                    <li><strong>Fødselsdatoen mangler.</strong> Uden den kender appen ikke vågetiden.</li>
-                    <li><strong>Luren blev ikke gemt.</strong> Planen regner fra sidste <em>gemte</em> lur.</li>
-                    <li><strong>Barnet er i et tigerspring.</strong> Så ryger rytmen — helt normalt, og det går over.</li>
-                    <li><strong>Dit barn kan bare mere eller mindre end tabellen.</strong> Følg barnet, ikke appen.</li>
+                    <li data-i18n-html="peWrong1"></li>
+                    <li data-i18n-html="peWrong2"></li>
+                    <li data-i18n-html="peWrong3"></li>
+                    <li data-i18n-html="peWrong4"></li>
                 </ul>
             </div>
         </div>
@@ -702,6 +706,7 @@
 <script src="firebase-config.js"></script>
 <script src="cloudflare-config.js"></script>
 <script src="i18n.js"></script>
+<script src="i18n-content.js"></script>
 <script src="defaults.js"></script>
 <script src="growth-data.js"></script>
 <script src="charts.js"></script>

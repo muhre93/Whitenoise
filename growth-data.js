@@ -98,16 +98,22 @@ const MAAL_TYPER = {
 // soevnMin / soevnMax er samlet døgnsøvn i TIMER
 // ==================================================
 const SOEVN_FASER = [
-    { fraMdr: 0,  tilMdr: 1,  vaageMin: 45,  vaageMax: 60,  soevnMin: 14, soevnMax: 17, lure: "4-6", navn: "Nyfødt" },
-    { fraMdr: 1,  tilMdr: 2,  vaageMin: 60,  vaageMax: 90,  soevnMin: 14, soevnMax: 17, lure: "4-5", navn: "1-2 måneder" },
-    { fraMdr: 2,  tilMdr: 3,  vaageMin: 75,  vaageMax: 105, soevnMin: 14, soevnMax: 17, lure: "4-5", navn: "2-3 måneder" },
-    { fraMdr: 3,  tilMdr: 4,  vaageMin: 90,  vaageMax: 120, soevnMin: 12, soevnMax: 16, lure: "3-4", navn: "3-4 måneder" },
-    { fraMdr: 4,  tilMdr: 6,  vaageMin: 120, vaageMax: 150, soevnMin: 12, soevnMax: 16, lure: "3-4", navn: "4-6 måneder" },
-    { fraMdr: 6,  tilMdr: 9,  vaageMin: 150, vaageMax: 180, soevnMin: 12, soevnMax: 15, lure: "2-3", navn: "6-9 måneder" },
-    { fraMdr: 9,  tilMdr: 12, vaageMin: 180, vaageMax: 210, soevnMin: 12, soevnMax: 15, lure: "2",   navn: "9-12 måneder" },
-    { fraMdr: 12, tilMdr: 18, vaageMin: 210, vaageMax: 300, soevnMin: 11, soevnMax: 14, lure: "1-2", navn: "12-18 måneder" },
-    { fraMdr: 18, tilMdr: 999,vaageMin: 300, vaageMax: 360, soevnMin: 11, soevnMax: 14, lure: "1",   navn: "18-24 måneder" }
+    { fraMdr: 0,  tilMdr: 1,  vaageMin: 45,  vaageMax: 60,  soevnMin: 14, soevnMax: 17, lure: "4-6", navn: "Nyfødt", navnEn: "Newborn" },
+    { fraMdr: 1,  tilMdr: 2,  vaageMin: 60,  vaageMax: 90,  soevnMin: 14, soevnMax: 17, lure: "4-5", navn: "1-2 måneder", navnEn: "1-2 months" },
+    { fraMdr: 2,  tilMdr: 3,  vaageMin: 75,  vaageMax: 105, soevnMin: 14, soevnMax: 17, lure: "4-5", navn: "2-3 måneder", navnEn: "2-3 months" },
+    { fraMdr: 3,  tilMdr: 4,  vaageMin: 90,  vaageMax: 120, soevnMin: 12, soevnMax: 16, lure: "3-4", navn: "3-4 måneder", navnEn: "3-4 months" },
+    { fraMdr: 4,  tilMdr: 6,  vaageMin: 120, vaageMax: 150, soevnMin: 12, soevnMax: 16, lure: "3-4", navn: "4-6 måneder", navnEn: "4-6 months" },
+    { fraMdr: 6,  tilMdr: 9,  vaageMin: 150, vaageMax: 180, soevnMin: 12, soevnMax: 15, lure: "2-3", navn: "6-9 måneder", navnEn: "6-9 months" },
+    { fraMdr: 9,  tilMdr: 12, vaageMin: 180, vaageMax: 210, soevnMin: 12, soevnMax: 15, lure: "2",   navn: "9-12 måneder", navnEn: "9-12 months" },
+    { fraMdr: 12, tilMdr: 18, vaageMin: 210, vaageMax: 300, soevnMin: 11, soevnMax: 14, lure: "1-2", navn: "12-18 måneder", navnEn: "12-18 months" },
+    { fraMdr: 18, tilMdr: 999,vaageMin: 300, vaageMax: 360, soevnMin: 11, soevnMax: 14, lure: "1",   navn: "18-24 måneder", navnEn: "18-24 months" }
 ];
+
+// Navnet på fasen i det valgte sprog
+function faseNavn(f) {
+    if (!f) return "";
+    return (typeof SPROG !== 'undefined' && SPROG === 'en' && f.navnEn) ? f.navnEn : f.navn;
+}
 
 function soevnFaseForAlder(mdr) {
     if (mdr == null || isNaN(mdr)) return null;

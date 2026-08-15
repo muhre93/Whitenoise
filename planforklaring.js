@@ -14,7 +14,7 @@ function tegnVaageVisual() {
 
     const fase = soevnFaseForAlder(alderIMdr());
     if (!fase) {
-        el.innerHTML = `<div class="chart-empty">Indtast fødselsdato under Profil, så tegnes tidslinjen med ${esc(babyName)}s egne tal.</div>`;
+        el.innerHTML = `<div class="chart-empty">${T('noBirthDate')}</div>`;
         return;
     }
 
@@ -33,7 +33,7 @@ function tegnVaageVisual() {
         const vaageSlut = Math.min(t + vaageMid, slutMin);
         // Vågeperiode
         blokke += `<rect x="${X(t).toFixed(1)}" y="${pad.t}" width="${(X(vaageSlut) - X(t)).toFixed(1)}" height="34" rx="6" class="pv-wake"/>`;
-        blokke += `<text x="${((X(t) + X(vaageSlut)) / 2).toFixed(1)}" y="${pad.t + 22}" class="pv-label" text-anchor="middle">${Math.round(vaageMid)} min vågen</text>`;
+        blokke += `<text x="${((X(t) + X(vaageSlut)) / 2).toFixed(1)}" y="${pad.t + 22}" class="pv-label" text-anchor="middle">${Math.round(vaageMid)} ${T('peAwake')}</text>`;
         if (vaageSlut >= slutMin - 20) { t = slutMin; break; }
         // Lur
         const lurSlut = Math.min(vaageSlut + lurLaengde, slutMin);
@@ -52,15 +52,15 @@ function tegnVaageVisual() {
     el.innerHTML = `
         <div class="plan-visual">
             <svg viewBox="0 0 ${W} ${H}" class="chart-svg" role="img">
-                <text x="${pad.l}" y="20" class="pv-title">En typisk dag for ${esc(babyName)} — ${esc(fase.navn)}</text>
+                <text x="${pad.l}" y="20" class="pv-title">${T('peDayFor')} — ${esc(faseNavn(fase))}</text>
                 ${blokke}${maerker}${timer}
             </svg>
             <div class="chart-legend">
-                <span class="c-key"><i class="c-swatch pv-sw-wake"></i>Vågen (${minTekst(fase.vaageMin)}–${minTekst(fase.vaageMax)})</span>
-                <span class="c-key"><i class="c-swatch pv-sw-sleep"></i>Lur</span>
-                <span class="c-key"><i class="c-swatch pv-sw-mark"></i>Her åbner søvnvinduet</span>
+                <span class="c-key"><i class="c-swatch pv-sw-wake"></i>${T('peLegendWake')} (${minTekst(fase.vaageMin)}–${minTekst(fase.vaageMax)})</span>
+                <span class="c-key"><i class="c-swatch pv-sw-sleep"></i>${T('peLegendNap')}</span>
+                <span class="c-key"><i class="c-swatch pv-sw-mark"></i>${T('peLegendMark')}</span>
             </div>
-            <p class="mini-help">Forenklet eksempel med ${fase.lure} lure og sengetid kl. 19. Din dag ser anderledes ud — pointen er afstanden mellem lurene.</p>
+            <p class="mini-help">${T('peExampleNote', { lure: fase.lure })}</p>
         </div>`;
 }
 
@@ -93,7 +93,7 @@ function tegnTraethedsVisual() {
         <div class="plan-visual">
             <svg viewBox="0 0 ${W} ${H}" class="chart-svg" role="img">
                 <rect x="${vFra}" y="${pad.t}" width="${(vTil - vFra).toFixed(1)}" height="${h}" class="pv-window"/>
-                <text x="${((vFra + vTil) / 2).toFixed(1)}" y="${pad.t - 8}" class="pv-title" text-anchor="middle">Søvnvinduet</text>
+                <text x="${((vFra + vTil) / 2).toFixed(1)}" y="${pad.t - 8}" class="pv-title" text-anchor="middle">${T('peWindow')}</text>
 
                 <line x1="${pad.l}" y1="${pad.t + h}" x2="${pad.l + w}" y2="${pad.t + h}" class="c-grid"/>
                 <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${pad.t + h}" class="c-grid"/>
@@ -101,18 +101,18 @@ function tegnTraethedsVisual() {
                 <path d="${sti(soevnPunkter)}" class="pv-line-sleep"/>
                 <path d="${sti(stressPunkter)}" class="pv-line-stress"/>
 
-                <text x="${pad.l - 8}" y="${Y(95).toFixed(1)}" class="pv-axis" text-anchor="end">højt</text>
-                <text x="${pad.l - 8}" y="${(pad.t + h).toFixed(1)}" class="pv-axis" text-anchor="end">lavt</text>
-                <text x="${X(6).toFixed(1)}" y="${H - 22}" class="pv-axis">Vågnet</text>
-                <text x="${((vFra + vTil) / 2).toFixed(1)}" y="${H - 22}" class="pv-axis" text-anchor="middle">Let at putte</text>
-                <text x="${X(94).toFixed(1)}" y="${H - 22}" class="pv-axis" text-anchor="end">Overtræt</text>
-                <text x="${(pad.l + w / 2).toFixed(1)}" y="${H - 6}" class="pv-axis" text-anchor="middle">Tid siden barnet vågnede →</text>
+                <text x="${pad.l - 8}" y="${Y(95).toFixed(1)}" class="pv-axis" text-anchor="end">${T('peHigh')}</text>
+                <text x="${pad.l - 8}" y="${(pad.t + h).toFixed(1)}" class="pv-axis" text-anchor="end">${T('peLow')}</text>
+                <text x="${X(6).toFixed(1)}" y="${H - 22}" class="pv-axis">${T('peWoke')}</text>
+                <text x="${((vFra + vTil) / 2).toFixed(1)}" y="${H - 22}" class="pv-axis" text-anchor="middle">${T('peEasy')}</text>
+                <text x="${X(94).toFixed(1)}" y="${H - 22}" class="pv-axis" text-anchor="end">${T('peOvertired')}</text>
+                <text x="${(pad.l + w / 2).toFixed(1)}" y="${H - 6}" class="pv-axis" text-anchor="middle">${T('peAxisTime')}</text>
             </svg>
             <div class="chart-legend">
-                <span class="c-key"><i class="c-swatch pv-sw-sleeppress"></i>Søvntryk — trætheden der hjælper</span>
-                <span class="c-key"><i class="c-swatch pv-sw-stress"></i>Stresshormoner — modarbejder søvn</span>
+                <span class="c-key"><i class="c-swatch pv-sw-sleeppress"></i>${T('peSleepPressure')}</span>
+                <span class="c-key"><i class="c-swatch pv-sw-stress"></i>${T('peStress')}</span>
             </div>
-            <p class="mini-help">I det grønne felt er søvntrykket højt, mens stresshormonerne stadig er lave. Det er dér, putningen tager fem minutter i stedet for fyrre.</p>
+            <p class="mini-help">${T('peTiredCaption')}</p>
         </div>`;
 }
 
@@ -126,14 +126,14 @@ function tegnFaseTabel() {
     const nu = soevnFaseForAlder(alder);
 
     el.innerHTML = `<div class="table-scroll"><table class="wake-table">
-        <tr><th>Alder</th><th>Vågetid mellem lure</th><th>Søvn i døgnet</th><th>Lure</th></tr>
+        <tr><th>${T('peTableAge')}</th><th>${T('peTableWake')}</th><th>${T('peTableSleep')}</th><th>${T('peTableNaps')}</th></tr>
         ${SOEVN_FASER.map(f => {
             const aktiv = nu && f.fraMdr === nu.fraMdr;
             const til = f.tilMdr > 100 ? '24' : f.tilMdr;
             return `<tr class="${aktiv ? 'aktiv-fase' : ''}">
-                <td>${f.fraMdr}–${til} mdr.${aktiv ? ' <span class="naa">← nu</span>' : ''}</td>
+                <td>${f.fraMdr}–${til} ${T('peMonths')}${aktiv ? ` <span class="naa">${T('peNow')}</span>` : ''}</td>
                 <td>${minTekst(f.vaageMin)}–${minTekst(f.vaageMax)}</td>
-                <td>${f.soevnMin}–${f.soevnMax} timer</td>
+                <td>${f.soevnMin}–${f.soevnMax} ${SPROG === 'en' ? 'hours' : 'timer'}</td>
                 <td>${f.lure}</td>
             </tr>`;
         }).join('')}

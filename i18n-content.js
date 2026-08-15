@@ -1,0 +1,68 @@
+// ==================================================
+// BabyRo — i18n-content.js
+// Engelske udgaver af de lange artikler under Viden.
+// Bruges kun når sproget er engelsk; på dansk vises
+// det, du selv har skrevet i admin.
+// ==================================================
+
+const INDHOLD_EN = {
+    sleepTitle: "About baby sleep",
+    sleepSub: "How children sleep from birth to age three.",
+
+    sleepCards: [
+        {
+            title: "0-3 months: the fourth trimester",
+            body: "<p>Newborns sleep 14-17 hours a day, but in short stretches of 2-4 hours — with no sense of night and day. The body clock isn't developed yet, and the body only starts producing its own sleep hormone (melatonin) at around 2-3 months.</p><p>The sleep cycle is only about 40-50 minutes, and half of it is \"active\" REM sleep, where your baby grunts, smiles, twitches and makes noises. That's completely normal — don't pick them up at the slightest sound, because they're often still asleep.</p><p><strong>How the sound helps:</strong> The womb was constantly noisy with pulse, blood flow and digestion. Total silence is actually unsettling for a newborn. Steady, monotonous sound recreates that backdrop and triggers the calming reflex.</p>"
+        },
+        {
+            title: "3-6 months: sleep grows up",
+            body: "<p>At around four months a big and permanent change happens: {navn}'s sleep reorganises into adult sleep stages with light and deep phases. This is the famous <strong>four-month sleep regression</strong> — your baby now briefly surfaces between every sleep cycle, and if things have changed (the sound is gone, the dummy fell out), they wake fully.</p><p>Total sleep: 12-16 hours a day, usually across 3-4 naps. Night sleep slowly starts to consolidate.</p><p><strong>How the sound helps:</strong> A constant sound acts as a bridge between sleep cycles. When your baby surfaces and hears exactly what they heard falling asleep, they slide back under without waking properly.</p>"
+        },
+        {
+            title: "6-12 months: rhythm and separation anxiety",
+            body: "<p>Sleep becomes more predictable, and most babies go from three naps to two (usually morning and afternoon). Total need: 12-15 hours a day. Many can now sleep longer stretches at night, though waking is still normal.</p><p>Two things can get in the way. <strong>Motor development</strong> (crawling, pulling up, standing) means the brain \"practises\" at night, and your baby may wake up standing in the cot. And at around 8-10 months <strong>separation anxiety</strong> arrives — your baby now understands that you exist even when you're out of sight, and protests at bedtime.</p><p><strong>How the sound helps:</strong> The sound has become a conditioned sleep cue: when your baby hears it, the brain knows it's time to sleep. It also masks noise from the rest of the house.</p>"
+        },
+        {
+            title: "1-2 years: from two naps to one",
+            body: "<p>Sleep need: 11-14 hours a day. Somewhere between 12 and 18 months most children drop the morning nap and move to one long midday nap of 1.5-3 hours. The transition can bring a few messy weeks with an overtired child by late afternoon — move bedtime earlier during that period.</p><p>New challenges: the language explosion, and the will! Your child can now actively protest about sleeping, and around 18 months another regression often arrives, driven by a push for independence and teething (molars hurt).</p><p><strong>How the sound helps:</strong> A fixed sound as part of the bedtime routine gives predictability and security — two things a one-to-two-year-old needs, precisely because the world feels big and wild.</p>"
+        },
+        {
+            title: "2-3 years: dreams, dark and the big bed",
+            body: "<p>Sleep need: 10-13 hours a day. The midday nap shrinks — some drop it around age three, others keep it until four or five. Your child can now delay and negotiate (\"one more story!\"), and firm, loving boundaries around bedtime matter more than ever.</p><p>Imagination explodes, and with it come <strong>nightmares</strong> (your child wakes frightened and can be comforted) and for some <strong>night terrors</strong> (your child screams and seems awake but is actually asleep — the best thing is to stay nearby without waking them). Fear of the dark is common now too; a dim, warm night light is fine.</p><p><strong>How the sound helps:</strong> Calm, even sound helps settle the racing thoughts a two-to-three-year-old head is full of — and masks the \"scary\" noises the house makes at night.</p>"
+        },
+        {
+            title: "⏱️ Wake windows: how long can they stay awake?",
+            body: "<p>One of the best tools against bedtime battles is hitting the \"sleep window\" — settling your child before they become overtired. Guideline wake times between naps:</p><table class=\"wake-table\"><tr><th>Age</th><th>Wake window</th><th>Naps</th></tr><tr><td>0-3 mo</td><td>45-90 min</td><td>4-6</td></tr><tr><td>3-6 mo</td><td>1.5-2.5 hours</td><td>3-4</td></tr><tr><td>6-9 mo</td><td>2-3 hours</td><td>2-3</td></tr><tr><td>9-12 mo</td><td>2.5-3.5 hours</td><td>2</td></tr><tr><td>12-18 mo</td><td>3-5 hours</td><td>1-2</td></tr><tr><td>18 mo-3 yr</td><td>5-6 hours</td><td>0-1</td></tr></table><p style=\"margin-top:10px;\">Signs of tiredness: rubbing eyes, looking away, yawning, going glassy-eyed. Signs of being overtired: hectic, fretful, arching the back — the window is closing.</p>"
+        },
+        {
+            title: "🌙 A good bedtime routine",
+            body: "<p>Children love predictability. A short, fixed routine of 15-30 minutes in the same order every evening tells the body that sleep is coming:</p><ul class=\"leap-list\"><li>Dim the lights and slow the pace for the last hour.</li><li>Bath or wash → clean nappy → sleepwear.</li><li>Feed (ideally before they're fully gone, so feeding isn't the only way to fall asleep).</li><li>A story, a song, or quiet time on the changing table.</li><li>Start the same sound in BabyRo — {navn}'s own sleep cue.</li><li>Put your child down drowsy but awake.</li></ul>"
+        },
+        {
+            title: "🛡️ Safe sleep — the essentials",
+            body: "<ul class=\"leap-list\"><li>Always place your baby on their back to sleep for the first year.</li><li>Firm mattress, no loose duvets, pillows or soft toys in the first months — use a sleeping bag instead.</li><li>Sleep in the same room as your baby (in their own bed) for the first six months.</li><li>Keep the room cool (about 18-20 °C) and smoke-free.</li><li>Volume: place the speaker at least 1-2 metres from your baby and keep it soft — like a quiet shower, no louder.</li></ul><p style=\"margin-top:10px; font-size:0.85rem; color:var(--text-light);\">BabyRo is an everyday helper, not medical advice. If you're worried about your child's sleep, talk to your health visitor or doctor.</p>"
+        }
+    ],
+
+    leapTitle: "Leaps",
+    leapSub: "The 10 mental developmental leaps of the first 20 months.",
+    leapStatusTitle: "Where is {navn} right now?",
+    leapIntroTitle: "What is a leap?",
+    leapIntroBody: "<p>As well as growing physically, all babies go through 10 major <strong>mental</strong> developmental leaps during roughly the first 20 months. At each leap the brain matures suddenly, and your baby can perceive the world in a completely new way. It's wonderful — but also frightening, because everything familiar suddenly feels different.</p><p>The leaps arrive at surprisingly fixed times, and they are always counted from the <strong>due date</strong>, not the birthday. A baby born three weeks early reaches them about three weeks \"later\" than their calendar age.</p><h4 style=\"margin-top: 15px;\">The three classic signs:</h4><ul class=\"leap-list\"><li><strong>Crying</strong> — more fretful and quicker to tears than usual.</li><li><strong>Clinging</strong> — wants to be held and close to you all the time.</li><li><strong>Cranky</strong> — restless sleep, poor appetite, mood swings.</li></ul><p style=\"margin-top: 15px;\"><strong>How the sound helps:</strong> During a leap the brain is bombarded with new input. Monotonous, humming sound screens out the impressions and gives the brain a much-needed break — which is why the vacuum cleaner often works like magic during exactly these weeks.</p>",
+
+    leapCards: [
+        { nr: 1, from: 4, to: 5, title: "Sensations", body: "<p>All the senses sharpen at once. The world becomes brighter, sharper and louder — and from the inside, your baby now feels their own digestion more clearly. This is often when the first \"why is my calm baby crying?\" week arrives.</p><p><strong>Afterwards your baby can:</strong> Look longer and more intently, respond more clearly to sound and touch — and give you that first real smile.</p>" },
+        { nr: 2, from: 7, to: 9, title: "Patterns", body: "<p>Your baby starts noticing simple patterns — both in what they see (stripes, contrasts, their own hands!) and in what they feel. Many babies become utterly fascinated by their own hands during this period.</p><p><strong>Afterwards your baby can:</strong> Hold their head more steadily, make small controlled movements, coo (\"ooh\" and \"eh\") and study things for a long time.</p>" },
+        { nr: 3, from: 11, to: 12, title: "Smooth transitions", body: "<p>Your baby now perceives smooth, gradual change: a voice rising and falling, a movement gliding across the room. Their own movements also become more fluid and less jerky.</p><p><strong>Afterwards your baby can:</strong> Follow objects with their eyes in one smooth movement, squeal and \"sing\" with intonation, and reach more purposefully.</p>" },
+        { nr: 4, from: 14, to: 19, title: "Events", body: "<p>The longest and often hardest leap — and it typically coincides with the four-month sleep regression. Your baby now grasps short \"events\": that one thing leads to the next (rattle → sound, reach → grab → into the mouth).</p><p><strong>Afterwards your baby can:</strong> Grasp, turn and examine things deliberately, put everything in their mouth, respond to their own name and perhaps roll over.</p>" },
+        { nr: 5, from: 22, to: 26, title: "Relationships", body: "<p>Your baby now understands distance — and with it the alarming discovery that you can move AWAY. That's the start of separation anxiety. They also understand that things connect: the button and the sound, the lid and the pot.</p><p><strong>Afterwards your baby can:</strong> Sit more independently, move objects hand to hand, look for dropped things and protest loudly when you leave the room.</p>" },
+        { nr: 6, from: 33, to: 37, title: "Categories", body: "<p>The world gets sorted! Your baby discovers that things can be grouped: a dog is a dog, whether big, small, in a picture or in real life. They investigate everything systematically — squeezing, banging, dropping and tasting to work out what things \"are\".</p><p><strong>Afterwards your baby can:</strong> Recognise categories (animals, food, people), show clear preferences and understand individual words.</p>" },
+        { nr: 7, from: 41, to: 46, title: "Sequences", body: "<p>Your baby now understands that things must happen in a particular order to work: first pick up the block, THEN drop it in the bucket. Eager pointing begins, and your baby loves to \"help\" with small tasks.</p><p><strong>Afterwards your baby can:</strong> Stack, put things in and out of containers, point at what they want, say their first real words and perhaps take their first steps.</p>" },
+        { nr: 8, from: 50, to: 55, title: "Programmes", body: "<p>After sequences come \"programmes\": flexible plans with a goal. Your child now understands whole routines like \"having lunch\" or \"going for a walk\" — and wants to do it themselves! Hold the spoon themselves, wash themselves, decide themselves.</p><p><strong>Afterwards your child can:</strong> Imitate everyday tasks (sweeping, talking on the phone), help with getting dressed and start simple pretend play.</p>" },
+        { nr: 9, from: 59, to: 64, title: "Principles", body: "<p>Your child begins to think about their own thinking: planning, negotiating and — yes — testing boundaries quite deliberately. They discover there's more than one way to get what they want: charm, drama, cunning. The first hints of the terrible twos.</p><p><strong>Afterwards your child can:</strong> Plan small \"projects\", joke with you, imitate strategically and show early understanding of \"mine\" and \"yours\".</p>" },
+        { nr: 10, from: 70, to: 76, title: "Systems", body: "<p>The last big leap (around 17 months). Your child now understands \"systems\": the family is one system, the neighbours' family another. Conscience awakens — your child can feel empathy, comfort others and understand that they themselves are an \"I\" with their own choices.</p><p><strong>Afterwards your child can:</strong> Show care, recognise themselves in the mirror, engage in richer pretend play and put words together into short sentences.</p>" }
+    ],
+
+    leapOutroTitle: "Worth remembering",
+    leapOutroBody: "<ul class=\"leap-list\"><li>Leap periods usually last 1-6 weeks — the early ones are short, the later ones longer.</li><li>Restlessness and poor sleep during a leap is a good sign: the brain is working overtime.</li><li>After every leap comes a sunny period where your child can suddenly do new things.</li><li>All the dates are guidelines — your child isn't \"behind\" because a leap arrives a week later.</li></ul>"
+};
