@@ -12,10 +12,10 @@
 // uploade lyde og billeder, og påmindelser kan ikke sendes.
 // ==================================================
 
-const CLOUDFLARE_URL = "";
+const CLOUDFLARE_URL = "https://babyro-api.muhre93.workers.dev";
 
 // Den hemmelige kode du selv vælger. Den SKAL være præcis den samme
 // som den, du skriver i Cloudflare under Variables and Secrets
 // (navnet der skal være ADMIN_TOKEN).
 // Brug fx 20 tilfældige bogstaver og tal. Del den ikke med nogen.
-const CLOUDFLARE_TOKEN = "";
+const CLOUDFLARE_TOKEN = "asdfghjklæøzxcvbnm,.";
