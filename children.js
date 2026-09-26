@@ -1,7 +1,6 @@
 // ==================================================
-// BabyRo — children.js
-// Flere børn, deling med den anden forælder,
-// login og flytning af gamle data.
+// BabyBasen — children.js
+// Flere børn, deling, farvevalg og login.
 // ==================================================
 
 // ==========================================
@@ -13,6 +12,7 @@ function indlaesGaestData() {
     const p = gaestLaes('profile', {});
     babyName = p.name || "Baby";
     babyGender = p.gender || "neutral";
+    babyColor = p.color || "";
     babyBirthDate = p.birthDate || "";
     babyDueDate = p.dueDate || "";
     birthInfo = p.birthInfo || {};
@@ -36,18 +36,22 @@ function indlaesGaestData() {
     milestones = gaestLaes('milestones', []);
 }
 
+function gemGaestProfil() {
+    gaestSkriv('profile', {
+        name: babyName, gender: babyGender, color: babyColor,
+        birthDate: babyBirthDate, dueDate: babyDueDate, birthInfo
+    });
+}
+
 window.nulstilGaest = function () {
     if (!confirm(T('resetAsk'))) return;
     ['profile', 'sleep', 'growth', 'care', 'milestones'].forEach(k => localStorage.removeItem(gaestNoegle(k)));
     localStorage.removeItem('babyRoLogs');
+    localStorage.removeItem('babyRoUr_lokal');
     indlaesGaestData();
     opdaterAlt();
     alert(T('resetDone'));
 };
-
-function gemGaestProfil() {
-    gaestSkriv('profile', { name: babyName, gender: babyGender, birthDate: babyBirthDate, dueDate: babyDueDate, birthInfo });
-}
 
 // ==========================================
 // KONTO: hent børn og data
@@ -64,10 +68,7 @@ async function indlaesBrugerensBoern() {
     }
 
     let ids = userData.children || [];
-    if (!ids.length) {
-        const nyt = await opretBarn(userData.babyName || "Baby", true);
-        ids = [nyt];
-    }
+    if (!ids.length) ids = [await opretBarn(userData.babyName || "Baby", true)];
 
     childList = [];
     for (const id of ids) {
@@ -100,7 +101,6 @@ async function flytGamleData(userRef, gammel) {
         createdAt: Date.now()
     });
 
-    // Søvnloggen deles op i måneder
     const logs = gammel.sleepLogs || {};
     const maaneder = {};
     Object.keys(logs).forEach(k => {
@@ -111,9 +111,7 @@ async function flytGamleData(userRef, gammel) {
     for (const ym of Object.keys(maaneder)) {
         await db.collection("children").doc(cid).collection("sleep").doc(ym).set({ days: maaneder[ym] });
     }
-    if (gammel.growth) {
-        await db.collection("children").doc(cid).collection("data").doc("growth").set(gammel.growth);
-    }
+    if (gammel.growth) await db.collection("children").doc(cid).collection("data").doc("growth").set(gammel.growth);
     await userRef.set({ children: [cid], activeChild: cid }, { merge: true });
     console.log("Dine tidligere data er flyttet til den nye struktur.");
 }
@@ -121,11 +119,10 @@ async function flytGamleData(userRef, gammel) {
 async function opretBarn(navn, stille) {
     const cid = db.collection("children").doc().id;
     await db.collection("children").doc(cid).set({
-        name: navn || "Baby", gender: "neutral", birthDate: "", dueDate: "",
+        name: navn || "Baby", gender: "neutral", color: "", birthDate: "", dueDate: "",
         birthInfo: {}, members: { [currentUserId]: true }, createdAt: Date.now()
     });
-    const userRef = db.collection("users").doc(currentUserId);
-    await userRef.set({
+    await db.collection("users").doc(currentUserId).set({
         children: firebase.firestore.FieldValue.arrayUnion(cid),
         activeChild: cid
     }, { merge: true });
@@ -140,12 +137,17 @@ async function opretBarn(navn, stille) {
 // SKIFT BARN
 // ==========================================
 async function skiftBarn(id, gemValg) {
+    if (childId && childId !== id) spor('barnSkiftet');
+    // Uret hører til det forrige barn — gem det, før vi skifter
+    if (typeof gemUr === 'function') gemUr();
+
     childId = id;
     localStorage.setItem('babyRoActiveChild', id);
     const c = childList.find(x => x.id === id);
     if (c) {
         babyName = c.name || "Baby";
         babyGender = c.gender || "neutral";
+        babyColor = c.color || "";
         babyBirthDate = c.birthDate || "";
         babyDueDate = c.dueDate || "";
         birthInfo = c.birthInfo || {};
@@ -175,40 +177,10 @@ async function skiftBarn(id, gemValg) {
     opdaterAlt();
 }
 
-// ==========================================
-// BARNEVÆLGER ØVERST
-// ==========================================
 function aktiveBoern() { return childList.filter(c => !c.archived); }
 
-function renderChildBar() {
-    const bar = document.getElementById('child-bar');
-    const chips = document.getElementById('child-chips');
-    if (!bar || !chips) return;
-
-    const aktive = aktiveBoern();
-    bar.style.display = aktive.length > 1 ? 'flex' : 'none';
-    chips.innerHTML = aktive.map(c =>
-        `<button class="chip ${c.id === childId ? 'active' : ''}" data-child="${c.id}">${esc(c.name || 'Baby')}</button>`
-    ).join('');
-    chips.querySelectorAll('[data-child]').forEach(b => {
-        b.addEventListener('click', () => { if (b.dataset.child !== childId) skiftBarn(b.dataset.child); });
-    });
-}
-
-document.getElementById('btn-add-child')?.addEventListener('click', tilfoejBarn);
-document.getElementById('btn-new-child')?.addEventListener('click', tilfoejBarn);
-
-async function tilfoejBarn() {
-    if (isGuest) { alert(T('loginForChildren')); return; }
-    const navn = prompt(T('askChildName'));
-    if (!navn || !navn.trim()) return;
-    const cid = await opretBarn(navn.trim(), false);
-    await skiftBarn(cid);
-    alert(T('childAdded', { navn: navn.trim() }));
-}
-
 // ==========================================
-// BØRNELISTE PÅ PROFILSIDEN
+// BØRNELISTE
 // ==========================================
 function renderChildrenList() {
     const el = document.getElementById('children-list');
@@ -234,7 +206,7 @@ function renderChildrenList() {
                 ${arkiveret
                     ? `<button class="mini-btn" data-unarchive="${c.id}">${T('unarchive')}</button>`
                     : (c.id === childId ? `<span class="chip-tag">${T('selected')}</span>` : `<button class="mini-btn" data-pick="${c.id}">${T('pick')}</button>`)}
-                ${arkiveret ? '' : `<button class="mini-btn" data-archive="${c.id}" title="${T('archive')}">${T('archive')}</button>`}
+                ${arkiveret ? '' : `<button class="mini-btn" data-archive="${c.id}">${T('archive')}</button>`}
                 <button class="mini-btn danger" data-delete="${c.id}">${T('del')}</button>
             </div>
         </div>`;
@@ -242,7 +214,6 @@ function renderChildrenList() {
 
     const aktive = aktiveBoern();
     const arkiv = childList.filter(c => c.archived);
-
     el.innerHTML = aktive.map(c => raekke(c, false)).join('');
     if (arkivKort) arkivKort.style.display = arkiv.length ? 'block' : 'none';
     if (arkivEl) arkivEl.innerHTML = arkiv.map(c => raekke(c, true)).join('');
@@ -253,34 +224,28 @@ function renderChildrenList() {
     document.querySelectorAll('[data-delete]').forEach(b => b.addEventListener('click', () => sletBarnHelt(b.dataset.delete)));
 }
 
-// Gem væk: barnet forsvinder fra vælgeren, men alt er i behold
 async function arkiverBarn(id, skjul) {
     const c = childList.find(x => x.id === id);
     if (!c) return;
-    if (skjul && aktiveBoern().length <= 1) {
-        alert(T('cantArchiveOnly'));
-        return;
-    }
+    if (skjul && aktiveBoern().length <= 1) { alert(T('cantArchiveOnly')); return; }
     try {
         await db.collection("children").doc(id).set({ archived: !!skjul }, { merge: true });
         c.archived = !!skjul;
         if (skjul && childId === id) await skiftBarn(aktiveBoern()[0].id);
-        else { renderChildBar(); renderChildrenList(); }
+        else { renderChildrenList(); opdaterProfilMenu(); }
     } catch (e) { alert(T('couldNotSave') + e.message); }
 }
 
-// Slet helt: undermapperne først, så selve barnet
 async function sletBarnHelt(id) {
     const c = childList.find(x => x.id === id);
     const navn = c?.name || 'barnet';
     const antal = Object.keys(c?.members || {}).length;
 
-    if (!confirm(`Slet ${navn} helt?\n\nAl søvn, pleje, vækst og milepæle slettes permanent.${antal > 1 ? '\n\nOBS: Barnet er delt — det slettes også for den anden forælder.' : ''}\n\nDet kan ikke fortrydes.`)) return;
-    if (!confirm(`Sidste chance. Skriv-frit tjek: er du HELT sikker på, at ${navn} skal slettes?`)) return;
+    if (!confirm(T('deleteChildAsk', { navn }) + (antal > 1 ? '\n\n' + T('deleteChildShared') : ''))) return;
+    if (!confirm(T('deleteChildSure', { navn }))) return;
 
     try {
         const base = db.collection("children").doc(id);
-        // Undermapperne skal væk først — bagefter kan reglerne ikke se barnet
         for (const mappe of ['sleep', 'care', 'milestones', 'data']) {
             const snap = await base.collection(mappe).get();
             for (const doc of (snap.docs || [])) await base.collection(mappe).doc(doc.id).delete();
@@ -290,6 +255,7 @@ async function sletBarnHelt(id) {
         await db.collection("users").doc(currentUserId).set({
             children: firebase.firestore.FieldValue.arrayRemove(id)
         }, { merge: true });
+        localStorage.removeItem('babyRoUr_' + id);
 
         childList = childList.filter(x => x.id !== id);
         if (!childList.length) {
@@ -297,13 +263,25 @@ async function sletBarnHelt(id) {
             const d = await db.collection("children").doc(nyt).get();
             childList = [Object.assign({ id: nyt }, d.data())];
             await skiftBarn(nyt);
-            alert(`${navn} er slettet. Der er oprettet et nyt, tomt barn.`);
+            alert(T('childDeletedNew', { navn }));
         } else {
             if (childId === id) await skiftBarn(childList[0].id);
-            else { renderChildBar(); renderChildrenList(); }
-            alert(`${navn} er slettet.`);
+            else { renderChildrenList(); opdaterProfilMenu(); }
+            alert(T('childDeleted', { navn }));
         }
     } catch (e) { alert(T('couldNotDelete') + e.message); }
+}
+
+document.getElementById('btn-new-child')?.addEventListener('click', tilfoejBarn);
+
+async function tilfoejBarn() {
+    if (isGuest) { alert(T('loginForChildren')); return; }
+    const navn = prompt(T('askChildName'));
+    if (!navn || !navn.trim()) return;
+    spor('barnTilfoejet');
+    const cid = await opretBarn(navn.trim(), false);
+    await skiftBarn(cid);
+    alert(T('childAdded', { navn: navn.trim() }));
 }
 
 // ==========================================
@@ -319,13 +297,10 @@ function lavKode() {
 function renderShare() {
     const el = document.getElementById('share-area');
     if (!el) return;
-    if (isGuest) {
-        el.innerHTML = `<p class="field-label">${T('loginToShare')}</p>`;
-        return;
-    }
+    if (isGuest) { el.innerHTML = `<p class="field-label">${T('loginToShare')}</p>`; return; }
+
     const c = childList.find(x => x.id === childId);
     const antal = Object.keys(c?.members || {}).length;
-
     el.innerHTML = `
         <p class="field-label">${T('sharingNow', { navn: esc(babyName) })} ${antal - 1 > 0 ? (antal - 1) : T('nobodyYet')}.</p>
         ${inviteCode
@@ -333,8 +308,7 @@ function renderShare() {
                    <button class="mini-btn" id="btn-copy-code">${T('copy')}</button></div>
                <p class="field-label">${T('codeHelp')}</p>
                <button class="action-btn reset-btn full-btn" id="btn-new-code">${T('newCode')}</button>`
-            : `<button class="action-btn save-btn full-btn" id="btn-make-code">${T('makeCode')}</button>`}
-    `;
+            : `<button class="action-btn save-btn full-btn" id="btn-make-code">${T('makeCode')}</button>`}`;
 
     document.getElementById('btn-make-code')?.addEventListener('click', lavDelingskode);
     document.getElementById('btn-new-code')?.addEventListener('click', lavDelingskode);
@@ -361,6 +335,7 @@ async function lavDelingskode() {
 }
 
 document.getElementById('btn-join-child')?.addEventListener('click', async () => {
+    spor('tilsluttet');
     if (isGuest) { alert(T('loginToJoin')); return; }
     const kode = document.getElementById('join-code').value.trim().toUpperCase();
     if (!kode) { alert(T('writeCode')); return; }
@@ -397,30 +372,53 @@ const BIRTH_FIELDS = ['birth-time', 'birth-place', 'birth-weight', 'birth-length
 
 async function gemProfil(visKvittering) {
     if (isGuest) {
-        alert(T('loginToSave'));
+        gemGaestProfil();
+        applyGenderTheme(); renderTexts();
+        if (visKvittering) alert(T('loginToSave'));
         return false;
     }
     try {
         await db.collection("children").doc(childId).set({
-            name: babyName, gender: babyGender,
+            name: babyName, gender: babyGender, color: babyColor,
             birthDate: babyBirthDate, dueDate: babyDueDate, birthInfo
         }, { merge: true });
         const c = childList.find(x => x.id === childId);
-        if (c) Object.assign(c, { name: babyName, gender: babyGender, birthDate: babyBirthDate, dueDate: babyDueDate, birthInfo });
-        applyGenderTheme(); renderTexts(); renderChildBar(); renderChildrenList(); renderShare();
+        if (c) Object.assign(c, { name: babyName, gender: babyGender, color: babyColor, birthDate: babyBirthDate, dueDate: babyDueDate, birthInfo });
+        applyGenderTheme(); renderTexts(); renderChildrenList(); renderShare(); opdaterProfilMenu();
         if (typeof planlaegNaesteSoevn === 'function') planlaegNaesteSoevn();
         if (visKvittering) alert(T('savedOk'));
         return true;
-    } catch (e) { alert("Kunne ikke gemme: " + e.message); return false; }
+    } catch (e) { alert(T('couldNotSave') + e.message); return false; }
 }
 
-document.querySelectorAll('.gender-btn').forEach(btn => {
+// Køn: sætter automatisk blå eller lyserød og rydder egen farve
+document.querySelectorAll('.gender-btn[data-gender]').forEach(btn => {
     btn.addEventListener('click', async () => {
+        spor('koenValgt');
         babyGender = btn.getAttribute('data-gender');
+        babyColor = "";
         applyGenderTheme();
+        document.getElementById('color-row').style.display = 'none';
         if (!isGuest) await gemProfil(false); else gemGaestProfil();
         if (typeof renderGrowth === 'function') renderGrowth();
     });
+});
+
+// Egen farve
+document.getElementById('btn-color-pick')?.addEventListener('click', () => {
+    const row = document.getElementById('color-row');
+    if (!row) return;
+    renderFarveRaekke();
+    row.style.display = row.style.display === 'grid' ? 'none' : 'grid';
+});
+
+document.getElementById('color-row')?.addEventListener('click', async (e) => {
+    const knap = e.target.closest('[data-color]');
+    if (!knap) return;
+    spor('farveValgt');
+    babyColor = (babyColor === knap.dataset.color) ? "" : knap.dataset.color;
+    applyGenderTheme();
+    if (!isGuest) await gemProfil(false); else gemGaestProfil();
 });
 
 document.getElementById('btn-update-name')?.addEventListener('click', async () => {
@@ -452,6 +450,11 @@ function refreshProfileInputs() {
     });
     const locked = document.getElementById('profile-locked-note');
     if (locked) locked.style.display = isGuest ? 'block' : 'none';
+
+    // Neutral-knappen vises kun, hvis admin har slået den til
+    const neutral = document.getElementById('gender-neutral');
+    if (neutral) neutral.style.display = (TEXTS.showNeutral === true) ? 'block' : 'none';
+
     renderChildrenList();
     renderShare();
 }
@@ -461,7 +464,7 @@ function refreshProfileInputs() {
 // ==========================================
 if (auth) {
     document.getElementById('btn-google-login')?.addEventListener('click', () => {
-        auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert("Login fejl: " + e.message));
+        auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert("Login: " + e.message));
     });
     document.getElementById('btn-logout')?.addEventListener('click', () => {
         if (confirm(T('logoutConfirm'))) auth.signOut();
@@ -470,7 +473,6 @@ if (auth) {
     auth.onAuthStateChanged(async (user) => {
         const guestSection = document.getElementById('profile-guest-section');
         const loggedIn = document.getElementById('profile-logged-in-section');
-        const guestWarning = document.getElementById('guest-warning');
 
         if (user) {
             isGuest = false;
@@ -478,9 +480,9 @@ if (auth) {
             currentEmail = user.email || "";
             if (guestSection) guestSection.style.display = 'none';
             if (loggedIn) loggedIn.style.display = 'block';
-            if (guestWarning) guestWarning.style.display = 'none';
             const mail = document.getElementById('logged-in-email');
             if (mail) mail.textContent = currentEmail;
+            if (typeof sporLogin === 'function') sporLogin();
             try { await indlaesBrugerensBoern(); }
             catch (e) { console.log("Kunne ikke hente børn:", e); opdaterAlt(); }
         } else {
@@ -488,7 +490,6 @@ if (auth) {
             currentUserId = null; currentEmail = "";
             if (guestSection) guestSection.style.display = 'block';
             if (loggedIn) loggedIn.style.display = 'none';
-            if (guestWarning) guestWarning.style.display = 'block';
             indlaesGaestData();
             opdaterAlt();
         }

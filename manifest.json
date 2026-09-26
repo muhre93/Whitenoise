@@ -1,7 +1,7 @@
 {
-  "name": "BabyRo — Beroligende lyde",
-  "short_name": "BabyRo",
-  "description": "Beroligende lyde, søvnlog, vækstkurver og tigerspring til de første to år.",
+  "name": "BabyBasen",
+  "short_name": "BabyBasen",
+  "description": "Søvn, mad og vækst — samlet ét sted",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -9,7 +9,9 @@
   "background_color": "#F7F5F0",
   "theme_color": "#8DA399",
   "lang": "da",
+  "categories": ["health", "lifestyle", "parenting"],
   "icons": [
-    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
   ]
 }

@@ -1,5 +1,5 @@
 // ==================================================
-// BabyRo — i18n.js
+// BabyBasen — i18n.js
 // Dansk og engelsk. Sproget gemmes lokalt og
 // skiftes med knappen i øverste højre hjørne.
 // ==================================================
@@ -8,11 +8,111 @@ let SPROG = localStorage.getItem('babyRoLang');
 if (SPROG !== 'en' && SPROG !== 'da') SPROG = 'da';   // dansk som standard
 
 const ORD = {
+
+    // ---------- NAVIGATION (korte navne i bunden) ----------
+    navPlayerShort:     { da: "Ur",            en: "Timer" },
+    navCareShort:       { da: "Pleje",         en: "Care" },
+    navHistoryShort:    { da: "Søvn",          en: "Sleep" },
+    navGrowthShort:     { da: "Vækst",         en: "Growth" },
+    navMilestonesShort: { da: "Milepæle",      en: "Milestones" },
+    navKnowShort:       { da: "Viden",         en: "Learn" },
+
+    // ---------- PROFILMENU ----------
+    tabReport:      { da: "📄 Rapport",     en: "📄 Report" },
+    tabFeedback:    { da: "💬 Godt og skidt", en: "💬 Good and bad" },
+
+    // ---------- UR OG LÅSESKÆRM ----------
+    lockOffBtn:     { da: "🔓 Slå bjælken fra", en: "🔓 Turn the bar off" },
+
+    // ---------- PLEJE ----------
+    careNoEntries:  { da: "Der er ikke registreret noget på den dag endnu.", en: "Nothing logged for that day yet." },
+    careHeroNone:   { da: "Der er ikke registreret et måltid i dag endnu.", en: "No feed logged today yet." },
+    careHeroLast:   { da: "Seneste {type} var {siden}.", en: "Last {type} was {siden}." },
+    justNow:        { da: "lige nu",        en: "just now" },
+    noneToday:      { da: "ingen i dag",    en: "none today" },
+    minShort:       { da: "min",            en: "min" },
+    inTotal:        { da: "i alt",          en: "in total" },
+    statFeedsDay:   { da: "Måltider pr. dag", en: "Feeds per day" },
+    statNappiesDay: { da: "Bleer pr. dag",  en: "Nappies per day" },
+    statMlDay:      { da: "Mælk pr. dag",   en: "Milk per day" },
+    statBreastDay:  { da: "Amning pr. dag", en: "Breastfeeding per day" },
+    noMlYet:        { da: "Der er ikke skrevet nogen mængder ind endnu.", en: "No amounts entered yet." },
+
+    // ---------- VÆKST ----------
+    growthLast:     { da: "Seneste måling: {dato}", en: "Last measurement: {dato}" },
+    growthNone:     { da: "Der er ingen målinger endnu. Skriv den første ind herunder.", en: "No measurements yet. Add the first one below." },
+    noMeasuresYet:  { da: "Der er ingen målinger endnu.", en: "No measurements yet." },
+    noMeasuresPeriod: { da: "Ingen målinger i den periode.", en: "No measurements in that period." },
+    deleteMeasureSure: { da: "Slet målingen?", en: "Delete this measurement?" },
+    ownNameAsk:     { da: "Hvad skal målingen hedde? (fx Temperatur)", en: "What should the measurement be called? (e.g. Temperature)" },
+    ownUnitAsk:     { da: "Hvilken enhed? (fx °C — lad stå tom hvis ingen)", en: "Which unit? (e.g. °C — leave blank for none)" },
+    monthsShort:    { da: "mdr",            en: "mo" },
+    monthOne:       { da: "måned",          en: "month" },
+    monthMany:      { da: "måneder",        en: "months" },
+    underMonth:     { da: "under 1 måned",  en: "under 1 month" },
+    whoNormal:      { da: "inden for det normale", en: "within the normal range" },
+    whoBelow:       { da: "under det normale", en: "below the normal range" },
+    whoAbove:       { da: "over det normale", en: "above the normal range" },
+    whoBand:        { da: "WHO normalområde", en: "WHO normal range" },
+
+    // ---------- MILEPÆLE ----------
+    msEmpty:        { da: "Der er ingen milepæle endnu. Den første må du meget gerne skrive ind.", en: "No milestones yet. Do add the first one." },
+    msNeedTitle:    { da: "Skriv hvad der skete.", en: "Write what happened." },
+    msDeleteSure:   { da: "Slet milepælen?", en: "Delete this milestone?" },
+    msPhotoBig:     { da: "Billedet er for stort. Vælg et på under 4 MB.", en: "That image is too big. Pick one under 4 MB." },
+    msNonePeriod:   { da: "Ingen milepæle i den periode.", en: "No milestones in that period." },
+
+    // ---------- SØVNREDIGERING ----------
+    pickTime:       { da: "Vælg både dato og klokkeslæt.", en: "Pick both a date and a time." },
+    deleteSleepSure:{ da: "Slet den lur?", en: "Delete this nap?" },
+
+    // ---------- BØRN ----------
+    childNoName:    { da: "Uden navn",      en: "No name" },
+    childDeleted:   { da: "{navn} er slettet.", en: "{navn} has been deleted." },
+    childDeletedNew:{ da: "{navn} er slettet. Du starter nu forfra med et nyt barn.", en: "{navn} has been deleted. You're starting fresh with a new child." },
+    deleteChildAsk: { da: "Slet {navn} og alt der er gemt? Det kan ikke fortrydes.", en: "Delete {navn} and everything saved? This can't be undone." },
+    deleteChildShared: { da: "{navn} deles med en anden. Sletter du barnet, forsvinder det også for dem.", en: "{navn} is shared with someone else. Deleting removes it for them too." },
+    deleteChildSure:{ da: "Skriv SLET for at bekræfte", en: "Type DELETE to confirm" },
+
+    // ---------- PÅMINDELSER ----------
+    notifWorking:   { da: "Arbejder…",      en: "Working…" },
+    notifOn:        { da: "Påmindelser er slået til. Du får besked {min} min. før næste søvnvindue.", en: "Reminders are on. You'll hear from us {min} min before the next sleep window." },
+    notifDenied:    { da: "Browseren sagde nej. Slå beskeder til for siden i browserens indstillinger.", en: "The browser said no. Allow notifications for this site in your browser settings." },
+    notifNotSupported: { da: "Den her browser kan ikke sende påmindelser. Prøv Chrome eller Safari — og læg appen på hjemmeskærmen først.", en: "This browser can't send reminders. Try Chrome or Safari — and add the app to your home screen first." },
+    notifNoServer:  { da: "Der mangler en adresse i cloudflare-config.js.", en: "There's no address in cloudflare-config.js." },
+    notifNoKey:     { da: "Serveren har ikke fået lavet sine nøgler endnu. Tryk \"Slå push til\" på admin-siden.", en: "The server hasn't made its keys yet. Press \"Turn push on\" on the admin page." },
+    notifServerFail:{ da: "Serveren svarede ikke som forventet.", en: "The server didn't respond as expected." },
+    notifError:     { da: "Der gik noget galt:", en: "Something went wrong:" },
+    notifTestSent:  { da: "Testbeskeden er sendt. Den kommer om et øjeblik.", en: "Test message sent. It'll arrive in a moment." },
+    notifTestSentLocal: { da: "Testbeskeden er vist her på enheden.", en: "Test message shown on this device." },
+    notifTestTitle: { da: "BabyBasen",      en: "BabyBase" },
+    notifTestBody:  { da: "Sådan ser en påmindelse om {navn} ud.", en: "This is what a reminder about {navn} looks like." },
+
+    // ---------- RAPPORT ----------
+    reportFor:      { da: "Perioden",       en: "Period" },
+    reportKey:      { da: "Nøgletal",       en: "Key figures" },
+    reportDayByDay: { da: "Dag for dag",    en: "Day by day" },
+    reportRec:      { da: "Anbefalingen for den alder er {min}-{max} timers søvn i døgnet fordelt på ca. {lure} lure.", en: "The recommendation at this age is {min}-{max} hours of sleep a day across about {lure} naps." },
+    reportFoot:     { da: "Lavet i BabyBasen. Tallene er skrevet ind af forælderen og er ikke en lægefaglig vurdering.", en: "Made in BabyBase. The figures were entered by the parent and are not a medical assessment." },
+    printBtn:       { da: "🖨️ Print eller gem som PDF", en: "🖨️ Print or save as PDF" },
+    summaryTotal:   { da: "I alt er der registreret {timer} timers søvn fordelt på {lure} lure.", en: "In total {timer} hours of sleep have been logged across {lure} naps." },
+    birthWeek:      { da: "Uge ved fødslen", en: "Week at birth" },
+    birthHead:      { da: "Hovedomfang ved fødslen", en: "Head at birth" },
+    ageLabel:       { da: "Alder",          en: "Age" },
+
+    // ---------- DIAGRAMMER ----------
+    actualSleep:    { da: "Faktisk søvn",   en: "Actual sleep" },
+    avg3day:        { da: "3-dages gennemsnit", en: "3-day average" },
+
+    // ---------- INSTALLATION ----------
+    installIOS:     { da: "På iPhone: tryk på Del-knappen nederst og vælg \"Føj til hjemmeskærm\".", en: "On iPhone: tap the Share button at the bottom and choose \"Add to Home Screen\"." },
+    installAndroid: { da: "På Android: tryk på de tre prikker øverst og vælg \"Installer app\".", en: "On Android: tap the three dots at the top and choose \"Install app\"." },
+
     // ---------- NAVIGATION ----------
     navPlayer:      { da: "⏱️ Søvnur",      en: "⏱️ Sleep timer" },
     navCare:        { da: "🍼 Pleje",        en: "🍼 Care" },
     navHistory:     { da: "🌙 Søvn",         en: "🌙 Sleep" },
-    navProfile:     { da: "👤 Profil",       en: "👤 Profile" },
+    navProfile:     { da: "Profil",          en: "Profile" },
     navMilestones:  { da: "⭐ Milepæle",     en: "⭐ Milestones" },
     navKnow:        { da: "📖 Viden",        en: "📖 Learn" },
     navGrowth:      { da: "📈 Vækst",        en: "📈 Growth" },
@@ -434,6 +534,72 @@ const ORD = {
     lockedGrowth:   { da: "<strong>🔒 Log ind for at gemme</strong><br>Vækstdata følger dit barn i årevis — derfor gemmes de kun i skyen. Gå til Profil og log ind.", en: "<strong>🔒 Sign in to save</strong><br>Growth data follows your child for years, so it's only stored in the cloud. Go to Profile and sign in." },
     lockedMs:       { da: "<strong>🔒 Log ind for at gemme</strong><br>Milepæle og billeder gemmes i skyen, så de følger dit barn. Gå til Profil og log ind.", en: "<strong>🔒 Sign in to save</strong><br>Milestones and photos are stored in the cloud so they follow your child. Go to Profile and sign in." },
     resetGuest:     { da: "🗑 Nulstil alt og start forfra", en: "🗑 Reset everything and start over" },
+
+    // ---------- GÆSTELÅS ----------
+    guestLockTitle: { da: "Log ind for at bruge {hvad}", en: "Sign in to use {hvad}" },
+    guestLockBody:  { da: "Som gæst kan du bruge søvnuret og lydene. Log ind med Google, så gemmes alt sikkert — og du får søvnlog, pleje, vækst, milepæle, rapporter og deling med den anden forælder.", en: "As a guest you can use the sleep timer and the sounds. Sign in with Google to save everything safely — and unlock the sleep log, care, growth, milestones, reports and sharing with the other parent." },
+    guestLockBtn:   { da: "Log ind med Google", en: "Sign in with Google" },
+    guestBadge:     { da: "Gæst", en: "Guest" },
+    guestHint:      { da: "Du bruger BabyBasen som gæst. Søvnuret og lydene virker — log ind for resten.", en: "You're using BabyBase as a guest. The timer and sounds work — sign in for everything else." },
+
+    // ---------- FARVER ----------
+    colorPick:      { da: "Vælg farve", en: "Choose a colour" },
+    colorPickHelp:  { da: "Farven gælder hele appen. Dreng og pige sætter blå og lyserød automatisk — eller vælg din egen.", en: "The colour applies to the whole app. Boy and girl set blue and pink automatically — or pick your own." },
+    colorOwn:       { da: "🎨 Egen farve", en: "🎨 Own colour" },
+    cBlue:          { da: "Himmelblå", en: "Sky blue" },
+    cPink:          { da: "Rosa", en: "Rose" },
+    cMint:          { da: "Mint", en: "Mint" },
+    cLavender:      { da: "Lavendel", en: "Lavender" },
+    cPeach:         { da: "Fersken", en: "Peach" },
+    cSage:          { da: "Salvie", en: "Sage" },
+    cButter:        { da: "Smørgul", en: "Butter" },
+    cSand:          { da: "Sand", en: "Sand" },
+    cSeafoam:       { da: "Havskum", en: "Seafoam" },
+    cClay:          { da: "Ler", en: "Clay" },
+
+    // ---------- FEEDBACK ----------
+    fbTitle:        { da: "💬 Godt og skidt", en: "💬 What works and what doesn't" },
+    fbSub:          { da: "Hvad fungerer, og hvad driller? Skriv det her — det er sådan, BabyBasen bliver bedre.", en: "What's working, and what's annoying? Tell us here — it's how BabyBase gets better." },
+    fbType:         { da: "Hvad handler det om?", en: "What's it about?" },
+    fbGood:         { da: "😊 Noget der virker godt", en: "😊 Something that works well" },
+    fbBad:          { da: "😕 Noget der driller", en: "😕 Something that's annoying" },
+    fbIdea:         { da: "💡 En idé", en: "💡 An idea" },
+    fbBug:          { da: "🐛 En fejl", en: "🐛 A bug" },
+    fbText:         { da: "Fortæl om det", en: "Tell us about it" },
+    fbPlaceholder:  { da: "Skriv så meget eller lidt, du vil...", en: "Write as much or as little as you like..." },
+    fbSend:         { da: "Send til udvikleren", en: "Send to the developer" },
+    fbSending:      { da: "Sender...", en: "Sending..." },
+    fbThanks:       { da: "Tak! Det er sendt. 💛", en: "Thank you! It's on its way. 💛" },
+    fbEmpty:        { da: "Skriv lidt om det først.", en: "Write something first." },
+    fbFailed:       { da: "Kunne ikke sendes lige nu. Prøv igen senere.", en: "Couldn't send right now. Please try again later." },
+
+    // ---------- LÅSESKÆRM ----------
+    lockTitle:      { da: "Vis på låseskærmen", en: "Show on the lock screen" },
+    lockHelp:       { da: "Sætter en bjælke på låseskærmen, mens {navn} sover, så du kan se tiden og stoppe luren uden at låse op.", en: "Puts a bar on your lock screen while {navn} sleeps, so you can see the time and stop the nap without unlocking." },
+    lockOn:         { da: "🔒 Vis på låseskærm", en: "🔒 Show on lock screen" },
+    lockOff:        { da: "Slå fra", en: "Turn off" },
+    lockSleeping:   { da: "{navn} sover", en: "{navn} is asleep" },
+    lockWindow:     { da: "Søvnvindue åbner {tid}", en: "Sleep window opens {tid}" },
+    lockNotSupported:{ da: "Din browser understøtter det ikke. Prøv Chrome på Android eller Safari på iPhone.", en: "Your browser doesn't support this. Try Chrome on Android or Safari on iPhone." },
+
+    // ---------- DIAGRAM-ORD ----------
+    avgLabel:       { da: "Gennemsnit", en: "Average" },
+    perDayLabel:    { da: "Pr. dag", en: "Per day" },
+    sleepWord:      { da: "Søvn", en: "Sleep" },
+    nightWord:      { da: "Nat (20-06)", en: "Night (8pm-6am)" },
+    noDataPeriod:   { da: "Ingen data i den valgte periode.", en: "No data in the selected period." },
+    noDataYet:      { da: "Ingen data endnu.", en: "No data yet." },
+
+    // ---------- HJØRNEMENU ----------
+    menuProfile:    { da: "Profil & barnet", en: "Profile & child" },
+    menuReport:     { da: "Rapport til sundhedsplejersken", en: "Report for the health visitor" },
+    menuOverview:   { da: "Min oversigt", en: "My overview" },
+    menuChildren:   { da: "Børn & deling", en: "Children & sharing" },
+    menuNotif:      { da: "Påmindelser", en: "Reminders" },
+    menuFeedback:   { da: "Godt og skidt", en: "Feedback" },
+    menuApp:        { da: "App & konto", en: "App & account" },
+    menuLogin:      { da: "Log ind", en: "Sign in" },
+    menuLogout:     { da: "Log ud", en: "Sign out" },
     resetDone:      { da: "Alt er nulstillet. Du starter forfra. 👶", en: "Everything has been reset. You're starting fresh. 👶" },
     resetAsk:       { da: "Slet alt i BabyRo på denne telefon?\n\nSøvnlog, pleje, vækst og milepæle forsvinder. Det kan ikke fortrydes.", en: "Delete everything in BabyRo on this phone?\n\nSleep log, care, growth and milestones will be gone. This cannot be undone." },
     loginForChildren:{ da: "Log ind for at have flere børn i BabyRo.", en: "Sign in to have more than one child in BabyRo." },
@@ -494,6 +660,7 @@ function anvendSprog() {
 }
 
 function skiftSprog() {
+    if (typeof spor === 'function') spor('sprogSkift');
     SPROG = SPROG === 'da' ? 'en' : 'da';
     localStorage.setItem('babyRoLang', SPROG);
     anvendSprog();

@@ -1,729 +1,791 @@
 // ==================================================
-// BabyRo — admin.js
-// Redigerer alt indhold i appen og gemmer det i Firestore:
-//   content/sounds  → { categories: [...] }
-//   content/texts   → alle tekster
-// Lydfiler uploades til Firebase Storage under lyde/
+// BabyBasen — admin.js
 // ==================================================
 
-let auth = null, db = null;
+const SPROG = 'da';           // admin-siden er altid på dansk
+let db = null, auth = null;
+let minEmail = "";
 
-if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
-    try {
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
-    } catch (e) {
-        alert("Firebase kunne ikke starte. Tjek firebase-config.js.\n\n" + e.message);
-    }
+let LYDE = [];
+let TEKSTER = {};
+let ART = {};
+let statsDage = 7;
+let fbFilter = "";
+let feedbackListe = [];
+
+// ---------- små hjælpere ----------
+function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function $(id) { return document.getElementById(id); }
+function kopi(o) { return JSON.parse(JSON.stringify(o)); }
+function isoKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function dageTilbage(n) { const d = new Date(); d.setDate(d.getDate() - n); return isoKey(d); }
+function kortDato(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('da-DK', { day: 'numeric', month: 'numeric' });
+}
+function status(tekst, fejl) {
+    const el = $('gem-status');
+    if (!el) return;
+    el.textContent = tekst;
+    el.className = 'gem-status' + (fejl ? ' fejl' : ' ok');
+    if (tekst) setTimeout(() => { el.textContent = ""; }, 4000);
+}
+function tv(v, sprog) {
+    // tosproget værdi → tekst på ét sprog
+    if (v == null) return "";
+    if (typeof v === 'string') return sprog === 'da' ? v : "";
+    return v[sprog] || "";
+}
+function cfBase() {
+    return (typeof CLOUDFLARE_URL === 'string' && CLOUDFLARE_URL) ? CLOUDFLARE_URL.replace(/\/$/, '') : "";
 }
 
-// Arbejdskopi af indholdet
-let sounds = JSON.parse(JSON.stringify(DEFAULT_SOUNDS));
-let texts = JSON.parse(JSON.stringify(DEFAULT_TEXTS));
-let dirty = false;
+// ==================================================
+// LOGIN
+// ==================================================
+try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db = firebase.firestore();
+} catch (e) {
+    $('login-fejl').textContent = "Firebase kunne ikke starte. Tjek firebase-config.js — husk anførselstegn om alle værdier.";
+}
 
-// Felter under "Generelle tekster" — nøgle: [label, type]
-const GENERAL_FIELDS = {
-    appTitle: ["Appens navn (øverst)", "text"],
-    appSubtitle: ["Undertekst i toppen", "text"],
-    navPlayer: ["Faneblad 1: Lyde", "text"],
-    navHistory: ["Faneblad 2: Log", "text"],
-    navSleep: ["Faneblad 3: Søvn", "text"],
-    navLeaps: ["Faneblad 4: Spring", "text"],
-    navProfile: ["Faneblad 5: Profil", "text"],
-    timerLabel: ["Søvnur: overskrift", "text"],
-    autoStopLabel: ["Søvnur: tekst ved sluk-timer", "text"],
-    stopAllLabel: ["Knap: Sluk alt lyd", "text"],
-    todayBoxTitle: ["Boks: Søvn i dag", "text"],
-    smartTitle: ["Smart-lyt: overskrift", "text"],
-    smartDesc: ["Smart-lyt: forklaring", "area"],
-    smartSoundLabel: ["Smart-lyt: label for lydvalg", "text"],
-    smartSensitivityLabel: ["Smart-lyt: label for følsomhed", "text"],
-    historyTitle: ["Log: overskrift", "text"],
-    historySub: ["Log: underoverskrift", "text"],
-    statsTitle: ["Log: overskrift over grafen", "text"],
-    guestWarning: ["Log: advarsel til gæster (HTML)", "area"],
-    profileTitle: ["Profil: overskrift", "text"],
-    navCare: ["Faneblad: Pleje", "text"],
-    navKnow: ["Faneblad: Viden", "text"],
-    planTitle: ["Dagens plan: overskrift", "text"],
-    growthTitle: ["Vækst: overskrift", "text"],
-    navGrowth: ["Faneblad: Vækst", "text"]
+$('btn-login')?.addEventListener('click', async () => {
+    try {
+        await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    } catch (e) {
+        $('login-fejl').textContent = "Kunne ikke logge ind: " + (e.message || e);
+    }
+});
+
+$('btn-logout')?.addEventListener('click', () => auth.signOut().then(() => location.reload()));
+
+auth?.onAuthStateChanged(async bruger => {
+    if (!bruger) { $('login-skaerm').style.display = 'flex'; $('admin').style.display = 'none'; return; }
+    const tilladt = (typeof ADMIN_EMAILS !== 'undefined' ? ADMIN_EMAILS : []).map(e => e.toLowerCase());
+    if (!tilladt.includes((bruger.email || "").toLowerCase())) {
+        $('login-fejl').textContent = `${bruger.email} står ikke som admin. Skriv din e-mail ind i firebase-config.js under ADMIN_EMAILS.`;
+        await auth.signOut();
+        return;
+    }
+    minEmail = bruger.email;
+    $('hvem').textContent = minEmail;
+    $('login-skaerm').style.display = 'none';
+    $('admin').style.display = 'block';
+    await hentAlt();
+});
+
+// ==================================================
+// FANER
+// ==================================================
+document.querySelectorAll('.fane').forEach(b => {
+    b.addEventListener('click', () => {
+        document.querySelectorAll('.fane').forEach(x => x.classList.remove('aktiv'));
+        document.querySelectorAll('.panel').forEach(x => x.classList.remove('aktiv'));
+        b.classList.add('aktiv');
+        $(b.dataset.fane).classList.add('aktiv');
+        if (b.dataset.fane === 'f-filer') hentFiler();
+        if (b.dataset.fane === 'f-stats') hentStats();
+        if (b.dataset.fane === 'f-feedback') hentFeedback();
+    });
+});
+document.querySelectorAll('.under-fane').forEach(b => {
+    b.addEventListener('click', () => {
+        document.querySelectorAll('.under-fane').forEach(x => x.classList.remove('aktiv'));
+        b.classList.add('aktiv');
+        $('art-soevn').style.display = b.dataset.del === 'soevn' ? '' : 'none';
+        $('art-spring').style.display = b.dataset.del === 'spring' ? '' : 'none';
+    });
+});
+
+// ==================================================
+// HENT INDHOLD
+// ==================================================
+async function hentAlt() {
+    try {
+        const [s, t, a] = await Promise.all([
+            db.collection('content').doc('sounds').get(),
+            db.collection('content').doc('texts').get(),
+            db.collection('content').doc('articles').get()
+        ]);
+        LYDE = (s.exists && Array.isArray(s.data().categories) && s.data().categories.length)
+            ? s.data().categories : kopi(DEFAULT_SOUNDS);
+        TEKSTER = t.exists ? Object.assign(kopi(DEFAULT_TEXTS), t.data()) : kopi(DEFAULT_TEXTS);
+        ART = a.exists ? Object.assign(kopi(DEFAULT_ARTICLES), a.data()) : kopi(DEFAULT_ARTICLES);
+    } catch (e) {
+        status("Kunne ikke hente indhold: " + (e.message || e), true);
+        LYDE = kopi(DEFAULT_SOUNDS); TEKSTER = kopi(DEFAULT_TEXTS); ART = kopi(DEFAULT_ARTICLES);
+    }
+    tegnLyde();
+    tegnTekster();
+    tegnArtikler();
+    tegnForbindelser();
+    hentStats();
+    hentFeedback();
+}
+
+// ==================================================
+// STATISTIK
+// ==================================================
+document.querySelectorAll('.p-knap').forEach(b => {
+    b.addEventListener('click', () => {
+        document.querySelectorAll('.p-knap').forEach(x => x.classList.remove('aktiv'));
+        b.classList.add('aktiv');
+        statsDage = Number(b.dataset.dage);
+        hentStats();
+    });
+});
+
+// Navnene på de ting appen tæller, oversat til noget man kan læse
+const BRUG_NAVN = {
+    side_ur: "Ur-siden",
+    side_pleje: "Pleje",
+    side_soevn: "Søvnlog",
+    side_vaekst: "Vækst",
+    side_milepaele: "Milepæle",
+    side_viden: "Viden",
+    side_profil: "Profil",
+    side_andet: "Andre sider",
+    login: "Logget ind",
+    gjort_urStart: "Startede uret",
+    gjort_urGemt: "Gemte en lur",
+    gjort_urNulstil: "Nulstillede uret",
+    gjort_lydStart: "Startede en lyd",
+    gjort_stopAlt: "Stoppede al lyd",
+    gjort_smartLyt: "Brugte babyalarmen",
+    gjort_plejeGemt: "Gemte en registrering",
+    gjort_plejeHurtig: "Brugte en hurtigknap",
+    gjort_maalingGemt: "Gemte en måling",
+    gjort_milepaelGemt: "Gemte en milepæl",
+    gjort_rapport: "Lavede rapporten",
+    gjort_oversigt: "Åbnede oversigten",
+    gjort_laaseskaerm: "Slog låseskærmen til",
+    gjort_feedback: "Sendte feedback",
+    gjort_sprogSkift: "Skiftede sprog",
+    gjort_temaSkift: "Skiftede nat/dag",
+    gjort_farveValgt: "Valgte en farve",
+    gjort_koenValgt: "Valgte dreng eller pige",
+    gjort_barnSkiftet: "Skiftede barn",
+    gjort_barnTilfoejet: "Tilføjede et barn",
+    gjort_delt: "Delte med en anden forælder",
+    gjort_tilsluttet: "Tilsluttede sig et barn med kode",
+    gjort_notifTil: "Slog påmindelser til",
+    gjort_installeret: "Lagde appen på hjemmeskærmen",
+    gjort_soevnRettet: "Rettede en gemt lur",
+    gjort_soevnTilfoejet: "Tilføjede søvn manuelt"
 };
 
-// ==========================================
-// HJÆLPERE
-// ==========================================
-function markDirty() {
-    dirty = true;
-    const el = document.getElementById('save-status');
-    el.textContent = "Du har ændringer, der ikke er udgivet.";
-    el.className = "unsaved";
-}
-function markClean(msg) {
-    dirty = false;
-    const el = document.getElementById('save-status');
-    el.textContent = msg || "Alt er gemt.";
-    el.className = "saved";
-}
-function esc(str) {
-    return String(str == null ? "" : str)
-        .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-}
-function slugify(str) {
-    return String(str).toLowerCase().trim()
-        .replaceAll('æ', 'ae').replaceAll('ø', 'o').replaceAll('å', 'a')
-        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || ('lyd-' + Date.now());
-}
-function move(arr, index, dir) {
-    const target = index + dir;
-    if (target < 0 || target >= arr.length) return;
-    [arr[index], arr[target]] = [arr[target], arr[index]];
-}
+async function hentStats() {
+    const tal = $('stats-tal'), graf = $('stats-graf'), brug = $('stats-brug'), enh = $('stats-enheder');
+    if (!tal) return;
+    tal.innerHTML = `<p class="hjaelp">Henter…</p>`;
 
-window.addEventListener('beforeunload', (e) => {
-    if (dirty) { e.preventDefault(); e.returnValue = ''; }
-});
+    const dage = [];
+    for (let i = statsDage - 1; i >= 0; i--) dage.push(dageTilbage(i));
 
-// ==========================================
-// LYDE
-// ==========================================
-function renderSounds() {
-    const wrap = document.getElementById('sounds-list');
-    wrap.innerHTML = sounds.map((cat, ci) => `
-        <div class="card">
-            <div class="card-head">
-                <h3>${esc(cat.icon)} ${esc(cat.title) || 'Uden navn'}</h3>
-                <div class="card-tools">
-                    <button class="icon-btn" data-act="cat-up" data-ci="${ci}" title="Flyt op">↑</button>
-                    <button class="icon-btn" data-act="cat-down" data-ci="${ci}" title="Flyt ned">↓</button>
-                    <button class="icon-btn del" data-act="cat-del" data-ci="${ci}" title="Slet kortet">🗑</button>
-                </div>
-            </div>
-
-            <div class="row">
-                <label class="field" style="max-width:110px;">
-                    <span>Ikon</span>
-                    <input type="text" value="${esc(cat.icon)}" data-ci="${ci}" data-field="icon" class="sound-input">
-                </label>
-                <label class="field">
-                    <span>Titel på kortet</span>
-                    <input type="text" value="${esc(cat.title)}" data-ci="${ci}" data-field="title" class="sound-input">
-                </label>
-                <label class="field">
-                    <span>Teknisk id (må ikke ændres, når lyden er i brug)</span>
-                    <input type="text" value="${esc(cat.id)}" data-ci="${ci}" data-field="id" class="sound-input">
-                </label>
-            </div>
-
-            <span class="field"><span>Varianter i rullemenuen</span></span>
-            ${(cat.variants || []).map((v, vi) => `
-                <div class="variant">
-                    <div class="row">
-                        <label class="field" style="max-width:220px;">
-                            <span>Navn i menuen</span>
-                            <input type="text" value="${esc(v.label)}" data-ci="${ci}" data-vi="${vi}" data-field="label" class="sound-input">
-                        </label>
-                        <label class="field">
-                            <span>Filsti eller adresse</span>
-                            <input type="text" value="${esc(v.url)}" data-ci="${ci}" data-vi="${vi}" data-field="url" class="sound-input">
-                        </label>
-                        <button class="icon-btn del" data-act="var-del" data-ci="${ci}" data-vi="${vi}" style="margin-bottom:16px;" title="Slet variant">🗑</button>
-                    </div>
-                    <div class="upload-row">
-                        <label class="upload-label">
-                            Upload lydfil
-                            <input type="file" accept="audio/*" data-act="upload" data-ci="${ci}" data-vi="${vi}">
-                        </label>
-                        <button class="preview-btn" data-act="preview" data-ci="${ci}" data-vi="${vi}">▶ Afspil</button>
-                        <span class="upload-info" id="up-${ci}-${vi}"></span>
-                    </div>
-                </div>
-            `).join('')}
-            <button class="btn btn-add" data-act="var-add" data-ci="${ci}">+ Tilføj variant</button>
-        </div>
-    `).join('');
-}
-
-document.getElementById('sounds-list').addEventListener('input', (e) => {
-    const el = e.target;
-    if (!el.classList.contains('sound-input')) return;
-    const ci = Number(el.dataset.ci);
-    const field = el.dataset.field;
-    if (el.dataset.vi !== undefined) sounds[ci].variants[Number(el.dataset.vi)][field] = el.value;
-    else sounds[ci][field] = el.value;
-    markDirty();
-});
-
-document.getElementById('sounds-list').addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-act]');
-    if (!btn || btn.tagName === 'INPUT') return;
-    const act = btn.dataset.act;
-    const ci = Number(btn.dataset.ci);
-    const vi = btn.dataset.vi !== undefined ? Number(btn.dataset.vi) : null;
-
-    if (act === 'cat-up') { move(sounds, ci, -1); renderSounds(); markDirty(); }
-    if (act === 'cat-down') { move(sounds, ci, 1); renderSounds(); markDirty(); }
-    if (act === 'cat-del') {
-        if (confirm(`Slet lydkortet "${sounds[ci].title}"?`)) { sounds.splice(ci, 1); renderSounds(); markDirty(); }
-    }
-    if (act === 'var-add') { sounds[ci].variants.push({ label: "Ny variant", url: "" }); renderSounds(); markDirty(); }
-    if (act === 'var-del') {
-        if (sounds[ci].variants.length <= 1) { alert("Der skal være mindst én variant på et lydkort."); return; }
-        sounds[ci].variants.splice(vi, 1); renderSounds(); markDirty();
-    }
-    if (act === 'preview') {
-        const url = sounds[ci].variants[vi].url;
-        if (!url) { alert("Der er ingen fil på denne variant endnu."); return; }
-        const a = new Audio(url);
-        a.play().catch(() => alert("Kunne ikke afspille:\n" + url));
-    }
-});
-
-// ---------- UPLOAD TIL CLOUDFLARE ----------
-function getToken() { return sessionStorage.getItem('babyRoWorkerToken') || ""; }
-
-function uploadToWorker(file, onProgress) {
-    return new Promise((resolve, reject) => {
-        const token = getToken();
-        if (!token) return reject(new Error("Gem din Cloudflare-nøgle under fanen Filer først."));
-        if (!WORKER_URL || WORKER_URL.includes("dit-brugernavn")) return reject(new Error("Udfyld WORKER_URL i cloudflare-config.js."));
-
-        const name = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', `${WORKER_URL}/upload/${encodeURIComponent(name)}`);
-        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        xhr.setRequestHeader('Content-Type', file.type || 'audio/mpeg');
-
-        xhr.upload.onprogress = e => {
-            if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () => {
-            let data = {};
-            try { data = JSON.parse(xhr.responseText); } catch (e) {}
-            if (xhr.status === 200 && data.url) resolve(data);
-            else reject(new Error(data.error || `Fejl ${xhr.status}`));
-        };
-        xhr.onerror = () => reject(new Error("Ingen forbindelse til din Worker. Tjek WORKER_URL og CORS."));
-        xhr.send(file);
-    });
-}
-
-document.getElementById('sounds-list').addEventListener('change', async (e) => {
-    const input = e.target;
-    if (input.dataset.act !== 'upload') return;
-    const file = input.files[0];
-    if (!file) return;
-    const ci = Number(input.dataset.ci);
-    const vi = Number(input.dataset.vi);
-    const info = document.getElementById(`up-${ci}-${vi}`);
-    info.className = "upload-info";
-
+    let docs = [];
     try {
-        const res = await uploadToWorker(file, pct => { info.textContent = `Uploader... ${pct}%`; });
-        sounds[ci].variants[vi].url = res.url;
-        info.textContent = "✔ Uploadet";
-        info.className = "upload-info done";
-        const urlField = document.querySelector(`input[data-ci="${ci}"][data-vi="${vi}"][data-field="url"]`);
-        if (urlField) urlField.value = res.url;
-        markDirty();
-    } catch (err) {
-        info.textContent = err.message;
-        info.className = "upload-info error";
+        const snap = await db.collection('stats')
+            .where(firebase.firestore.FieldPath.documentId(), '>=', dage[0])
+            .where(firebase.firestore.FieldPath.documentId(), '<=', dage[dage.length - 1])
+            .get();
+        snap.forEach(d => docs.push({ id: d.id, data: d.data() }));
+    } catch (e) {
+        tal.innerHTML = `<p class="hjaelp fejl">Kunne ikke hente statistik: ${esc(e.message || e)}<br>
+        Har du husket at sætte de nye Firestore-regler ind? Se firestore-regler.txt.</p>`;
+        return;
     }
+
+    if (!docs.length) {
+        tal.innerHTML = `<p class="hjaelp">Ingen tal endnu. De kommer, så snart nogen har brugt appen —
+        der går op til en time, før en dags tal er skrevet ind.</p>`;
+        if (graf) graf.innerHTML = "";
+        if (brug) brug.innerHTML = "";
+        if (enh) enh.innerHTML = "";
+        return;
+    }
+
+    const pr = {};
+    docs.forEach(d => { pr[d.id] = d.data; });
+
+    const sum = {};
+    let brugereIAlt = 0, loggetInd = 0, gaester = 0, installeret = 0, mobil = 0, computer = 0;
+    docs.forEach(d => {
+        Object.keys(d.data).forEach(k => {
+            if (typeof d.data[k] === 'number') sum[k] = (sum[k] || 0) + d.data[k];
+        });
+    });
+
+    // Antal telefoner/computere pr. dag ligger i underlisten "enheder"
+    const prDagBrugere = {};
+    for (const key of dage) {
+        prDagBrugere[key] = 0;
+        try {
+            const e = await db.collection('stats').doc(key).collection('enheder').get();
+            prDagBrugere[key] = e.size;
+            e.forEach(doc => {
+                const v = doc.data();
+                brugereIAlt++;
+                if (v.loggetInd) loggetInd++; else gaester++;
+                if (v.installeret) installeret++;
+                if (v.mobil) mobil++; else computer++;
+            });
+        } catch (_) {}
+    }
+
+    const iDagKey = dage[dage.length - 1];
+    const iDagBrugere = prDagBrugere[iDagKey] || 0;
+    const gnsBrugere = dage.length ? (brugereIAlt / dage.length) : 0;
+
+    tal.innerHTML = [
+        { v: iDagBrugere, l: "Brugere i dag", n: "Telefoner og computere der åbnede appen i dag" },
+        { v: gnsBrugere.toFixed(1), l: "Brugere pr. dag", n: `Over ${dage.length} dage` },
+        { v: loggetInd, l: "Logget ind", n: `${gaester} brugte den som gæst` },
+        { v: sum.aabnet || 0, l: "Gange åbnet", n: "" },
+        { v: sum.urStart || 0, l: "Ur startet", n: `${sum.urGemt || 0} lure gemt` },
+        { v: installeret, l: "På hjemmeskærmen", n: brugereIAlt ? Math.round(installeret / brugereIAlt * 100) + "% af alle" : "" }
+    ].map(k => `<div class="tal-kort"><strong>${k.v}</strong><span>${k.l}</span>${k.n ? `<em>${k.n}</em>` : ''}</div>`).join('');
+
+    if (graf) {
+        graf.innerHTML = barChart(dage.map(k => ({
+            label: kortDato(k), value: prDagBrugere[k] || 0, highlight: k === iDagKey
+        })), { format: v => Math.round(v) });
+    }
+
+    if (brug) {
+        const raekker = Object.keys(sum)
+            .filter(k => k !== 'aabnet')
+            .map(k => ({ navn: BRUG_NAVN[k] || k, antal: sum[k], noegle: k }))
+            .sort((a, b) => b.antal - a.antal);
+        const max = raekker.length ? raekker[0].antal : 1;
+        brug.innerHTML = raekker.length ? raekker.map(r => `
+            <div class="brug-raekke">
+                <span class="brug-navn">${esc(r.navn)}</span>
+                <span class="brug-bar"><i style="width:${Math.max(2, r.antal / max * 100)}%"></i></span>
+                <span class="brug-tal">${r.antal}</span>
+            </div>`).join('') + `<p class="hjaelp" style="margin-top:14px;">
+            Noget helt nede med 0-2 brug over ${dage.length} dage er sandsynligvis ikke værd at
+            beholde. Men husk: en funktion kan være vigtig for de få, der bruger den.</p>`
+            : `<p class="hjaelp">Ingen tal endnu.</p>`;
+    }
+
+    if (enh) {
+        enh.innerHTML = [
+            { v: mobil, l: "Telefon eller tablet" },
+            { v: computer, l: "Computer" },
+            { v: brugereIAlt ? Math.round(mobil / brugereIAlt * 100) + "%" : "–", l: "Andel på mobil" }
+        ].map(k => `<div class="tal-kort"><strong>${k.v}</strong><span>${k.l}</span></div>`).join('');
+    }
+}
+
+// ==================================================
+// FEEDBACK
+// ==================================================
+const FB_IKON = { godt: '😊', daarligt: '😕', ide: '💡', fejl: '🐛' };
+const FB_NAVN = { godt: 'Godt', daarligt: 'Driller', ide: 'Idé', fejl: 'Fejl' };
+
+document.querySelectorAll('.fb-filter').forEach(b => {
+    b.addEventListener('click', () => {
+        document.querySelectorAll('.fb-filter').forEach(x => x.classList.remove('aktiv'));
+        b.classList.add('aktiv');
+        fbFilter = b.dataset.type;
+        tegnFeedback();
+    });
 });
 
-document.getElementById('btn-add-category').addEventListener('click', () => {
-    const title = prompt("Hvad skal lydkortet hedde? (f.eks. Fugle)");
-    if (!title) return;
-    sounds.push({ id: slugify(title), icon: "🔊", title: title, variants: [{ label: "Variant 1", url: "" }] });
-    renderSounds();
-    markDirty();
-});
+async function hentFeedback() {
+    const box = $('fb-liste');
+    if (!box) return;
+    box.innerHTML = `<p class="hjaelp">Henter…</p>`;
+    try {
+        const snap = await db.collection('feedback').orderBy('tid', 'desc').limit(200).get();
+        feedbackListe = [];
+        snap.forEach(d => feedbackListe.push(Object.assign({ id: d.id }, d.data())));
+    } catch (e) {
+        box.innerHTML = `<p class="hjaelp fejl">Kunne ikke hente: ${esc(e.message || e)}<br>
+        Husk de nye Firestore-regler — se firestore-regler.txt.</p>`;
+        return;
+    }
+    const ulaeste = feedbackListe.filter(f => !f.laest).length;
+    const prik = $('fb-antal');
+    if (prik) { prik.style.display = ulaeste ? '' : 'none'; prik.textContent = ulaeste; }
+    tegnFeedback();
+}
 
-// ==========================================
-// GENERELLE TEKSTER
-// ==========================================
-function renderGeneral() {
-    const wrap = document.getElementById('general-list');
-    wrap.innerHTML = Object.keys(GENERAL_FIELDS).map(key => {
-        const [label, type] = GENERAL_FIELDS[key];
-        const val = texts[key] != null ? texts[key] : "";
-        return `
-            <label class="field">
-                <span>${esc(label)}</span>
-                ${type === 'area'
-                    ? `<textarea rows="3" data-key="${key}" class="general-input">${esc(val)}</textarea>`
-                    : `<input type="text" value="${esc(val)}" data-key="${key}" class="general-input">`}
-            </label>`;
+function tegnFeedback() {
+    const box = $('fb-liste');
+    if (!box) return;
+    const liste = fbFilter ? feedbackListe.filter(f => f.type === fbFilter) : feedbackListe;
+    if (!liste.length) { box.innerHTML = `<p class="hjaelp">Ingen beskeder her.</p>`; return; }
+    box.innerHTML = liste.map(f => {
+        const tid = f.tid && f.tid.toDate ? f.tid.toDate() : (f.dato ? new Date(f.dato) : null);
+        return `<div class="fb-kort ${f.laest ? 'laest' : ''}">
+            <div class="fb-hoved">
+                <span class="fb-type">${FB_IKON[f.type] || '•'} ${FB_NAVN[f.type] || f.type}</span>
+                <span class="fb-tid">${tid ? tid.toLocaleString('da-DK') : ''}</span>
+            </div>
+            <p class="fb-tekst">${esc(f.text)}</p>
+            <div class="fb-fod">
+                <span>${esc(f.fra || 'gæst')} · ${f.sprog === 'en' ? '🇬🇧' : '🇩🇰'}${f.installeret ? ' · på hjemmeskærmen' : ''}</span>
+                <span class="fb-enhed">${esc(f.enhed || '')}</span>
+            </div>
+            <div class="fb-knapper">
+                <button class="knap lille" onclick="markerLaest('${f.id}', ${f.laest ? 'false' : 'true'})">
+                    ${f.laest ? 'Marker som ulæst' : 'Marker som læst'}</button>
+                <button class="knap lille fare" onclick="sletFeedback('${f.id}')">Slet</button>
+            </div>
+        </div>`;
     }).join('');
 }
 
-// Alle simple felter (også dem der ligger direkte i HTML'en)
-document.addEventListener('input', (e) => {
-    const el = e.target;
-    if (!el.classList.contains('general-input')) return;
-    if (!el.dataset.key) return;
-    texts[el.dataset.key] = el.value;
-    markDirty();
-});
-
-function fillStaticFields() {
-    document.querySelectorAll('.general-input[data-key]').forEach(el => {
-        if (el.closest('#general-list')) return; // dem tegnes af renderGeneral
-        el.value = texts[el.dataset.key] != null ? texts[el.dataset.key] : "";
-    });
-}
-
-// ==========================================
-// SØVN-KORT
-// ==========================================
-function renderSleep() {
-    const wrap = document.getElementById('sleep-list');
-    wrap.innerHTML = (texts.sleepCards || []).map((c, si) => `
-        <div class="card">
-            <div class="card-head">
-                <h3>Kort ${si + 1}</h3>
-                <div class="card-tools">
-                    <button class="icon-btn" data-act="up" data-si="${si}">↑</button>
-                    <button class="icon-btn" data-act="down" data-si="${si}">↓</button>
-                    <button class="icon-btn del" data-act="del" data-si="${si}">🗑</button>
-                </div>
-            </div>
-            <label class="field">
-                <span>Overskrift</span>
-                <input type="text" value="${esc(c.title)}" data-si="${si}" data-field="title" class="sleep-input">
-            </label>
-            <label class="field">
-                <span>Tekst (HTML)</span>
-                <textarea rows="10" data-si="${si}" data-field="body" class="sleep-input">${esc(c.body)}</textarea>
-            </label>
-        </div>
-    `).join('');
-}
-
-document.getElementById('sleep-list').addEventListener('input', (e) => {
-    const el = e.target;
-    if (!el.classList.contains('sleep-input')) return;
-    texts.sleepCards[Number(el.dataset.si)][el.dataset.field] = el.value;
-    markDirty();
-});
-document.getElementById('sleep-list').addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-act]');
-    if (!btn) return;
-    const si = Number(btn.dataset.si);
-    if (btn.dataset.act === 'up') move(texts.sleepCards, si, -1);
-    if (btn.dataset.act === 'down') move(texts.sleepCards, si, 1);
-    if (btn.dataset.act === 'del') {
-        if (!confirm("Slet dette søvn-kort?")) return;
-        texts.sleepCards.splice(si, 1);
-    }
-    renderSleep(); markDirty();
-});
-document.getElementById('btn-add-sleep').addEventListener('click', () => {
-    texts.sleepCards.push({ title: "Ny overskrift", body: "<p>Skriv teksten her.</p>" });
-    renderSleep(); markDirty();
-});
-
-// ==========================================
-// TIGERSPRING
-// ==========================================
-function renderLeaps() {
-    const wrap = document.getElementById('leaps-list');
-    wrap.innerHTML = (texts.leapCards || []).map((c, li) => `
-        <div class="card">
-            <div class="card-head">
-                <h3>Spring ${esc(c.nr)}</h3>
-                <div class="card-tools">
-                    <button class="icon-btn" data-act="up" data-li="${li}">↑</button>
-                    <button class="icon-btn" data-act="down" data-li="${li}">↓</button>
-                    <button class="icon-btn del" data-act="del" data-li="${li}">🗑</button>
-                </div>
-            </div>
-            <div class="row">
-                <label class="field" style="max-width:110px;">
-                    <span>Nummer</span>
-                    <input type="number" value="${esc(c.nr)}" data-li="${li}" data-field="nr" class="leap-input">
-                </label>
-                <label class="field" style="max-width:130px;">
-                    <span>Fra uge</span>
-                    <input type="number" value="${esc(c.from)}" data-li="${li}" data-field="from" class="leap-input">
-                </label>
-                <label class="field" style="max-width:130px;">
-                    <span>Til uge</span>
-                    <input type="number" value="${esc(c.to)}" data-li="${li}" data-field="to" class="leap-input">
-                </label>
-                <label class="field">
-                    <span>Titel</span>
-                    <input type="text" value="${esc(c.title)}" data-li="${li}" data-field="title" class="leap-input">
-                </label>
-            </div>
-            <label class="field">
-                <span>Tekst (HTML)</span>
-                <textarea rows="8" data-li="${li}" data-field="body" class="leap-input">${esc(c.body)}</textarea>
-            </label>
-        </div>
-    `).join('');
-}
-
-document.getElementById('leaps-list').addEventListener('input', (e) => {
-    const el = e.target;
-    if (!el.classList.contains('leap-input')) return;
-    const field = el.dataset.field;
-    const val = (field === 'nr' || field === 'from' || field === 'to') ? Number(el.value) : el.value;
-    texts.leapCards[Number(el.dataset.li)][field] = val;
-    markDirty();
-});
-document.getElementById('leaps-list').addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-act]');
-    if (!btn) return;
-    const li = Number(btn.dataset.li);
-    if (btn.dataset.act === 'up') move(texts.leapCards, li, -1);
-    if (btn.dataset.act === 'down') move(texts.leapCards, li, 1);
-    if (btn.dataset.act === 'del') {
-        if (!confirm("Slet dette spring?")) return;
-        texts.leapCards.splice(li, 1);
-    }
-    renderLeaps(); markDirty();
-});
-document.getElementById('btn-add-leap').addEventListener('click', () => {
-    const nextNr = (texts.leapCards || []).reduce((m, c) => Math.max(m, Number(c.nr) || 0), 0) + 1;
-    texts.leapCards.push({ nr: nextNr, from: 0, to: 0, title: "Nyt spring", body: "<p>Skriv teksten her.</p>" });
-    renderLeaps(); markDirty();
-});
-
-// ==========================================
-// GEM / UDGIV
-// ==========================================
-async function saveAll() {
-    if (!db) { alert("Ingen forbindelse til databasen."); return; }
-
-    // Tjek for dubletter i id'er — ellers rammer to lydkort samme rullemenu
-    const ids = sounds.map(s => s.id);
-    const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
-    if (dupes.length) { alert("To lydkort har samme tekniske id: " + dupes.join(", ") + "\nRet det, før du gemmer."); return; }
-    if (ids.some(id => !id)) { alert("Et lydkort mangler et teknisk id."); return; }
-
-    const statusEl = document.getElementById('save-status');
-    statusEl.textContent = "Gemmer...";
-    statusEl.className = "";
-
+window.markerLaest = async function (id, vaerdi) {
     try {
-        await Promise.all([
-            db.collection("content").doc("sounds").set({ categories: sounds, updated: Date.now() }),
-            db.collection("content").doc("texts").set(Object.assign({}, texts, { updated: Date.now() }))
-        ]);
-        markClean("Udgivet ✔ Ændringerne er live i appen.");
-    } catch (e) {
-        statusEl.textContent = "Kunne ikke gemme: " + e.message;
-        statusEl.className = "unsaved";
-    }
-}
-document.getElementById('btn-save-all').addEventListener('click', saveAll);
+        await db.collection('feedback').doc(id).update({ laest: vaerdi });
+        const f = feedbackListe.find(x => x.id === id);
+        if (f) f.laest = vaerdi;
+        tegnFeedback();
+        const ulaeste = feedbackListe.filter(x => !x.laest).length;
+        const prik = $('fb-antal');
+        if (prik) { prik.style.display = ulaeste ? '' : 'none'; prik.textContent = ulaeste; }
+    } catch (e) { status("Kunne ikke gemme: " + (e.message || e), true); }
+};
 
-// ==========================================
-// BACKUP
-// ==========================================
-document.getElementById('btn-export').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify({ sounds, texts }, null, 2)], { type: "application/json" });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `babyro-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-});
+window.sletFeedback = async function (id) {
+    if (!confirm("Slet beskeden for altid?")) return;
+    try {
+        await db.collection('feedback').doc(id).delete();
+        feedbackListe = feedbackListe.filter(x => x.id !== id);
+        tegnFeedback();
+    } catch (e) { status("Kunne ikke slette: " + (e.message || e), true); }
+};
 
-document.getElementById('import-file').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-        try {
-            const data = JSON.parse(reader.result);
-            if (data.sounds) sounds = data.sounds;
-            if (data.texts) texts = Object.assign({}, DEFAULT_TEXTS, data.texts);
-            renderAll();
-            markDirty();
-            alert("Backup indlæst. Tryk 'Gem og udgiv ændringer' for at gøre den live.");
-        } catch (err) {
-            alert("Filen kunne ikke læses: " + err.message);
-        }
-    };
-    reader.readAsText(file);
-});
-
-document.getElementById('btn-reset').addEventListener('click', () => {
-    if (!confirm("Nulstil ALT indhold til standard? Dine ændringer går tabt.")) return;
-    sounds = JSON.parse(JSON.stringify(DEFAULT_SOUNDS));
-    texts = JSON.parse(JSON.stringify(DEFAULT_TEXTS));
-    renderAll();
-    markDirty();
-});
-
-// ==========================================
-// MILEPÆLE-FORSLAG
-// ==========================================
-function renderMsList() {
-    const el = document.getElementById('ms-list');
-    if (!el) return;
-    const liste = texts.milestoneSuggestions || [];
-    if (!liste.length) { el.innerHTML = '<p class="muted">Ingen forslag. Tryk på knappen for at tilføje.</p>'; return; }
-    el.innerHTML = liste.map((s, i) => `
-        <div class="variant">
-            <div class="row" style="align-items:flex-end;">
-                <label class="field" style="margin-bottom:0;">
-                    <span>Forslag ${i + 1}</span>
-                    <input type="text" value="${esc(s)}" data-msi="${i}" class="ms-input">
+// ==================================================
+// LYDE
+// ==================================================
+function tegnLyde() {
+    const box = $('lyd-liste');
+    if (!box) return;
+    box.innerHTML = LYDE.map((c, i) => `
+    <div class="lyd-kort" data-i="${i}">
+        <div class="lyd-hoved">
+            <input type="text" class="ikon-felt" value="${esc(c.icon || '')}" data-felt="icon" maxlength="4" title="Emoji">
+            <div class="tosprog voksen">
+                <label class="felt"><span>🇩🇰 Navn</span><input type="text" value="${esc(tv(c.title, 'da'))}" data-felt="title.da"></label>
+                <label class="felt"><span>🇬🇧 Name</span><input type="text" value="${esc(tv(c.title, 'en'))}" data-felt="title.en"></label>
+            </div>
+            <button class="knap lille fare" onclick="sletKategori(${i})">Slet</button>
+        </div>
+        <div class="varianter">
+            ${(c.variants || []).map((v, j) => `
+            <div class="variant" data-j="${j}">
+                <div class="tosprog">
+                    <label class="felt"><span>🇩🇰 Tekst i menuen</span><input type="text" value="${esc(tv(v.label, 'da'))}" data-felt="v.label.da"></label>
+                    <label class="felt"><span>🇬🇧 Menu text</span><input type="text" value="${esc(tv(v.label, 'en'))}" data-felt="v.label.en"></label>
+                </div>
+                <label class="felt"><span>Lydfil</span>
+                    <input type="text" value="${esc(v.url || '')}" data-felt="v.url" placeholder="https://...">
                 </label>
-                <button class="icon-btn" data-msact="up" data-msi="${i}">↑</button>
-                <button class="icon-btn" data-msact="down" data-msi="${i}">↓</button>
-                <button class="icon-btn del" data-msact="del" data-msi="${i}">🗑</button>
+                <div class="variant-fod">
+                    <select class="fil-vaelger" data-i="${i}" data-j="${j}"><option value="">— vælg en fil du har lagt op —</option></select>
+                    <button class="knap lille" onclick="afspil(${i},${j})">▶︎ Hør den</button>
+                    <button class="knap lille fare" onclick="sletVariant(${i},${j})">Slet</button>
+                </div>
+            </div>`).join('')}
+        </div>
+        <button class="knap lille" onclick="nyVariant(${i})">+ Ny lyd i denne kategori</button>
+    </div>`).join('');
+    fyldFilVaelgere();
+}
+
+function laesLyde() {
+    const ud = [];
+    document.querySelectorAll('#lyd-liste .lyd-kort').forEach(kort => {
+        const i = Number(kort.dataset.i);
+        const gammel = LYDE[i] || {};
+        const c = {
+            id: gammel.id || ('lyd' + Date.now() + i),
+            icon: kort.querySelector('[data-felt="icon"]').value.trim(),
+            title: {
+                da: kort.querySelector('[data-felt="title.da"]').value.trim(),
+                en: kort.querySelector('[data-felt="title.en"]').value.trim()
+            },
+            variants: []
+        };
+        kort.querySelectorAll('.variant').forEach(v => {
+            c.variants.push({
+                label: {
+                    da: v.querySelector('[data-felt="v.label.da"]').value.trim(),
+                    en: v.querySelector('[data-felt="v.label.en"]').value.trim()
+                },
+                url: v.querySelector('[data-felt="v.url"]').value.trim()
+            });
+        });
+        ud.push(c);
+    });
+    return ud;
+}
+
+window.sletKategori = function (i) {
+    if (!confirm("Slet hele kategorien?")) return;
+    LYDE = laesLyde(); LYDE.splice(i, 1); tegnLyde();
+};
+window.nyVariant = function (i) {
+    LYDE = laesLyde();
+    if (!LYDE[i].variants) LYDE[i].variants = [];
+    LYDE[i].variants.push({ label: { da: "Ny lyd", en: "New sound" }, url: "" });
+    tegnLyde();
+};
+window.sletVariant = function (i, j) {
+    LYDE = laesLyde(); LYDE[i].variants.splice(j, 1); tegnLyde();
+};
+window.afspil = function (i, j) {
+    const url = document.querySelector(`.lyd-kort[data-i="${i}"] .variant[data-j="${j}"] [data-felt="v.url"]`).value.trim();
+    if (!url) { alert("Der er ingen fil på den endnu."); return; }
+    const a = new Audio(url);
+    a.play().catch(() => alert("Kunne ikke afspille. Tjek at adressen er rigtig."));
+    setTimeout(() => a.pause(), 6000);
+};
+
+$('btn-ny-kategori')?.addEventListener('click', () => {
+    LYDE = laesLyde();
+    LYDE.push({ id: 'ny' + Date.now(), icon: '🔊', title: { da: "Ny kategori", en: "New category" }, variants: [] });
+    tegnLyde();
+});
+
+$('btn-gem-lyde')?.addEventListener('click', async () => {
+    LYDE = laesLyde();
+    try {
+        await db.collection('content').doc('sounds').set({ categories: LYDE, opdateret: new Date().toISOString() });
+        status("Lydene er gemt ✓");
+    } catch (e) { status("Kunne ikke gemme: " + (e.message || e), true); }
+});
+
+$('btn-nulstil-lyde')?.addEventListener('click', () => {
+    if (!confirm("Sætte alle lyde tilbage til standard? Det du har rettet, forsvinder.")) return;
+    LYDE = kopi(DEFAULT_SOUNDS); tegnLyde();
+});
+
+// ==================================================
+// TEKSTER
+// ==================================================
+const TXT_FELTER = [
+    { key: 'appTitle', navn: 'Navnet på appen', hjaelp: 'Fx BabyBasen' },
+    { key: 'appSubtitle', navn: 'Undertitel når man er logget ind', hjaelp: 'Skriv {navn}, hvor barnets navn skal stå' },
+    { key: 'appSubtitleGuest', navn: 'Undertitel for gæster', hjaelp: 'Vises før man logger ind' }
+];
+
+function tegnTekster() {
+    const box = $('txt-felter');
+    if (box) {
+        box.innerHTML = TXT_FELTER.map(f => `
+        <div class="txt-blok">
+            <h3>${esc(f.navn)}</h3>
+            <p class="hjaelp">${esc(f.hjaelp)}</p>
+            <div class="tosprog">
+                <label class="felt"><span>🇩🇰 Dansk</span><input type="text" data-txt="${f.key}.da" value="${esc(tv(TEKSTER[f.key], 'da'))}"></label>
+                <label class="felt"><span>🇬🇧 English</span><input type="text" data-txt="${f.key}.en" value="${esc(tv(TEKSTER[f.key], 'en'))}"></label>
             </div>
         </div>`).join('');
+    }
+    const n = $('vis-neutral'); if (n) n.checked = TEKSTER.showNeutral === true;
+    const f = $('vis-farver'); if (f) f.checked = TEKSTER.showColors !== false;
+
+    const forslag = TEKSTER.milestoneSuggestions || DEFAULT_TEXTS.milestoneSuggestions;
+    const da = $('ms-da'), en = $('ms-en');
+    if (da) da.value = (Array.isArray(forslag.da) ? forslag.da : []).join('\n');
+    if (en) en.value = (Array.isArray(forslag.en) ? forslag.en : []).join('\n');
 }
 
-document.getElementById('ms-list')?.addEventListener('input', (e) => {
-    if (!e.target.classList.contains('ms-input')) return;
-    texts.milestoneSuggestions[Number(e.target.dataset.msi)] = e.target.value;
-    markDirty();
-});
-document.getElementById('ms-list')?.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-msact]');
-    if (!btn) return;
-    const i = Number(btn.dataset.msi);
-    if (btn.dataset.msact === 'up') move(texts.milestoneSuggestions, i, -1);
-    if (btn.dataset.msact === 'down') move(texts.milestoneSuggestions, i, 1);
-    if (btn.dataset.msact === 'del') texts.milestoneSuggestions.splice(i, 1);
-    renderMsList(); markDirty();
-});
-document.getElementById('btn-add-ms')?.addEventListener('click', () => {
-    texts.milestoneSuggestions = texts.milestoneSuggestions || [];
-    texts.milestoneSuggestions.push("Ny milepæl");
-    renderMsList(); markDirty();
-});
-
-// ==========================================
-// FILER PÅ CLOUDFLARE
-// ==========================================
-const tokenInput = document.getElementById('worker-token');
-const tokenStatus = document.getElementById('token-status');
-
-document.getElementById('btn-save-token').addEventListener('click', () => {
-    const val = tokenInput.value.trim();
-    if (!val) { tokenStatus.textContent = "Skriv nøglen først."; tokenStatus.className = "upload-info error"; return; }
-    sessionStorage.setItem('babyRoWorkerToken', val);
-    tokenStatus.textContent = "✔ Nøglen er gemt for denne session";
-    tokenStatus.className = "upload-info done";
-    loadFiles();
-    tjekPushStatus();
-});
-
-function formatBytes(b) {
-    if (!b) return "";
-    return b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.round(b / 1024) + " KB";
-}
-
-async function loadFiles() {
-    const wrap = document.getElementById('files-list');
-    const token = getToken();
-    if (!token) { wrap.innerHTML = '<p class="muted">Gem din nøgle øverst først.</p>'; return; }
-
-    wrap.innerHTML = '<p class="muted">Henter...</p>';
+$('btn-gem-tekster')?.addEventListener('click', async () => {
+    const ny = {};
+    TXT_FELTER.forEach(f => {
+        ny[f.key] = {
+            da: document.querySelector(`[data-txt="${f.key}.da"]`).value.trim(),
+            en: document.querySelector(`[data-txt="${f.key}.en"]`).value.trim()
+        };
+    });
+    ny.showNeutral = $('vis-neutral').checked;
+    ny.showColors = $('vis-farver').checked;
+    ny.milestoneSuggestions = {
+        da: $('ms-da').value.split('\n').map(s => s.trim()).filter(Boolean),
+        en: $('ms-en').value.split('\n').map(s => s.trim()).filter(Boolean)
+    };
     try {
-        const res = await fetch(`${WORKER_URL}/files`, { headers: { Authorization: 'Bearer ' + token } });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Fejl ${res.status}`);
-        if (!data.files.length) { wrap.innerHTML = '<p class="muted">Ingen filer uploadet endnu.</p>'; return; }
+        await db.collection('content').doc('texts').set(Object.assign({}, TEKSTER, ny, { opdateret: new Date().toISOString() }));
+        TEKSTER = Object.assign(TEKSTER, ny);
+        status("Teksterne er gemt ✓");
+    } catch (e) { status("Kunne ikke gemme: " + (e.message || e), true); }
+});
 
-        wrap.innerHTML = data.files.map(f => `
-            <div class="variant">
-                <div class="row" style="align-items:center;">
-                    <div class="field" style="margin-bottom:0;">
-                        <span>${esc(f.name)} &middot; ${formatBytes(f.size)}</span>
-                        <input type="text" value="${esc(f.url)}" readonly>
-                    </div>
-                </div>
-                <div class="upload-row">
-                    <button class="preview-btn" data-file-act="copy" data-url="${esc(f.url)}">Kopiér adresse</button>
-                    <button class="preview-btn" data-file-act="play" data-url="${esc(f.url)}">&#9654; Afspil</button>
-                    <button class="preview-btn" data-file-act="del" data-name="${esc(f.name)}">Slet</button>
-                </div>
+$('btn-nulstil-tekster')?.addEventListener('click', () => {
+    if (!confirm("Sætte teksterne tilbage til standard?")) return;
+    TEKSTER = kopi(DEFAULT_TEXTS); tegnTekster();
+});
+
+// ==================================================
+// ARTIKLER
+// ==================================================
+function artFelt(sti, navn, hjaelp, linjer) {
+    const v = hentSti(ART, sti);
+    const stor = linjer > 2;
+    const felt = (sprog, flag) => stor
+        ? `<label class="felt"><span>${flag}</span><textarea rows="${linjer}" data-art="${sti}.${sprog}">${esc(tv(v, sprog))}</textarea></label>`
+        : `<label class="felt"><span>${flag}</span><input type="text" data-art="${sti}.${sprog}" value="${esc(tv(v, sprog))}"></label>`;
+    return `<div class="art-felt">
+        <h4>${esc(navn)}</h4>
+        ${hjaelp ? `<p class="hjaelp">${esc(hjaelp)}</p>` : ''}
+        <div class="tosprog">${felt('da', '🇩🇰 Dansk')}${felt('en', '🇬🇧 English')}</div>
+    </div>`;
+}
+
+function hentSti(o, sti) {
+    return sti.split('.').reduce((a, k) => {
+        if (a == null) return null;
+        return /^\d+$/.test(k) ? a[Number(k)] : a[k];
+    }, o);
+}
+function saetSti(o, sti, v) {
+    const dele = sti.split('.');
+    let p = o;
+    for (let i = 0; i < dele.length - 1; i++) {
+        const k = /^\d+$/.test(dele[i]) ? Number(dele[i]) : dele[i];
+        if (p[k] == null) p[k] = /^\d+$/.test(dele[i + 1]) ? [] : {};
+        p = p[k];
+    }
+    const sidst = dele[dele.length - 1];
+    p[/^\d+$/.test(sidst) ? Number(sidst) : sidst] = v;
+}
+
+function tegnArtikler() {
+    const s = $('art-soevn');
+    if (s) {
+        s.innerHTML = `<section class="kort">
+            <h2>Overskrift på Søvn-siden</h2>
+            ${artFelt('sleepTitle', 'Titel')}
+            ${artFelt('sleepSub', 'Undertitel')}
+        </section>` +
+        (ART.sleepCards || []).map((c, i) => `<section class="kort art-kort">
+            <div class="kort-hoved">
+                <h2>Afsnit ${i + 1}</h2>
+                <button class="knap lille fare" onclick="sletArtikel('sleepCards', ${i})">Slet afsnittet</button>
             </div>
-        `).join('');
-    } catch (err) {
-        wrap.innerHTML = `<p class="upload-info error">${esc(err.message)}</p>`;
+            ${artFelt('sleepCards.' + i + '.title', 'Overskrift')}
+            ${artFelt('sleepCards.' + i + '.body', 'Tekst', 'HTML er tilladt. {navn} bliver barnets navn.', 12)}
+        </section>`).join('') +
+        `<div class="gem-linje"><button class="knap lille" onclick="nyArtikel('sleepCards')">+ Nyt afsnit under Søvn</button></div>`;
+    }
+
+    const p = $('art-spring');
+    if (p) {
+        p.innerHTML = `<section class="kort">
+            <h2>Overskrifter på Tigerspring-siden</h2>
+            ${artFelt('leapTitle', 'Titel')}
+            ${artFelt('leapSub', 'Undertitel')}
+            ${artFelt('leapStatusTitle', 'Overskrift over statuslinjen')}
+            ${artFelt('leapIntroTitle', 'Introduktion — overskrift')}
+            ${artFelt('leapIntroBody', 'Introduktion — tekst', 'HTML er tilladt.', 8)}
+        </section>` +
+        (ART.leapCards || []).map((c, i) => `<section class="kort art-kort">
+            <div class="kort-hoved">
+                <h2>Spring ${c.nr || i + 1}</h2>
+                <button class="knap lille fare" onclick="sletArtikel('leapCards', ${i})">Slet springet</button>
+            </div>
+            <div class="spring-tal">
+                <label class="felt lille-felt"><span>Nummer</span><input type="number" data-artnum="leapCards.${i}.nr" value="${c.nr || ''}"></label>
+                <label class="felt lille-felt"><span>Fra uge</span><input type="number" data-artnum="leapCards.${i}.from" value="${c.from || ''}"></label>
+                <label class="felt lille-felt"><span>Til uge</span><input type="number" data-artnum="leapCards.${i}.to" value="${c.to || ''}"></label>
+            </div>
+            ${artFelt('leapCards.' + i + '.title', 'Navnet på springet')}
+            ${artFelt('leapCards.' + i + '.body', 'Tekst', 'HTML er tilladt.', 10)}
+        </section>`).join('') +
+        `<section class="kort">
+            <h2>Afslutning</h2>
+            ${artFelt('leapOutroTitle', 'Overskrift')}
+            ${artFelt('leapOutroBody', 'Tekst', 'HTML er tilladt.', 8)}
+        </section>
+        <div class="gem-linje"><button class="knap lille" onclick="nyArtikel('leapCards')">+ Nyt spring</button></div>`;
     }
 }
 
-// ---------- PUSH-OPSÆTNING ----------
-async function tjekPushStatus() {
-    const el = document.getElementById('push-state');
-    if (!el) return;
-    if (!WORKER_URL || WORKER_URL.includes('dit-brugernavn')) {
-        el.textContent = "Udfyld WORKER_URL i cloudflare-config.js først.";
-        el.className = "upload-info error";
+function laesArtikler() {
+    const ny = kopi(ART);
+    document.querySelectorAll('[data-art]').forEach(el => {
+        const sti = el.dataset.art;
+        saetSti(ny, sti, el.value);
+    });
+    document.querySelectorAll('[data-artnum]').forEach(el => {
+        saetSti(ny, el.dataset.artnum, Number(el.value) || 0);
+    });
+    return ny;
+}
+
+window.nyArtikel = function (liste) {
+    ART = laesArtikler();
+    if (!Array.isArray(ART[liste])) ART[liste] = [];
+    if (liste === 'leapCards') {
+        const sidst = ART[liste][ART[liste].length - 1] || { nr: 0, to: 0 };
+        ART[liste].push({ nr: (sidst.nr || 0) + 1, from: (sidst.to || 0) + 1, to: (sidst.to || 0) + 2, title: { da: "", en: "" }, body: { da: "", en: "" } });
+    } else {
+        ART[liste].push({ title: { da: "", en: "" }, body: { da: "", en: "" } });
+    }
+    tegnArtikler();
+};
+window.sletArtikel = function (liste, i) {
+    if (!confirm("Slet det for altid?")) return;
+    ART = laesArtikler();
+    ART[liste].splice(i, 1);
+    tegnArtikler();
+};
+
+$('btn-gem-artikler')?.addEventListener('click', async () => {
+    ART = laesArtikler();
+    try {
+        await db.collection('content').doc('articles').set(Object.assign({}, ART, { opdateret: new Date().toISOString() }));
+        status("Artiklerne er gemt ✓");
+    } catch (e) { status("Kunne ikke gemme: " + (e.message || e), true); }
+});
+
+$('btn-nulstil-artikler')?.addEventListener('click', () => {
+    if (!confirm("Sætte alle artikler tilbage til standard? Det du selv har skrevet, forsvinder.")) return;
+    ART = kopi(DEFAULT_ARTICLES); tegnArtikler();
+});
+
+// ==================================================
+// FILER I CLOUDFLARE
+// ==================================================
+let filer = [];
+
+async function hentFiler() {
+    const box = $('fil-liste');
+    if (!box) return;
+    if (!cfBase()) {
+        box.innerHTML = `<p class="hjaelp">Der står ingen adresse i <code>cloudflare-config.js</code>.
+        Skriv din workers.dev-adresse ind under <code>CLOUDFLARE_URL</code>, så kan du lægge filer op herfra.</p>`;
         return;
     }
+    box.innerHTML = `<p class="hjaelp">Henter…</p>`;
     try {
-        const r = await fetch(WORKER_URL + '/health');
-        const d = await r.json();
-        if (d.push) {
-            el.textContent = "Push er slået til. Du behøver ikke gøre mere.";
-            el.className = "upload-info done";
-        } else {
-            el.textContent = "Push er ikke sat op endnu. Gem din nøgle ovenfor, og tryk på knappen.";
-            el.className = "upload-info";
-        }
+        const svar = await fetch(cfBase() + '/list', { headers: { 'Authorization': 'Bearer ' + CLOUDFLARE_TOKEN } });
+        if (svar.status === 401) { box.innerHTML = `<p class="hjaelp fejl">Den hemmelige kode passer ikke.
+            <code>CLOUDFLARE_TOKEN</code> i cloudflare-config.js skal være præcis den samme som
+            <code>ADMIN_TOKEN</code> i Cloudflare.</p>`; return; }
+        const j = await svar.json();
+        filer = j.filer || [];
     } catch (e) {
-        el.textContent = "Kunne ikke nå din Worker. Tjek WORKER_URL.";
-        el.className = "upload-info error";
-    }
-}
-
-document.getElementById('btn-push-setup')?.addEventListener('click', async () => {
-    const el = document.getElementById('push-state');
-    const token = getToken();
-    if (!token) {
-        el.textContent = "Gem først din adgangsnøgle i feltet ovenfor.";
-        el.className = "upload-info error";
+        box.innerHTML = `<p class="hjaelp fejl">Kunne ikke nå Cloudflare: ${esc(e.message || e)}</p>`;
         return;
     }
-    if (!confirm("Lav nye push-nøgler?\n\nHar du gjort det før, skal alle forældre slå påmindelser til igen.")) return;
+    if (!filer.length) { box.innerHTML = `<p class="hjaelp">Der ligger ingen filer endnu.</p>`; fyldFilVaelgere(); return; }
+    box.innerHTML = `<table class="fil-tabel"><thead><tr><th>Fil</th><th>Størrelse</th><th>Lagt op</th><th></th></tr></thead><tbody>` +
+        filer.map(f => `<tr>
+            <td><code>${esc(f.navn)}</code></td>
+            <td>${(f.storrelse / 1048576).toFixed(1)} MB</td>
+            <td>${f.tid ? new Date(f.tid).toLocaleDateString('da-DK') : '–'}</td>
+            <td class="fil-handling">
+                <button class="knap lille" onclick="kopierUrl('${esc(f.url)}')">Kopier adressen</button>
+                <button class="knap lille fare" onclick="sletFil('${esc(f.key)}')">Slet</button>
+            </td></tr>`).join('') + `</tbody></table>`;
+    fyldFilVaelgere();
+}
 
-    el.textContent = "Laver nøgler...";
-    el.className = "upload-info";
+function fyldFilVaelgere() {
+    document.querySelectorAll('.fil-vaelger').forEach(sel => {
+        sel.innerHTML = `<option value="">— vælg en fil du har lagt op —</option>` +
+            filer.map(f => `<option value="${esc(f.url)}">${esc(f.navn)}</option>`).join('');
+        sel.onchange = () => {
+            if (!sel.value) return;
+            const felt = document.querySelector(`.lyd-kort[data-i="${sel.dataset.i}"] .variant[data-j="${sel.dataset.j}"] [data-felt="v.url"]`);
+            if (felt) felt.value = sel.value;
+            sel.value = "";
+        };
+    });
+}
+
+window.kopierUrl = function (url) {
+    navigator.clipboard.writeText(url).then(() => status("Adressen er kopieret ✓"));
+};
+window.sletFil = async function (key) {
+    if (!confirm("Slet filen for altid? Lyde der bruger den, holder op med at virke.")) return;
     try {
-        const r = await fetch(WORKER_URL + '/push/setup', {
+        await fetch(cfBase() + '/delete', {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token }
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CLOUDFLARE_TOKEN },
+            body: JSON.stringify({ key })
         });
-        const d = await r.json();
-        if (r.ok && d.publicKey) {
-            el.textContent = "Færdig! Push er nu slået til.";
-            el.className = "upload-info done";
-        } else {
-            el.textContent = "Fejl: " + (d.error || ("status " + r.status));
-            el.className = "upload-info error";
-        }
-    } catch (e) {
-        el.textContent = "Fejl: " + e.message;
-        el.className = "upload-info error";
-    }
-});
+        hentFiler();
+    } catch (e) { status("Kunne ikke slette: " + (e.message || e), true); }
+};
 
-document.getElementById('btn-refresh-files').addEventListener('click', loadFiles);
+$('btn-hent-filer')?.addEventListener('click', hentFiler);
 
-document.getElementById('files-list').addEventListener('click', async (e) => {
-    const btn = e.target.closest('[data-file-act]');
-    if (!btn) return;
-    const act = btn.dataset.fileAct;
-
-    if (act === 'copy') {
-        navigator.clipboard.writeText(btn.dataset.url);
-        btn.textContent = "Kopieret!";
-        setTimeout(() => { btn.textContent = "Kopiér adresse"; }, 1500);
-    }
-    if (act === 'play') {
-        new Audio(btn.dataset.url).play().catch(() => alert("Kunne ikke afspille filen."));
-    }
-    if (act === 'del') {
-        const name = btn.dataset.name;
-        if (!confirm(`Slet filen "${name}" permanent?\n\nHusk at fjerne adressen fra dine lydkort bagefter.`)) return;
-        try {
-            const res = await fetch(`${WORKER_URL}/lyde/${encodeURIComponent(name)}`, {
-                method: 'DELETE', headers: { Authorization: 'Bearer ' + getToken() }
-            });
-            if (!res.ok) throw new Error("Kunne ikke slette filen.");
-            loadFiles();
-        } catch (err) { alert(err.message); }
-    }
-});
-
-// ==========================================
-// FANER
-// ==========================================
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-        window.scrollTo(0, 0);
-    });
-});
-
-function renderAll() {
-    tjekPushStatus();
-    if (tokenInput && getToken()) { tokenInput.value = getToken(); tokenStatus.textContent = '✔ Nøgle aktiv'; tokenStatus.className = 'upload-info done'; }
-    renderSounds();
-    renderGeneral();
-    renderSleep();
-    renderLeaps();
-    renderMsList();
-    fillStaticFields();
-}
-
-// ==========================================
-// LOGIN-PORT
-// ==========================================
-async function loadExisting() {
+$('btn-upload')?.addEventListener('click', async () => {
+    const fil = $('lyd-fil').files[0];
+    const st = $('upload-status');
+    if (!fil) { st.textContent = "Vælg en fil først."; return; }
+    if (!cfBase()) { st.textContent = "Der står ingen adresse i cloudflare-config.js."; return; }
+    if (fil.size > 24 * 1024 * 1024) { st.textContent = "Filen er for stor. Max 24 MB."; return; }
+    st.textContent = "Lægger op…";
+    $('btn-upload').disabled = true;
     try {
-        const [s, t] = await Promise.all([
-            db.collection("content").doc("sounds").get(),
-            db.collection("content").doc("texts").get()
-        ]);
-        if (s.exists && Array.isArray(s.data().categories) && s.data().categories.length) sounds = s.data().categories;
-        if (t.exists && t.data()) texts = Object.assign({}, DEFAULT_TEXTS, t.data());
+        const fd = new FormData();
+        fd.append('file', fil);
+        fd.append('name', fil.name);
+        const svar = await fetch(cfBase() + '/upload', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + CLOUDFLARE_TOKEN },
+            body: fd
+        });
+        const j = await svar.json();
+        if (!svar.ok) { st.textContent = "Gik ikke: " + (j.error || svar.status); return; }
+        st.innerHTML = `Klar ✓ <code>${esc(j.url)}</code> — den ligger nu i menuerne herunder.`;
+        $('lyd-fil').value = "";
+        hentFiler();
     } catch (e) {
-        console.log("Kunne ikke hente gemt indhold — starter fra standardindhold.", e);
+        st.textContent = "Kunne ikke nå Cloudflare: " + (e.message || e);
+    } finally {
+        $('btn-upload').disabled = false;
     }
-    renderAll();
-    markClean();
+});
+
+// ==================================================
+// OPSÆTNING
+// ==================================================
+function tegnForbindelser() {
+    const box = $('forbindelser');
+    if (!box) return;
+    const raekker = [
+        { navn: 'Firebase', ok: !!db, note: db ? 'Forbundet' : 'Tjek firebase-config.js' },
+        { navn: 'Admin-mail', ok: !!minEmail, note: minEmail || '–' },
+        { navn: 'Cloudflare-adresse', ok: !!cfBase(), note: cfBase() || 'Ikke udfyldt i cloudflare-config.js' },
+        { navn: 'Hemmelig kode', ok: !!(typeof CLOUDFLARE_TOKEN !== 'undefined' && CLOUDFLARE_TOKEN), note: (typeof CLOUDFLARE_TOKEN !== 'undefined' && CLOUDFLARE_TOKEN) ? 'Udfyldt' : 'Ikke udfyldt' }
+    ];
+    box.innerHTML = raekker.map(r => `<div class="forb-raekke">
+        <span class="forb-prik ${r.ok ? 'ja' : 'nej'}"></span>
+        <strong>${esc(r.navn)}</strong>
+        <span class="hjaelp" style="margin:0;">${esc(r.note)}</span>
+    </div>`).join('');
 }
 
-if (auth) {
-    document.getElementById('btn-admin-login').addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(err => alert("Login fejl: " + err.message));
-    });
-    document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
-    document.getElementById('btn-gate-logout').addEventListener('click', () => auth.signOut());
-
-    auth.onAuthStateChanged(async (user) => {
-        const gate = document.getElementById('gate');
-        const admin = document.getElementById('admin');
-        const gateText = document.getElementById('gate-text');
-        const loginBtn = document.getElementById('btn-admin-login');
-        const gateLogout = document.getElementById('btn-gate-logout');
-
-        if (!user) {
-            gate.style.display = 'flex';
-            admin.style.display = 'none';
-            gateText.textContent = "Log ind med din administrator-konto for at redigere appen.";
-            loginBtn.style.display = 'block';
-            gateLogout.style.display = 'none';
-            return;
-        }
-
-        const email = (user.email || "").toLowerCase();
-        const isAdmin = ADMIN_EMAILS.map(a => a.toLowerCase()).includes(email);
-
-        if (!isAdmin) {
-            gate.style.display = 'flex';
-            admin.style.display = 'none';
-            gateText.textContent = `${email} har ikke adgang til admin. Log ud og brug din administrator-konto.`;
-            loginBtn.style.display = 'none';
-            gateLogout.style.display = 'block';
-            return;
-        }
-
-        gate.style.display = 'none';
-        admin.style.display = 'block';
-        document.getElementById('admin-user').textContent = "Logget ind som " + email;
-        await loadExisting();
-    });
-} else {
-    document.getElementById('gate-text').textContent = "Firebase er ikke sat op. Udfyld firebase-config.js først.";
-}
+$('btn-push-setup')?.addEventListener('click', async () => {
+    const st = $('push-status');
+    if (!cfBase()) { st.textContent = "Skriv først din Cloudflare-adresse ind i cloudflare-config.js."; return; }
+    st.textContent = "Arbejder…";
+    try {
+        const svar = await fetch(cfBase() + '/push/setup', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + CLOUDFLARE_TOKEN }
+        });
+        const j = await svar.json();
+        if (!svar.ok) { st.textContent = "Gik ikke: " + (j.error || svar.status); return; }
+        st.innerHTML = `Push er slået til ✓ Nøglerne er gemt i Cloudflare.<br>
+        <code>${esc((j.key || '').slice(0, 24))}…</code>`;
+    } catch (e) {
+        st.textContent = "Kunne ikke nå Cloudflare: " + (e.message || e);
+    }
+});

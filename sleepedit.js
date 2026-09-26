@@ -1,177 +1,140 @@
 // ==================================================
-// BabyRo — sleepedit.js
-// Ret og tilføj sovetider. Vigtigt, fordi tallene
-// ender hos sundhedsplejersken — de skal være rigtige.
-//
-// Alt er koblet op med delegerede klik på document,
-// så det også virker for knapper, der først bliver
-// tegnet senere.
+// BabyBasen — sleepedit.js
+// Tilføj søvn manuelt + ret en gemt lur
+// Dato og tid er delt op i to felter, fordi datetime-local
+// opfører sig forskelligt fra telefon til telefon.
 // ==================================================
 
-let redigerNoegle = null;   // dato-nøgle
-let redigerIndex = null;    // -1 = ny lur
+let seRedigerer = null;   // { dagKey, index } eller null når vi tilføjer
 
-function toCifre(n) { return String(n).padStart(2, '0'); }
+function toTal(n) { return String(n).padStart(2, '0'); }
 
-function msTilDato(ms) {
-    const d = new Date(ms);
-    return d.getFullYear() + '-' + toCifre(d.getMonth() + 1) + '-' + toCifre(d.getDate());
+function saetSeFelter(startMs, slutMs) {
+    const s = new Date(startMs), e = new Date(slutMs);
+    document.getElementById('se-start-date').value = isoKey(s);
+    document.getElementById('se-start-time').value = toTal(s.getHours()) + ':' + toTal(s.getMinutes());
+    document.getElementById('se-end-date').value = isoKey(e);
+    document.getElementById('se-end-time').value = toTal(e.getHours()) + ':' + toTal(e.getMinutes());
+    opdaterSeVarighed();
 }
-function msTilKlokke(ms) {
-    const d = new Date(ms);
-    return toCifre(d.getHours()) + ':' + toCifre(d.getMinutes());
-}
-function feltTilMs(datoId, tidId) {
-    const dato = document.getElementById(datoId)?.value;
-    const tid = document.getElementById(tidId)?.value;
-    if (!dato || !tid) return null;
-    const [y, m, d] = dato.split('-').map(Number);
-    const [t, min] = tid.split(':').map(Number);
-    const dt = new Date(y, m - 1, d, t, min, 0, 0);
+
+function seLaes(hvilken) {
+    const d = document.getElementById('se-' + hvilken + '-date').value;
+    const t = document.getElementById('se-' + hvilken + '-time').value;
+    if (!d || !t) return null;
+    const [y, m, dag] = d.split('-').map(Number);
+    const [ti, mi] = t.split(':').map(Number);
+    const dt = new Date(y, m - 1, dag, ti, mi, 0, 0);
     return isNaN(dt.getTime()) ? null : dt.getTime();
 }
 
-// ==========================================
-// ÅBN
-// ==========================================
-window.aabnSoevnRet = function (key, index) {
-    const boks = document.getElementById('sleep-edit');
-    if (!boks) return;
-
-    redigerNoegle = key;
-    redigerIndex = index;
-
-    let start, slut;
-    if (index === -1) {
-        const nu = Date.now();
-        start = nu - 3600000;
-        slut = nu;
-        document.getElementById('se-title').textContent = T('addSleepTitle');
-        document.getElementById('se-delete').style.display = 'none';
-    } else {
-        const s = (localSleepLogs[key] && localSleepLogs[key].sessions[index]) || {};
-        slut = s.endMs || Date.now();
-        start = s.startMs || (slut - (s.durationSec || 0) * 1000);
-        document.getElementById('se-title').textContent = T('editSleep');
-        document.getElementById('se-delete').style.display = 'block';
-    }
-
-    document.getElementById('se-start-date').value = msTilDato(start);
-    document.getElementById('se-start-time').value = msTilKlokke(start);
-    document.getElementById('se-end-date').value = msTilDato(slut);
-    document.getElementById('se-end-time').value = msTilKlokke(slut);
-
-    boks.classList.add('vis');
-    document.body.style.overflow = 'hidden';
-    opdaterVarighed();
-};
-
-function lukSoevnRet() {
-    document.getElementById('sleep-edit')?.classList.remove('vis');
-    document.body.style.overflow = '';
-    redigerNoegle = null;
-    redigerIndex = null;
-}
-
-// ==========================================
-// VARIGHED VISES, MENS MAN RETTER
-// ==========================================
-function opdaterVarighed() {
+function opdaterSeVarighed() {
     const el = document.getElementById('se-duration');
     if (!el) return;
-    const a = feltTilMs('se-start-date', 'se-start-time');
-    const b = feltTilMs('se-end-date', 'se-end-time');
-    if (a === null || b === null) { el.textContent = '–'; el.className = 'se-duration'; return; }
-    const sek = Math.round((b - a) / 1000);
-    if (sek <= 0) { el.textContent = '⚠️ ' + T('endBeforeStart'); el.className = 'se-duration fejl'; return; }
-    if (sek > 86400) { el.textContent = '⚠️ ' + T('tooLong'); el.className = 'se-duration fejl'; return; }
+    const s = seLaes('start'), e = seLaes('end');
+    if (s == null || e == null) { el.textContent = "–"; el.classList.remove('se-fejl'); return; }
+    const sek = Math.round((e - s) / 1000);
+    if (sek <= 0) { el.textContent = T('endBeforeStart'); el.classList.add('se-fejl'); return; }
+    el.classList.remove('se-fejl');
     el.textContent = formatTimeText(sek);
-    el.className = 'se-duration';
 }
 
-// ==========================================
-// DELEGEREDE KLIK — virker uanset hvornår
-// knapperne er blevet tegnet
-// ==========================================
-document.addEventListener('click', async (e) => {
-    // Åbn tomt skema
-    if (e.target.closest('#btn-add-sleep')) {
-        e.preventDefault();
-        aabnSoevnRet(todayKey(), -1);
-        return;
-    }
-
-    // Flyt et tidspunkt et par minutter
-    const nudge = e.target.closest('[data-nudge]');
-    if (nudge) {
-        e.preventDefault();
-        const [hvilken, min] = nudge.dataset.nudge.split(':');
-        const ms = feltTilMs(`se-${hvilken}-date`, `se-${hvilken}-time`);
-        if (ms === null) return;
-        const ny = ms + Number(min) * 60000;
-        document.getElementById(`se-${hvilken}-date`).value = msTilDato(ny);
-        document.getElementById(`se-${hvilken}-time`).value = msTilKlokke(ny);
-        opdaterVarighed();
-        return;
-    }
-
-    if (e.target.closest('#se-cancel') || e.target.id === 'sleep-edit') { lukSoevnRet(); return; }
-
-    // Slet
-    if (e.target.closest('#se-delete')) {
-        if (redigerIndex === null || redigerIndex < 0) return;
-        if (!confirm(T('deleteNap') + '?')) return;
-        const key = redigerNoegle, i = redigerIndex;
-        lukSoevnRet();
-        await window.deleteLogEntry(key, i, true);
-        return;
-    }
-
-    // Gem
-    if (e.target.closest('#se-save')) {
-        const start = feltTilMs('se-start-date', 'se-start-time');
-        const slut = feltTilMs('se-end-date', 'se-end-time');
-        if (start === null || slut === null) { alert(T('fillBothTimes')); return; }
-        if (slut <= start) { alert(T('endBeforeStart')); return; }
-        const sek = Math.round((slut - start) / 1000);
-        if (sek > 86400) { alert(T('tooLong')); return; }
-
-        const nyNoegle = isoKey(new Date(start));
-        const post = {
-            timeDisplay: `${T('atClock')} ${clockFromMs(start)} - ${clockFromMs(slut)}`,
-            durationText: formatTimeText(sek),
-            durationSec: sek,
-            startMs: start,
-            endMs: slut
-        };
-
-        const paavirkede = new Set();
-
-        // Fjern den gamle post, hvis vi retter en eksisterende
-        if (redigerIndex !== null && redigerIndex >= 0 && localSleepLogs[redigerNoegle]) {
-            const gammel = localSleepLogs[redigerNoegle].sessions[redigerIndex];
-            localSleepLogs[redigerNoegle].total = Math.max(0, localSleepLogs[redigerNoegle].total - (gammel.durationSec || 0));
-            localSleepLogs[redigerNoegle].sessions.splice(redigerIndex, 1);
-            if (!localSleepLogs[redigerNoegle].sessions.length) delete localSleepLogs[redigerNoegle];
-            paavirkede.add(monthKey(redigerNoegle));
-        }
-
-        if (!localSleepLogs[nyNoegle]) localSleepLogs[nyNoegle] = { sessions: [], total: 0 };
-        localSleepLogs[nyNoegle].sessions.push(post);
-        localSleepLogs[nyNoegle].sessions.sort((x, y) => (x.startMs || 0) - (y.startMs || 0));
-        localSleepLogs[nyNoegle].total += sek;
-        paavirkede.add(monthKey(nyNoegle));
-
-        lukSoevnRet();
-        for (const ym of paavirkede) await gemSoevnMaaned(ym);
-
-        renderTodayLog();
-        renderPlanCard();
-        if (typeof renderLogPage === 'function') renderLogPage();
-        if (typeof planlaegNaesteSoevn === 'function') planlaegNaesteSoevn();
-    }
+['se-start-date', 'se-start-time', 'se-end-date', 'se-end-time'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', opdaterSeVarighed);
+    document.getElementById(id)?.addEventListener('input', opdaterSeVarighed);
 });
 
-document.addEventListener('input', (e) => {
-    if (e.target.id && e.target.id.startsWith('se-')) opdaterVarighed();
+document.querySelectorAll('[data-nudge]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const [hvilken, min] = btn.dataset.nudge.split(':');
+        const nu = seLaes(hvilken);
+        if (nu == null) return;
+        const ny = new Date(nu + Number(min) * 60000);
+        document.getElementById('se-' + hvilken + '-date').value = isoKey(ny);
+        document.getElementById('se-' + hvilken + '-time').value = toTal(ny.getHours()) + ':' + toTal(ny.getMinutes());
+        opdaterSeVarighed();
+    });
+});
+
+function aabnSoevnTilfoej() {
+    seRedigerer = null;
+    document.getElementById('se-title').textContent = T('addSleep');
+    document.getElementById('se-delete').style.display = 'none';
+    const nu = Date.now();
+    saetSeFelter(nu - 45 * 60000, nu);
+    document.getElementById('sleep-edit').classList.add('vis');
+}
+
+function aabnSoevnRet(dagKey, index) {
+    const dag = localSleepLogs[dagKey];
+    if (!dag || !dag.sessions[index]) return;
+    const s = dag.sessions[index];
+    seRedigerer = { dagKey, index };
+    document.getElementById('se-title').textContent = T('editSleep');
+    document.getElementById('se-delete').style.display = '';
+
+    let start = s.startMs;
+    if (!start) {
+        // Gamle poster har kun "14.05 - 14.50". Vi læser starttiden ud af teksten.
+        const m = /(\d{1,2})[.:](\d{2})/.exec(s.timeDisplay || "");
+        const d = keyToDate(dagKey);
+        if (m) d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+        start = d.getTime();
+    }
+    const slut = s.endMs || (start + (s.durationSec || 0) * 1000);
+    saetSeFelter(start, slut);
+    document.getElementById('sleep-edit').classList.add('vis');
+}
+
+function lukSoevnRet() {
+    document.getElementById('sleep-edit').classList.remove('vis');
+    seRedigerer = null;
+}
+
+document.getElementById('btn-add-sleep')?.addEventListener('click', aabnSoevnTilfoej);
+document.getElementById('se-cancel')?.addEventListener('click', lukSoevnRet);
+document.getElementById('sleep-edit')?.addEventListener('click', e => {
+    if (e.target.id === 'sleep-edit') lukSoevnRet();
+});
+
+document.getElementById('se-save')?.addEventListener('click', async () => {
+    const start = seLaes('start'), slut = seLaes('end');
+    if (start == null || slut == null) { alert(T('pickTime')); return; }
+    if (slut <= start) { alert(T('endBeforeStart')); return; }
+
+    const sek = Math.round((slut - start) / 1000);
+    const post = {
+        startMs: start, endMs: slut,
+        timeDisplay: clockFromMs(start) + " - " + clockFromMs(slut),
+        durationSec: sek,
+        durationText: formatTimeText(sek)
+    };
+    const nyDag = isoKey(new Date(start));
+
+    if (seRedigerer) {
+        const { dagKey, index } = seRedigerer;
+        localSleepLogs[dagKey].sessions.splice(index, 1);
+        localSleepLogs[dagKey].total = localSleepLogs[dagKey].sessions.reduce((s, x) => s + (x.durationSec || 0), 0);
+        if (!localSleepLogs[dagKey].sessions.length) delete localSleepLogs[dagKey];
+        await gemSoevnMaaned(monthKey(dagKey));
+    }
+
+    if (!localSleepLogs[nyDag]) localSleepLogs[nyDag] = { sessions: [], total: 0 };
+    localSleepLogs[nyDag].sessions.push(post);
+    localSleepLogs[nyDag].sessions.sort((a, b) => (a.startMs || 0) - (b.startMs || 0));
+    localSleepLogs[nyDag].total = localSleepLogs[nyDag].sessions.reduce((s, x) => s + (x.durationSec || 0), 0);
+    await gemSoevnMaaned(monthKey(nyDag));
+
+    if (isGuest) gaestSkriv('logs', localSleepLogs);
+    spor(seRedigerer ? 'soevnRettet' : 'soevnTilfoejet');
+    lukSoevnRet();
+    opdaterAlt();
+});
+
+document.getElementById('se-delete')?.addEventListener('click', async () => {
+    if (!seRedigerer) return;
+    if (!confirm(T('deleteSleepSure'))) return;
+    const { dagKey, index } = seRedigerer;
+    await deleteLogEntry(dagKey, index, true);
+    lukSoevnRet();
 });

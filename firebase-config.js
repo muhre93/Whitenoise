@@ -1,24 +1,27 @@
 // ==================================================
-// BabyRo — Fælles Firebase-opsætning
-// Bruges af BÅDE index.html og admin.html
+// BabyBasen — firebase-config.js
+//
+// HER SKRIVER DU DINE EGNE FIREBASE-VÆRDIER.
+//
+// Du finder dem i Firebase: Projektindstillinger (tandhjulet)
+// → Generelt → rul ned til "Dine apps" → vælg web-appen
+// → "SDK-opsætning og konfiguration" → vælg "Konfiguration".
+//
+// ⚠️ VIGTIGT: hver værdi SKAL stå mellem to anførselstegn ("...").
+//    Rigtigt:  apiKey: "AIzaSyB3xY...",
+//    Forkert:  apiKey: AIzaSyB3xY...",     ← mangler det første "
+//    Mangler et anførselstegn, virker HELE appen ikke.
 // ==================================================
-// VIGTIGT: ALLE værdier skal stå i "anførselstegn".
-// Mangler bare ét tegn, går hele appen i stå.
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAiev2iHG8I31LSe-oBL7yjQMiDtVYEQHM",
-  authDomain: "babyro-b320c.firebaseapp.com",
-  projectId: "babyro-b320c",
-  storageBucket: "babyro-b320c.firebasestorage.app",
-  messagingSenderId: "260945437474",
-  appId: "1:260945437474:web:f670ae0502e1843125fb7b",
-  measurementId: "G-9HT4SHH5BR"
-  };
+const FIREBASE_CONFIG = {
+    apiKey: "SKRIV_DIN_API_KEY_HER",
+    authDomain: "dit-projekt.firebaseapp.com",
+    projectId: "dit-projekt",
+    storageBucket: "dit-projekt.firebasestorage.app",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abc123def456"
+};
 
-// De e-mails der må logge ind på admin.html.
-// Skriv din egen Google-mail her (små bogstaver).
-// BEMÆRK: Dette er kun en "dørmand" i browseren — den rigtige sikkerhed
-// ligger i Firebase-reglerne. Se filen SIKKERHED-regler.md.
-const ADMIN_EMAILS = [
-    "muhre93@gmail.com"
-];
+// Din egen e-mail. Kun den kan komme ind på admin.html.
+// Skriv den præcis som du skriver den, når du logger ind med Google.
+const ADMIN_EMAILS = ["kronborgnielsen@gmail.com"];

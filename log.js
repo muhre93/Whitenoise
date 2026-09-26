@@ -1,5 +1,5 @@
 // ==================================================
-// BabyRo — log.js
+// BabyBasen — log.js
 // Periodevælger, nøgletal og diagrammer på Søvn-siden
 // ==================================================
 
@@ -27,8 +27,7 @@ document.querySelectorAll('.range-btn').forEach(btn => {
 document.getElementById('btn-apply-range')?.addEventListener('click', () => {
     const f = document.getElementById('range-from').value;
     const t = document.getElementById('range-to').value;
-    if (!f || !t) { alert(T('showPeriod')); return; }
-    if (f > t) { alert("Fra-datoen skal ligge før til-datoen."); return; }
+    if (!f || !t || f > t) { alert(T('endBeforeStart')); return; }
     logFra = f; logTil = t;
     document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
     renderLogPage();
@@ -63,7 +62,7 @@ function sessionStartMin(s) {
         const d = new Date(s.startMs);
         return d.getHours() * 60 + d.getMinutes();
     }
-    const m = /Kl\.\s*(\d{1,2})[.:](\d{2})/.exec(s.timeDisplay || "");
+    const m = /(\d{1,2})[.:](\d{2})/.exec(s.timeDisplay || "");
     return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
 
@@ -131,9 +130,9 @@ function tegnChart() {
             formatY: v => v.toFixed(0) + 't',
             formatX: v => dage[Math.round(v)] ? shortDate(dage[Math.round(v)].key) : '',
             xTicks: Math.min(6, Math.max(1, dage.length - 1)),
-            legend: `<span class="c-key"><i class="c-swatch c-sw-s1"></i>Faktisk søvn</span>
-                     <span class="c-key"><i class="c-swatch c-sw-s2"></i>3-dages gennemsnit</span>
-                     ${fase ? `<span class="c-key"><i class="c-swatch c-sw-band"></i>Anbefalet ${fase.soevnMin}-${fase.soevnMax} t</span>` : ''}`
+            legend: `<span class="c-key"><i class="c-swatch c-sw-s1"></i>${T('actualSleep')}</span>
+                     <span class="c-key"><i class="c-swatch c-sw-s2"></i>${T('avg3day')}</span>
+                     ${fase ? `<span class="c-key"><i class="c-swatch c-sw-band"></i>${T('planTarget')} ${fase.soevnMin}-${fase.soevnMax} t</span>` : ''}`
         });
         help.textContent = T('helpTrend');
     }

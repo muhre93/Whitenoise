@@ -1,197 +1,244 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BabyRo — Admin</title>
-    <link rel="stylesheet" href="admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BabyBasen — admin</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<!-- ============ LOGIN-PORT ============ -->
-<div id="gate" class="gate">
-    <div class="gate-box">
-        <h1>BabyRo Admin</h1>
-        <p id="gate-text">Log ind med din administrator-konto for at redigere appen.</p>
-        <button id="btn-admin-login" class="btn btn-primary">Log ind med Google</button>
-        <button id="btn-gate-logout" class="btn btn-ghost" style="display:none;">Log ud og prøv en anden konto</button>
+<!-- ============ LOGIN ============ -->
+<div id="login-skaerm" class="login-skaerm">
+    <div class="login-boks">
+        <div class="login-ikon">🔐</div>
+        <h1>BabyBasen admin</h1>
+        <p>Log ind med den Google-konto, der står som admin.</p>
+        <button id="btn-login" class="knap primaer">Log ind med Google</button>
+        <p id="login-fejl" class="fejl"></p>
     </div>
 </div>
 
 <!-- ============ ADMIN ============ -->
 <div id="admin" style="display:none;">
 
-    <header class="admin-header">
-        <div>
-            <h1>BabyRo Admin</h1>
-            <p id="admin-user" class="muted"></p>
-        </div>
-        <div class="header-actions">
-            <a href="index.html" target="_blank" class="btn btn-ghost">Se appen ↗</a>
-            <button id="btn-logout" class="btn btn-ghost">Log ud</button>
-        </div>
-    </header>
-
-    <nav class="admin-nav">
-        <button class="tab-btn active" data-tab="tab-sounds">🎵 Lyde</button>
-        <button class="tab-btn" data-tab="tab-general">✏️ Generelle tekster</button>
-        <button class="tab-btn" data-tab="tab-sleep">👶 Søvn-artikler</button>
-        <button class="tab-btn" data-tab="tab-leaps">🐯 Tigerspring</button>
-        <button class="tab-btn" data-tab="tab-lists">⭐ Milepæle</button>
-        <button class="tab-btn" data-tab="tab-files">📁 Filer</button>
-        <button class="tab-btn" data-tab="tab-backup">💾 Backup</button>
-    </nav>
-
-    <div id="save-bar" class="save-bar">
-        <span id="save-status">Alt er gemt.</span>
-        <button id="btn-save-all" class="btn btn-primary">Gem og udgiv ændringer</button>
+<header class="top">
+    <div class="top-venstre">
+        <h1>BabyBasen <span class="badge">admin</span></h1>
+        <p id="hvem"></p>
     </div>
+    <div class="top-hoejre">
+        <span id="gem-status" class="gem-status"></span>
+        <button id="btn-logout" class="knap lille">Log ud</button>
+    </div>
+</header>
 
-    <!-- ---------- LYDE ---------- -->
-    <section id="tab-sounds" class="tab-panel active">
-        <div class="section-intro">
-            <h2>Lyde</h2>
-            <p class="muted">Tilføj lydkort, upload mp3-filer og omdøb varianter. Rækkefølgen her er også rækkefølgen i appen.</p>
+<nav class="faner">
+    <button class="fane aktiv" data-fane="f-stats">📊 Statistik</button>
+    <button class="fane" data-fane="f-feedback">💬 Feedback <span id="fb-antal" class="prik" style="display:none;"></span></button>
+    <button class="fane" data-fane="f-lyde">🔊 Lyde</button>
+    <button class="fane" data-fane="f-tekster">✏️ Tekster</button>
+    <button class="fane" data-fane="f-artikler">📚 Artikler</button>
+    <button class="fane" data-fane="f-filer">📁 Filer</button>
+    <button class="fane" data-fane="f-opsaet">⚙️ Opsætning</button>
+</nav>
+
+<!-- ============ STATISTIK ============ -->
+<main id="f-stats" class="panel aktiv">
+    <section class="kort">
+        <div class="kort-hoved">
+            <h2>Hvor mange bruger appen?</h2>
+            <div class="periode">
+                <button class="p-knap aktiv" data-dage="7">7 dage</button>
+                <button class="p-knap" data-dage="14">14 dage</button>
+                <button class="p-knap" data-dage="30">30 dage</button>
+                <button class="p-knap" data-dage="90">90 dage</button>
+            </div>
         </div>
-        <div id="sounds-list"></div>
-        <button id="btn-add-category" class="btn btn-add">+ Tilføj nyt lydkort</button>
+        <div id="stats-tal" class="tal-net"></div>
+        <p class="hjaelp">Tallene er anonyme. Der gemmes ingen navne, e-mails, søvntider eller
+        oplysninger om børnene — kun hvor mange gange noget blev brugt.</p>
     </section>
 
-    <!-- ---------- GENERELLE TEKSTER ---------- -->
-    <section id="tab-general" class="tab-panel">
-        <div class="section-intro">
-            <h2>Generelle tekster</h2>
-            <p class="muted">Skriv <code>{navn}</code> et sted i teksten, så indsætter appen automatisk barnets navn. Felter markeret med HTML må gerne indeholde tags som &lt;strong&gt; og &lt;br&gt;.</p>
-        </div>
-        <div id="general-list"></div>
+    <section class="kort">
+        <h2>Brugere pr. dag</h2>
+        <div id="stats-graf"></div>
     </section>
 
-    <!-- ---------- SØVN ---------- -->
-    <section id="tab-sleep" class="tab-panel">
-        <div class="section-intro">
-            <h2>Søvn-artikler</h2>
-            <p class="muted">Kortene vises i denne rækkefølge under fanen "Søvn". Brødteksten er HTML — brug &lt;p&gt;afsnit&lt;/p&gt; og &lt;ul class="leap-list"&gt;&lt;li&gt;punkt&lt;/li&gt;&lt;/ul&gt;.</p>
+    <section class="kort">
+        <div class="kort-hoved">
+            <h2>Hvad bliver brugt?</h2>
+            <p class="hjaelp" style="margin:0;">Sorteret efter mest brugt. Det nederste på listen er
+            kandidater til at blive fjernet.</p>
         </div>
-        <label class="field">
-            <span>Sidens overskrift</span>
-            <input type="text" data-key="sleepTitle" class="general-input">
-        </label>
-        <label class="field">
-            <span>Sidens underoverskrift</span>
-            <input type="text" data-key="sleepSub" class="general-input">
-        </label>
-        <div id="sleep-list"></div>
-        <button id="btn-add-sleep" class="btn btn-add">+ Tilføj nyt søvn-kort</button>
+        <div id="stats-brug"></div>
     </section>
 
-    <!-- ---------- TIGERSPRING ---------- -->
-    <section id="tab-leaps" class="tab-panel">
-        <div class="section-intro">
-            <h2>Tigerspring</h2>
-            <p class="muted">Uge-tallene styrer beregneren i appen: Den fremhæver automatisk det spring, barnet er i, ud fra terminsdatoen.</p>
+    <section class="kort">
+        <h2>Telefon eller computer</h2>
+        <div id="stats-enheder" class="tal-net"></div>
+    </section>
+</main>
+
+<!-- ============ FEEDBACK ============ -->
+<main id="f-feedback" class="panel">
+    <section class="kort">
+        <div class="kort-hoved">
+            <h2>Beskeder fra brugerne</h2>
+            <div class="periode">
+                <button class="fb-filter aktiv" data-type="">Alle</button>
+                <button class="fb-filter" data-type="godt">😊 Godt</button>
+                <button class="fb-filter" data-type="daarligt">😕 Driller</button>
+                <button class="fb-filter" data-type="ide">💡 Idéer</button>
+                <button class="fb-filter" data-type="fejl">🐛 Fejl</button>
+            </div>
         </div>
-        <label class="field">
-            <span>Sidens overskrift</span>
-            <input type="text" data-key="leapTitle" class="general-input">
+        <div id="fb-liste"></div>
+    </section>
+</main>
+
+<!-- ============ LYDE ============ -->
+<main id="f-lyde" class="panel">
+    <section class="kort">
+        <h2>Upload en ny lydfil</h2>
+        <p class="hjaelp">Filen lægges op i Cloudflare. Bagefter kan du vælge den i menuen
+        under hver lyd herunder. Max 24 MB pr. fil. MP3 virker bedst.</p>
+        <div class="upload-felt">
+            <input type="file" id="lyd-fil" accept="audio/*">
+            <button id="btn-upload" class="knap primaer">Læg op</button>
+        </div>
+        <p id="upload-status" class="hjaelp"></p>
+    </section>
+
+    <section class="kort">
+        <div class="kort-hoved">
+            <h2>Lydkategorier</h2>
+            <button id="btn-ny-kategori" class="knap lille">+ Ny kategori</button>
+        </div>
+        <div id="lyd-liste"></div>
+        <div class="gem-linje">
+            <button id="btn-gem-lyde" class="knap primaer">Gem lydene</button>
+            <button id="btn-nulstil-lyde" class="knap fare">Tilbage til standard</button>
+        </div>
+    </section>
+</main>
+
+<!-- ============ TEKSTER ============ -->
+<main id="f-tekster" class="panel">
+    <section class="kort">
+        <h2>Navnet på appen</h2>
+        <p class="hjaelp">Står øverst på siden og i browserens fane.</p>
+        <div id="txt-felter"></div>
+    </section>
+
+    <section class="kort">
+        <h2>Knapper og valg</h2>
+        <label class="skifte">
+            <input type="checkbox" id="vis-neutral">
+            <span>
+                <strong>Vis "Neutral"-knappen under Dit barn</strong>
+                <em>Slået fra vælger man Dreng, Pige eller en af de 10 farver.
+                Slår du den til, kommer den gamle Neutral-knap tilbage ved siden af farvevælgeren.</em>
+            </span>
         </label>
-        <label class="field">
-            <span>Sidens underoverskrift</span>
-            <input type="text" data-key="leapSub" class="general-input">
-        </label>
-        <label class="field">
-            <span>Intro-kort: overskrift</span>
-            <input type="text" data-key="leapIntroTitle" class="general-input">
-        </label>
-        <label class="field">
-            <span>Intro-kort: tekst (HTML)</span>
-            <textarea rows="8" data-key="leapIntroBody" class="general-input"></textarea>
-        </label>
-        <div id="leaps-list"></div>
-        <button id="btn-add-leap" class="btn btn-add">+ Tilføj nyt spring</button>
-        <label class="field" style="margin-top:25px;">
-            <span>Afsluttende kort: overskrift</span>
-            <input type="text" data-key="leapOutroTitle" class="general-input">
-        </label>
-        <label class="field">
-            <span>Afsluttende kort: tekst (HTML)</span>
-            <textarea rows="6" data-key="leapOutroBody" class="general-input"></textarea>
+        <label class="skifte">
+            <input type="checkbox" id="vis-farver">
+            <span>
+                <strong>Vis farvevælgeren</strong>
+                <em>Slår du den fra, kan man kun vælge Dreng eller Pige.</em>
+            </span>
         </label>
     </section>
 
-    <!-- ---------- LISTER ---------- -->
-    <section id="tab-lists" class="tab-panel">
-        <div class="section-intro">
-            <h2>Milepæle-forslag</h2>
-            <p class="muted">De forslag, forældre får, når de skriver en milepæl. Rækkefølgen her er rækkefølgen i appen.</p>
-        </div>
-        <div id="ms-list"></div>
-        <button id="btn-add-ms" class="btn btn-add">+ Tilføj forslag</button>
-    </section>
-
-    <!-- ---------- FILER ---------- -->
-    <section id="tab-files" class="tab-panel">
-        <div class="section-intro">
-            <h2>Filer på Cloudflare</h2>
-            <p class="muted">Alle lydfiler du uploader, ligger her. Kopiér en adresse og indsæt den i en variant under fanen Lyde.</p>
-        </div>
-
-        <div class="card">
-            <h3>Adgangsnøgle</h3>
-            <p class="muted">Nøglen fra din Worker (ADMIN_TOKEN). Den gemmes kun i denne fane og forsvinder, når du lukker browseren.</p>
-            <label class="field" style="margin-top:12px;">
-                <span>Cloudflare adgangsnøgle</span>
-                <input type="password" id="worker-token" placeholder="Indsæt din ADMIN_TOKEN">
-            </label>
-            <button id="btn-save-token" class="btn btn-primary">Gem nøgle for denne session</button>
-            <span id="token-status" class="upload-info" style="margin-left:10px;"></span>
-        </div>
-
-        <div class="card">
-            <h3>Push-beskeder</h3>
-            <p class="muted">Skal kun gøres én gang. Laver de nøgler, der gør, at appen kan sende påmindelser til forældrenes telefoner.</p>
-            <div id="push-state" class="upload-info" style="display:block; margin:12px 0;">Tjekker...</div>
-            <button id="btn-push-setup" class="btn btn-primary">Slå push til</button>
-        </div>
-
-        <div class="card">
-            <h3>Uploadede filer</h3>
-            <button id="btn-refresh-files" class="btn btn-ghost" style="margin-bottom:15px;">Opdatér listen</button>
-            <div id="files-list"><p class="muted">Gem din nøgle og tryk "Opdatér listen".</p></div>
+    <section class="kort">
+        <h2>Forslag til milepæle</h2>
+        <p class="hjaelp">Ét forslag pr. linje. De vises som forslag i feltet "Hvad skete der?".</p>
+        <div class="tosprog">
+            <label class="felt"><span>🇩🇰 Dansk</span><textarea id="ms-da" rows="10"></textarea></label>
+            <label class="felt"><span>🇬🇧 English</span><textarea id="ms-en" rows="10"></textarea></label>
         </div>
     </section>
 
-    <!-- ---------- BACKUP ---------- -->
-    <section id="tab-backup" class="tab-panel">
-        <div class="section-intro">
-            <h2>Backup & nulstilling</h2>
-            <p class="muted">Hent alt indhold som en fil, før du laver store ændringer. Så kan du altid lægge det tilbage.</p>
-        </div>
-        <div class="card">
-            <h3>Download backup</h3>
-            <p class="muted">Gemmer lyde og tekster som én JSON-fil på din computer.</p>
-            <button id="btn-export" class="btn btn-primary">Download backup-fil</button>
-        </div>
-        <div class="card">
-            <h3>Gendan fra backup</h3>
-            <p class="muted">Indlæser en tidligere backup. Husk at trykke "Gem og udgiv" bagefter.</p>
-            <input type="file" id="import-file" accept="application/json">
-        </div>
-        <div class="card danger">
-            <h3>Nulstil til standardindhold</h3>
-            <p class="muted">Sætter alle tekster og lyde tilbage til det, appen blev leveret med. Dine uploadede lydfiler slettes ikke.</p>
-            <button id="btn-reset" class="btn btn-danger">Nulstil alt indhold</button>
+    <div class="gem-linje">
+        <button id="btn-gem-tekster" class="knap primaer">Gem teksterne</button>
+        <button id="btn-nulstil-tekster" class="knap fare">Tilbage til standard</button>
+    </div>
+</main>
+
+<!-- ============ ARTIKLER ============ -->
+<main id="f-artikler" class="panel">
+    <section class="kort">
+        <h2>Artikler under Viden</h2>
+        <p class="hjaelp">Du kan skrive begge sprog her. Dansk til venstre, engelsk til højre.
+        Feltet forstår simpel HTML: <code>&lt;p&gt;afsnit&lt;/p&gt;</code> og
+        <code>&lt;strong&gt;fed&lt;/strong&gt;</code>. Skriver du <code>{navn}</code>,
+        bliver det byttet ud med barnets navn.</p>
+        <div class="under-faner">
+            <button class="under-fane aktiv" data-del="soevn">😴 Søvn</button>
+            <button class="under-fane" data-del="spring">🐯 Tigerspring</button>
         </div>
     </section>
+
+    <div id="art-soevn" class="art-del"></div>
+    <div id="art-spring" class="art-del" style="display:none;"></div>
+
+    <div class="gem-linje">
+        <button id="btn-gem-artikler" class="knap primaer">Gem artiklerne</button>
+        <button id="btn-nulstil-artikler" class="knap fare">Tilbage til standard</button>
+    </div>
+</main>
+
+<!-- ============ FILER ============ -->
+<main id="f-filer" class="panel">
+    <section class="kort">
+        <div class="kort-hoved">
+            <h2>Filer i Cloudflare</h2>
+            <button id="btn-hent-filer" class="knap lille">Opdater listen</button>
+        </div>
+        <div id="fil-liste"></div>
+    </section>
+</main>
+
+<!-- ============ OPSÆTNING ============ -->
+<main id="f-opsaet" class="panel">
+    <section class="kort">
+        <h2>Forbindelser</h2>
+        <div id="forbindelser"></div>
+    </section>
+
+    <section class="kort">
+        <h2>Push-påmindelser</h2>
+        <p class="hjaelp">Tryk én gang. Så laver Cloudflare de nøgler, der skal til for at sende
+        beskeder til telefonerne. Du skal kun gøre det én gang — nøglerne bliver gemt.</p>
+        <button id="btn-push-setup" class="knap primaer">Slå push til</button>
+        <p id="push-status" class="hjaelp"></p>
+    </section>
+
+    <section class="kort">
+        <h2>Hvor står hvad?</h2>
+        <table class="opsaet-tabel">
+            <tr><th>Firebase-nøgler</th><td><code>firebase-config.js</code> på GitHub</td></tr>
+            <tr><th>Din admin-mail</th><td><code>firebase-config.js</code> → <code>ADMIN_EMAILS</code></td></tr>
+            <tr><th>Cloudflare-adresse</th><td><code>cloudflare-config.js</code> → <code>CLOUDFLARE_URL</code></td></tr>
+            <tr><th>Hemmelig kode</th><td><code>cloudflare-config.js</code> → <code>CLOUDFLARE_TOKEN</code><br>
+                og i Cloudflare under Variables and Secrets som <code>ADMIN_TOKEN</code></td></tr>
+            <tr><th>Firestore-regler</th><td>Firebase → Firestore Database → Rules</td></tr>
+        </table>
+    </section>
+</main>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
 <script src="firebase-config.js"></script>
 <script src="cloudflare-config.js"></script>
 <script src="defaults.js"></script>
+<script src="articles.js"></script>
+<script src="charts.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>

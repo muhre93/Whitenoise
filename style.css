@@ -563,3 +563,259 @@ body.ur-koerer .time-display { color: var(--accent-green); }
     font-size: 1.05rem; font-weight: 700; color: var(--text-light);
     margin: -4px 0 8px; letter-spacing: .3px;
 }
+
+/* ==================================================
+   ===== NYT I v11 =================================
+   Hjørne-værktøjer, profilmenu, bundnav, gæstelås,
+   farvevælger, låseskærm, feedback og mobiloprydning
+   ================================================== */
+
+/* ---------- 1. HJØRNET ØVERST ---------- */
+.header-inner {
+    max-width: 1000px; margin: 0 auto;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+}
+.header-text { text-align: left; flex: 1; min-width: 0; }
+.top-header { text-align: left; padding: 18px 0 12px; }
+.top-header h1 { font-size: 1.85rem; letter-spacing: .5px; }
+.subtitle { margin-top: 0; font-size: .92rem; }
+
+.corner-tools { display: flex; gap: 7px; align-items: center; flex-shrink: 0; padding-top: 4px; }
+.corner-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--card-bg); border: 1px solid var(--nav-bg);
+    color: var(--text-dark); font-size: 1.05rem; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: .15s; padding: 0; line-height: 1;
+}
+.corner-btn:hover { border-color: var(--accent-green); }
+.corner-btn:active { transform: scale(.94); }
+.lang-btn { font-size: .78rem; letter-spacing: .04em; }
+.avatar-btn { background: var(--accent-green); border-color: var(--accent-green); color: #fff; font-size: 1.05rem; }
+.avatar-btn.gaest { background: var(--nav-bg); color: var(--text-light); border-color: var(--nav-bg); }
+
+/* De gamle store knapper i profilen skjules ikke — de virker stadig —
+   men på små skærme er hjørnet det primære sted. */
+
+/* ---------- 2. PROFILMENUEN ---------- */
+.sheet {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    display: none; align-items: flex-end; justify-content: center; z-index: 900;
+    backdrop-filter: blur(2px);
+}
+.sheet.vis { display: flex; }
+.sheet-box {
+    background: var(--card-bg); width: 100%; max-width: 480px;
+    border-radius: 24px 24px 0 0; padding: 20px 20px 28px;
+    box-shadow: 0 -8px 40px rgba(0,0,0,.2);
+    max-height: 88vh; overflow-y: auto;
+    animation: sheetUp .22s ease;
+}
+@keyframes sheetUp { from { transform: translateY(22px); opacity: .6; } to { transform: none; opacity: 1; } }
+.sheet-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.sheet-head strong { display: block; font-size: 1.15rem; }
+.sheet-head small { color: var(--text-light); font-size: .85rem; }
+.icon-round {
+    width: 34px; height: 34px; border-radius: 50%; border: none;
+    background: var(--bg-main); color: var(--text-dark); font-size: .95rem; cursor: pointer; flex-shrink: 0;
+}
+.sheet-children { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.barn-chip {
+    background: var(--bg-main); border: 1px solid var(--nav-bg); color: var(--text-dark);
+    padding: 8px 14px; border-radius: 20px; font-size: .88rem; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.barn-chip.valgt { background: var(--accent-green); border-color: var(--accent-green); color: #fff; }
+.sheet-menu { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; }
+.sheet-item {
+    display: flex; align-items: center; gap: 13px; width: 100%;
+    background: none; border: none; text-align: left; cursor: pointer;
+    padding: 13px 10px; border-radius: 12px; color: var(--text-dark); font-family: inherit;
+}
+.sheet-item:hover { background: var(--bg-main); }
+.sheet-item:active { background: var(--nav-bg); }
+.sheet-item span { font-size: 1.25rem; width: 26px; text-align: center; flex-shrink: 0; }
+.sheet-item em { font-style: normal; font-size: .98rem; font-weight: 600; }
+
+/* ---------- 3. NAVIGATION ---------- */
+.app-nav { gap: 5px; margin-bottom: 20px; }
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 6px; max-width: none; font-size: .74rem; line-height: 1.2;
+}
+.nav-item .ni { font-size: 1.22rem; line-height: 1; }
+.nav-item em { font-style: normal; font-weight: 700; }
+
+/* Under 620 px sidder navigationen fast i bunden, som i en rigtig app */
+@media (max-width: 620px) {
+    body { padding-left: 12px; padding-right: 12px; padding-bottom: 82px; }
+    .app-nav {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 800;
+        background: var(--card-bg); border-top: 1px solid var(--nav-bg);
+        margin: 0; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+        gap: 0; border-radius: 0; box-shadow: 0 -3px 16px rgba(0,0,0,.06);
+    }
+    .nav-item { background: none; border-radius: 12px; flex: 1; padding: 7px 2px; font-size: .67rem; }
+    .nav-item.active { background: none; color: var(--accent-green); }
+    .nav-item.active .ni { transform: scale(1.12); }
+    .top-header { padding: 14px 0 10px; }
+    .top-header h1 { font-size: 1.5rem; }
+    .subtitle { font-size: .85rem; }
+    .corner-btn { width: 37px; height: 37px; font-size: .98rem; }
+}
+
+/* ---------- 4. GÆSTELÅS ---------- */
+.guest-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--btn-pause); color: #4a4a4a;
+    border-radius: 14px; padding: 11px 15px; margin: 0 auto 20px;
+    max-width: 1000px; font-size: .88rem; font-weight: 600;
+}
+body.dark-theme .guest-banner { color: #2a2a2a; }
+
+.laas-kort {
+    background: var(--card-bg); border-radius: 20px; padding: 34px 24px;
+    text-align: center; box-shadow: 0 4px 18px rgba(0,0,0,.04);
+    max-width: 480px; margin: 10px auto 24px;
+}
+.laas-ikon { font-size: 2.6rem; margin-bottom: 10px; }
+.laas-kort h3 { font-size: 1.15rem; color: var(--accent-green); margin-bottom: 8px; }
+.laas-kort p { color: var(--text-light); font-size: .93rem; margin-bottom: 20px; }
+.laas-kort .google-btn { max-width: 300px; margin: 0 auto; }
+
+/* ---------- 5. FARVEVÆLGER ---------- */
+.farve-linje {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    padding: 16px 4px 6px; margin-top: 6px;
+    border-top: 1px dashed var(--nav-bg);
+}
+.farve-prik {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--prik); border: 3px solid transparent;
+    cursor: pointer; padding: 0; transition: .15s; position: relative;
+}
+.farve-prik:hover { transform: scale(1.08); }
+.farve-prik.valgt { border-color: var(--text-dark); }
+.farve-prik.valgt::after {
+    content: '✓'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.05rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+#color-row { display: none; }
+#color-row.vis { display: flex; }
+
+/* De 10 babyfarver som tema */
+body[data-farve="blue"]     { --accent-green: #6E9FC5; --btn-save: #8FB8D6; --nav-bg: #DEE7EE; }
+body[data-farve="pink"]     { --accent-green: #D2879F; --btn-save: #E0A6B8; --nav-bg: #F2E2E7; }
+body[data-farve="mint"]     { --accent-green: #7FBDA8; --btn-save: #9ECFBE; --nav-bg: #E0EEE9; }
+body[data-farve="lavender"] { --accent-green: #9D93C4; --btn-save: #B5AED6; --nav-bg: #E7E4F0; }
+body[data-farve="peach"]    { --accent-green: #E3A183; --btn-save: #EDBBA4; --nav-bg: #F7E7DE; }
+body[data-farve="sage"]     { --accent-green: #8DA399; --btn-save: #A4C3D2; --nav-bg: #E5E0D5; }
+body[data-farve="butter"]   { --accent-green: #C9A94F; --btn-save: #DCC580; --nav-bg: #F2EBD7; }
+body[data-farve="sand"]     { --accent-green: #C2A98C; --btn-save: #D4C1AA; --nav-bg: #EFE7DC; }
+body[data-farve="seafoam"]  { --accent-green: #79B4B4; --btn-save: #98C8C8; --nav-bg: #DFEBEB; }
+body[data-farve="clay"]     { --accent-green: #C08D84; --btn-save: #D2A8A0; --nav-bg: #EFE2DF; }
+
+body.dark-theme[data-farve="blue"]     { --accent-green: #5580A3; --btn-save: #4E748F; --nav-bg: #26303A; }
+body.dark-theme[data-farve="pink"]     { --accent-green: #AB6A80; --btn-save: #96596D; --nav-bg: #372A2E; }
+body.dark-theme[data-farve="mint"]     { --accent-green: #619A87; --btn-save: #55897A; --nav-bg: #26332F; }
+body.dark-theme[data-farve="lavender"] { --accent-green: #7C739F; --btn-save: #6C6490; --nav-bg: #2C2A38; }
+body.dark-theme[data-farve="peach"]    { --accent-green: #B87F63; --btn-save: #A57157; --nav-bg: #372C26; }
+body.dark-theme[data-farve="sage"]     { --accent-green: #688579; --btn-save: #60889c; --nav-bg: #2C2C2C; }
+body.dark-theme[data-farve="butter"]   { --accent-green: #A2883A; --btn-save: #8F7733; --nav-bg: #353021; }
+body.dark-theme[data-farve="sand"]     { --accent-green: #9C866B; --btn-save: #89755D; --nav-bg: #322C24; }
+body.dark-theme[data-farve="seafoam"]  { --accent-green: #5B9090; --btn-save: #4F8080; --nav-bg: #243030; }
+body.dark-theme[data-farve="clay"]     { --accent-green: #9C6E66; --btn-save: #8A605A; --nav-bg: #342A28; }
+
+/* ---------- 6. LÅSESKÆRM ---------- */
+.laase-linje {
+    display: flex; flex-direction: column; gap: 8px; align-items: center;
+    margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--nav-bg);
+}
+#btn-lock-toggle { max-width: 320px; width: 100%; }
+#lock-status { color: var(--text-light); font-size: .85rem; text-align: center; }
+#lock-status.notif-error { color: #c98080; }
+#lock-audio { display: none; }
+
+/* ---------- 7. FEEDBACK ---------- */
+.fb-types { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.fb-btn {
+    flex: 1; min-width: 100px;
+    background: var(--bg-main); border: 2px solid var(--bg-main); color: var(--text-dark);
+    padding: 12px 10px; border-radius: 12px; font-size: .9rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: .15s;
+}
+.fb-btn.active { border-color: var(--accent-green); background: var(--card-bg); color: var(--accent-green); }
+#fb-text { min-height: 120px; }
+#fb-status.notif-error { color: #c98080; }
+#fb-status.notif-ok { color: var(--accent-green); font-weight: 700; }
+
+/* ---------- 8. PLEJE-DAGBOG ---------- */
+.care-day-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.day-nav { display: flex; gap: 6px; }
+.care-list { list-style: none; padding: 0; margin: 0; }
+.care-list li {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-bottom: 1px dashed var(--bg-main);
+}
+.care-ikon { font-size: 1.5rem; width: 34px; text-align: center; flex-shrink: 0; }
+.care-tekst { flex: 1; min-width: 0; }
+.care-tekst strong { display: block; font-size: .95rem; }
+.care-meta { color: var(--text-light); font-size: .82rem; }
+.care-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.care-hero-tal { background: var(--bg-main); border-radius: 14px; padding: 14px; text-align: center; }
+.care-hero-tal strong { display: block; font-size: 1.6rem; color: var(--accent-green); font-variant-numeric: tabular-nums; }
+.care-hero-tal span { display: block; font-size: .82rem; font-weight: 600; }
+.care-hero-tal em { display: block; font-size: .76rem; color: var(--text-light); font-style: normal; margin-top: 3px; }
+
+/* ---------- 9. VÆKST OG MILEPÆLE ---------- */
+.measure-row {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    padding: 13px 0; border-bottom: 1px dashed var(--bg-main);
+}
+.measure-vals { font-size: .92rem; margin-top: 2px; }
+.measure-vals em { color: var(--text-light); font-size: .8rem; font-style: normal; }
+.measure-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+.ms-timeline { position: relative; padding-left: 8px; }
+.ms-item { display: flex; gap: 14px; padding-bottom: 22px; position: relative; }
+.ms-item:not(:last-child)::before {
+    content: ''; position: absolute; left: 6px; top: 20px; bottom: 0;
+    width: 2px; background: var(--nav-bg);
+}
+.ms-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent-green); flex-shrink: 0; margin-top: 5px; z-index: 1; }
+.ms-body { flex: 1; min-width: 0; }
+.ms-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.ms-body p { font-size: .92rem; margin: 6px 0 0; }
+.ms-photo, .ms-thumb { max-width: 100%; border-radius: 14px; margin-top: 10px; display: block; }
+.ms-thumb { max-height: 180px; width: auto; }
+
+/* ---------- 10. GENVEJ TIL RAPPORTEN ---------- */
+.print-row { display: flex; justify-content: center; margin: 18px 0 4px; }
+.genvej-rapport { max-width: 340px; width: 100%; }
+
+/* ---------- 11. SMÅ TING ---------- */
+.c-mark { font-size: 13px; }
+.empty-state { color: var(--text-light); font-size: .92rem; text-align: center; padding: 26px 14px; }
+.se-fejl { color: #c98080; font-weight: 700; }
+.hint {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--nav-bg); color: var(--text-light);
+    font-size: .74rem; font-weight: 700; cursor: help; vertical-align: middle;
+}
+
+/* Mobiloprydning: felter og knapper får plads nok til tommelfingre */
+@media (max-width: 620px) {
+    .panel, .profile-card, .control-center { padding: 18px 15px; border-radius: 18px; }
+    .measure-form { grid-template-columns: 1fr; }
+    .time-display { font-size: 2.9rem; }
+    .action-btn { padding: 14px 16px; font-size: .95rem; }
+    .time-actions { gap: 9px; }
+    .quick-range button, .chart-tabs button { font-size: .8rem; padding: 8px 11px; }
+    .date-range { flex-direction: column; align-items: stretch; }
+    .care-hero { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .sound-grid { gap: 11px; }
+    .page-header h2 { font-size: 1.45rem; }
+    input, select, textarea { font-size: 16px; }   /* forhindrer at iPhone zoomer ind */
+}

@@ -4,6 +4,7 @@
 
 let SOUNDS = JSON.parse(JSON.stringify(DEFAULT_SOUNDS));
 let TEXTS = JSON.parse(JSON.stringify(DEFAULT_TEXTS));
+let ARTIKLER = JSON.parse(JSON.stringify(DEFAULT_ARTICLES));
 
 let currentUserId = null;
 let currentEmail = "";
@@ -14,6 +15,7 @@ let childId = null;
 let childList = [];                 // [{id, name, gender, ...}]
 let babyName = "Baby";
 let babyGender = "neutral";
+let babyColor = "";        // tom = brug køn
 let babyDueDate = "";
 let babyBirthDate = "";
 let birthInfo = {};
@@ -153,12 +155,15 @@ async function sletMilepaelData(id) {
 // ==========================================
 // Artiklerne under Viden findes både på dansk (dine egne fra admin)
 // og engelsk (den indbyggede oversættelse)
+// Artiklerne kommer fra admin (ARTIKLER) og falder tilbage
+// på standardindholdet. Begge dele findes på begge sprog.
 function indhold(key) {
-    if (typeof SPROG !== 'undefined' && SPROG === 'en' &&
-        typeof INDHOLD_EN !== 'undefined' && INDHOLD_EN[key] !== undefined) {
-        return INDHOLD_EN[key];
-    }
-    return TEXTS[key];
+    const kilde = (typeof ARTIKLER !== 'undefined' && ARTIKLER && ARTIKLER[key] !== undefined)
+        ? ARTIKLER[key] : DEFAULT_ARTICLES[key];
+    return kilde;
+}
+function indholdTekst(key) {
+    return String(lokal(indhold(key)) || '').replaceAll('{navn}', babyName);
 }
 
 function t(key) {
@@ -170,12 +175,14 @@ function fill(id, key) { const el = document.getElementById(id); if (el) el.inne
 async function loadContentFromCloud() {
     if (!db) return;
     try {
-        const [s, x] = await Promise.all([
+        const [s, x, a] = await Promise.all([
             db.collection("content").doc("sounds").get(),
-            db.collection("content").doc("texts").get()
+            db.collection("content").doc("texts").get(),
+            db.collection("content").doc("articles").get()
         ]);
         if (s.exists && Array.isArray(s.data().categories) && s.data().categories.length) SOUNDS = s.data().categories;
         if (x.exists && x.data()) TEXTS = Object.assign({}, DEFAULT_TEXTS, x.data());
+        if (a.exists && a.data()) ARTIKLER = Object.assign({}, DEFAULT_ARTICLES, a.data());
     } catch (e) { console.log("Bruger standardindhold.", e); }
     renderSounds();
     renderTexts();
@@ -188,25 +195,36 @@ function renderSounds() {
     grid.innerHTML = SOUNDS.map(c => `
         <div class="sound-card">
             <div class="card-icon">${c.icon || '🔊'}</div>
-            <h3>${esc(c.title)}</h3>
+            <h3>${esc(lokal(c.title))}</h3>
             <select class="sound-variant" id="variant-${c.id}">
-                ${(c.variants || []).map(v => `<option value="${esc(v.url)}">${esc(v.label)}</option>`).join('')}
+                ${(c.variants || []).map(v => `<option value="${esc(v.url)}">${esc(lokal(v.label))}</option>`).join('')}
             </select>
             <button class="play-btn" data-category="${c.id}">${T('play')}</button>
         </div>`).join('');
     if (sel) {
         const prev = sel.value;
-        sel.innerHTML = SOUNDS.map(c => `<option value="${c.id}">${c.icon || ''} ${esc(c.title)}</option>`).join('');
+        sel.innerHTML = SOUNDS.map(c => `<option value="${c.id}">${c.icon || ''} ${esc(lokal(c.title))}</option>`).join('');
         if (prev && SOUNDS.some(c => c.id === prev)) sel.value = prev;
     }
     currentlyPlayingId = null;
 }
 
 function renderTexts() {
-    document.title = TEXTS.appTitle + " — " + babyName;
-    fill('txt-app-title', 'appTitle');
-    fill('txt-app-subtitle', 'appSubtitle');
+    const titel = lokal(TEXTS.appTitle) || "BabyBasen";
+    document.title = isGuest ? titel : (titel + " — " + babyName);
+
+    const tEl = document.getElementById('txt-app-title');
+    if (tEl) tEl.textContent = titel;
+
+    const sEl = document.getElementById('txt-app-subtitle');
+    if (sEl) {
+        // Logget ind: undertitlen taler om barnet. Som gæst: hvad appen er.
+        const raa = isGuest ? (TEXTS.appSubtitleGuest || DEFAULT_TEXTS.appSubtitleGuest)
+                            : (TEXTS.appSubtitle || DEFAULT_TEXTS.appSubtitle);
+        sEl.textContent = String(lokal(raa)).replaceAll('{navn}', babyName);
+    }
     document.querySelectorAll('.b-name').forEach(el => el.textContent = babyName);
+    if (typeof opdaterProfilMenu === 'function') opdaterProfilMenu();
 
     fill('txt-smart-title', 'smartTitle');
     fill('txt-smart-desc', 'smartDesc');
@@ -214,27 +232,27 @@ function renderTexts() {
     const gw = document.getElementById('guest-warning'); if (gw) gw.innerHTML = T('guestWarning');
 
     const sleepTitleEl = document.getElementById('txt-sleep-title');
-    if (sleepTitleEl) sleepTitleEl.textContent = String(indhold('sleepTitle') || '').replaceAll('{navn}', babyName);
+    if (sleepTitleEl) sleepTitleEl.textContent = indholdTekst('sleepTitle');
     const sleepSubEl = document.getElementById('txt-sleep-sub');
-    if (sleepSubEl) sleepSubEl.textContent = String(indhold('sleepSub') || '').replaceAll('{navn}', babyName);
+    if (sleepSubEl) sleepSubEl.textContent = indholdTekst('sleepSub');
 
     const sleepEl = document.getElementById('sleep-cards');
     if (sleepEl) sleepEl.innerHTML = (indhold('sleepCards') || []).map(c =>
-        `<div class="info-card"><h3>${(c.title || '').replaceAll('{navn}', babyName)}</h3>${(c.body || '').replaceAll('{navn}', babyName)}</div>`).join('');
+        `<div class="info-card"><h3>${String(lokal(c.title)).replaceAll('{navn}', babyName)}</h3>${String(lokal(c.body)).replaceAll('{navn}', babyName)}</div>`).join('');
 
     ['txt-leap-title:leapTitle', 'txt-leap-sub:leapSub', 'txt-leap-status-title:leapStatusTitle',
      'txt-leap-intro-title:leapIntroTitle', 'txt-leap-intro-body:leapIntroBody',
      'txt-leap-outro-title:leapOutroTitle', 'txt-leap-outro-body:leapOutroBody'].forEach(par => {
         const [id, key] = par.split(':');
         const el = document.getElementById(id);
-        if (el) el.innerHTML = String(indhold(key) || '').replaceAll('{navn}', babyName);
+        if (el) el.innerHTML = indholdTekst(key);
     });
 
     const leapEl = document.getElementById('leap-cards');
     if (leapEl) leapEl.innerHTML = (indhold('leapCards') || []).map(c =>
         `<div class="info-card leap-card" id="leap-${c.nr}">
-            <h3><span class="leap-badge">${T('leapWord')} ${c.nr}</span> ${T('weekWord')} ${c.from}-${c.to}: ${(c.title || '').replaceAll('{navn}', babyName)}</h3>
-            ${(c.body || '').replaceAll('{navn}', babyName)}
+            <h3><span class="leap-badge">${T('leapWord')} ${c.nr}</span> ${T('weekWord')} ${c.from}-${c.to}: ${String(lokal(c.title)).replaceAll('{navn}', babyName)}</h3>
+            ${String(lokal(c.body)).replaceAll('{navn}', babyName)}
         </div>`).join('');
 
     renderLeapStatus();
@@ -248,7 +266,9 @@ function renderTexts() {
 // bliver det ved med at køre, selv om siden opdateres,
 // telefonen låses, eller browseren sætter fanen på pause.
 // ==========================================
-const UR_NOEGLE = 'babyRoUr';
+// Uret hører til ét barn. To søskende kan sove på hver sin tid,
+// så hvert barn har sin egen nøgle i localStorage.
+function urNoegle() { return 'babyRoUr_' + (childId || 'lokal'); }
 
 let urStart = null;        // hvornår den nuværende kørsel begyndte (ms)
 let urOpsparet = 0;        // sekunder fra tidligere kørsler
@@ -265,10 +285,10 @@ function forloebetSek() {
 
 function gemUr() {
     if (!urKoerer && urOpsparet === 0 && !sessionStartTime) {
-        localStorage.removeItem(UR_NOEGLE);
+        localStorage.removeItem(urNoegle());
         return;
     }
-    localStorage.setItem(UR_NOEGLE, JSON.stringify({
+    localStorage.setItem(urNoegle(), JSON.stringify({
         urStart, urOpsparet, urKoerer,
         sessionStart: sessionStartTime ? sessionStartTime.getTime() : null,
         barn: childId
@@ -276,9 +296,13 @@ function gemUr() {
 }
 
 function gendanUr() {
+    // Ryd det forrige barns ur fra skærmen, før det nye hentes
+    clearInterval(visInterval);
+    urKoerer = false; urStart = null; urOpsparet = 0; sessionStartTime = null;
+
     let d = null;
-    try { d = JSON.parse(localStorage.getItem(UR_NOEGLE)); } catch (e) {}
-    if (!d) { opdaterUrKnap(); return; }
+    try { d = JSON.parse(localStorage.getItem(urNoegle())); } catch (e) {}
+    if (!d) { updateDisplay(); opdaterUrKnap(); if (typeof opdaterLaaseskaerm === 'function') opdaterLaaseskaerm(); return; }
 
     urOpsparet = d.urOpsparet || 0;
     urKoerer = !!d.urKoerer;
@@ -291,6 +315,7 @@ function gendanUr() {
     updateDisplay();
     opdaterUrKnap();
     if (urKoerer) startVisning();
+    if (typeof opdaterLaaseskaerm === 'function') opdaterLaaseskaerm();
 }
 
 function startVisning() {
@@ -319,6 +344,7 @@ function opdaterUrKnap() {
 
 function startStopwatch() {
     if (urKoerer) return;
+    spor('urStart');
     const nu = Date.now();
     if (sessionStartTime === null) sessionStartTime = new Date(nu);
     else if (urOpsparet > 0) {
@@ -333,6 +359,7 @@ function startStopwatch() {
     opdaterUrKnap();
     gemUr();
     if (typeof renderPlanCard === 'function') renderPlanCard();
+    if (typeof opdaterLaaseskaerm === 'function') opdaterLaaseskaerm();
 }
 
 function stopStopwatch() {
@@ -344,15 +371,17 @@ function stopStopwatch() {
     opdaterUrKnap();
     gemUr();
     if (typeof renderPlanCard === 'function') renderPlanCard();
+    if (typeof opdaterLaaseskaerm === 'function') opdaterLaaseskaerm();
 }
 
 function nulstilUr() {
     clearInterval(visInterval);
     urKoerer = false; urStart = null; urOpsparet = 0; sessionStartTime = null;
-    localStorage.removeItem(UR_NOEGLE);
+    localStorage.removeItem(urNoegle());
     updateDisplay();
     opdaterUrKnap();
     if (typeof renderPlanCard === 'function') renderPlanCard();
+    if (typeof opdaterLaaseskaerm === 'function') opdaterLaaseskaerm();
 }
 const resetStopwatch = nulstilUr;
 
@@ -403,6 +432,7 @@ if (soundGrid) {
         audioPlayer.src = sel.value;
         btn.textContent = T('pauseSound'); btn.classList.add('playing');
         currentlyPlayingId = cat;
+        spor('lydStart');
         if (!urKoerer) startStopwatch();
         setupTimer();
         audioPlayer.play().catch(() => console.log("Kunne ikke afspille:", sel.value));
@@ -541,6 +571,7 @@ function opdaterTemaKnapper() {
     }
 }
 function skiftTema() {
+    spor('temaSkift');
     document.body.classList.toggle('dark-theme');
     localStorage.setItem('babyRoTheme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
     opdaterTemaKnapper();
@@ -549,18 +580,71 @@ if (localStorage.getItem('babyRoTheme') === 'dark') document.body.classList.add(
 document.getElementById('btn-theme-toggle')?.addEventListener('click', skiftTema);
 document.getElementById('btn-theme-corner')?.addEventListener('click', skiftTema);
 opdaterTemaKnapper();
+// ==========================================
+// FARVER
+// Dreng og pige sætter blå og lyserød. Vil man
+// noget andet, vælger man en af de ti babyfarver.
+// ==========================================
+const FARVER = [
+    { id: 'blue',     navn: 'cBlue',     hex: '#6E9FC5' },
+    { id: 'pink',     navn: 'cPink',     hex: '#D2879F' },
+    { id: 'mint',     navn: 'cMint',     hex: '#7FBDA8' },
+    { id: 'lavender', navn: 'cLavender', hex: '#9D93C4' },
+    { id: 'peach',    navn: 'cPeach',    hex: '#E3A183' },
+    { id: 'sage',     navn: 'cSage',     hex: '#8DA399' },
+    { id: 'butter',   navn: 'cButter',   hex: '#D9BC6A' },
+    { id: 'sand',     navn: 'cSand',     hex: '#C2A98C' },
+    { id: 'seafoam',  navn: 'cSeafoam',  hex: '#79B4B4' },
+    { id: 'clay',     navn: 'cClay',     hex: '#C08D84' }
+];
+
 function applyGenderTheme() {
     document.body.classList.remove('theme-dreng', 'theme-pige');
-    if (babyGender === 'dreng') document.body.classList.add('theme-dreng');
-    if (babyGender === 'pige') document.body.classList.add('theme-pige');
-    document.querySelectorAll('.gender-btn').forEach(b =>
-        b.classList.toggle('selected', b.getAttribute('data-gender') === babyGender));
+    document.body.removeAttribute('data-farve');
+
+    if (babyColor) {
+        // Egen farve vinder over køn
+        document.body.setAttribute('data-farve', babyColor);
+        localStorage.setItem('babyRoColor', babyColor);
+        localStorage.removeItem('babyRoGenderTheme');
+    } else {
+        localStorage.removeItem('babyRoColor');
+        if (babyGender === 'dreng' || babyGender === 'pige') {
+            document.body.classList.add('theme-' + babyGender);
+            localStorage.setItem('babyRoGenderTheme', babyGender);
+        } else {
+            localStorage.removeItem('babyRoGenderTheme');
+        }
+    }
+
+    document.querySelectorAll('.gender-btn[data-gender]').forEach(b =>
+        b.classList.toggle('selected', !babyColor && b.getAttribute('data-gender') === babyGender));
+    const cb = document.getElementById('btn-color-pick');
+    if (cb) cb.classList.toggle('selected', !!babyColor);
+
+    // Farven på browserens adresselinje følger med
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+        const valgt = FARVER.find(f => f.id === babyColor);
+        meta.setAttribute('content', valgt ? valgt.hex :
+            (babyGender === 'dreng' ? '#6E9FC5' : babyGender === 'pige' ? '#D2879F' : '#8DA399'));
+    }
+    renderFarveRaekke();
+}
+
+function renderFarveRaekke() {
+    const row = document.getElementById('color-row');
+    if (!row) return;
+    row.innerHTML = FARVER.map(f =>
+        `<button class="farve-prik ${babyColor === f.id ? 'valgt' : ''}" data-color="${f.id}"
+                 style="--prik:${f.hex}" title="${T(f.navn)}" aria-label="${T(f.navn)}"></button>`).join('');
 }
 
 // ==========================================
 // SØVNLOG: GEM
 // ==========================================
 document.getElementById('btn-save-log')?.addEventListener('click', async () => {
+    spor('urGemt');
     const elapsedSeconds = forloebetSek();
     if (elapsedSeconds === 0) { alert(T('timerZero')); return; }
     const end = new Date();
@@ -780,6 +864,9 @@ const TABS = [
 
 function opdaterAlt() {
     applyGenderTheme();
+    if (typeof opdaterLaase === 'function') opdaterLaase();
+    if (typeof opdaterProfilMenu === 'function') opdaterProfilMenu();
+    if (typeof gendanUr === 'function') gendanUr();
     if (typeof refreshProfileInputs === 'function') refreshProfileInputs();
     renderTexts();
     renderTodayLog();
@@ -794,6 +881,9 @@ function opdaterAlt() {
 }
 
 function visFane(navId, husk) {
+    // Fjern den midlertidige style fra opstarten, så JS styrer visningen
+    document.getElementById('forhaandsvis')?.remove();
+
     const tab = TABS.find(t => t.id === navId) || TABS[0];
     TABS.forEach(tt => {
         const v = document.getElementById(tt.viewId);
@@ -810,6 +900,7 @@ function visFane(navId, husk) {
     if (tab.id === 'nav-growth' && typeof renderGrowth === 'function') renderGrowth();
     if (tab.id === 'nav-milestones' && typeof renderMilestones === 'function') renderMilestones();
     if (tab.id === 'nav-know' && typeof renderPlanForklaring === 'function') renderPlanForklaring();
+    if (typeof sporSidevisning === 'function') sporSidevisning(tab.id);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -820,9 +911,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Vis den fane man var på sidst — ikke altid Lyde
+    // Vis den fane man var på sidst — den er allerede tegnet af
+    // opstarts-scriptet, så der er intet skift at se
     const gemt = huskedeFaner();
-    visFane(gemt.main || 'nav-player', false);
+    visFane(document.body.dataset.startfane || gemt.main || 'nav-player', false);
     gendanFaner();
 
     renderSounds();
