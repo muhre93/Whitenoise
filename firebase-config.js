@@ -13,13 +13,13 @@
 //    Mangler et anførselstegn, virker HELE appen ikke.
 // ==================================================
 
-const FIREBASE_CONFIG = {
-    apiKey: "SKRIV_DIN_API_KEY_HER",
-    authDomain: "dit-projekt.firebaseapp.com",
-    projectId: "dit-projekt",
-    storageBucket: "dit-projekt.firebasestorage.app",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abc123def456"
+  apiKey: "AIzaSyAiev2iHG8I31LSe-oBL7yjQMiDtVYEQHM",
+  authDomain: "babyro-b320c.firebaseapp.com",
+  projectId: "babyro-b320c",
+  storageBucket: "babyro-b320c.firebasestorage.app",
+  messagingSenderId: "260945437474",
+  appId: "1:260945437474:web:f670ae0502e1843125fb7b",
+  measurementId: "G-9HT4SHH5BR"
 };
 
 // Din egen e-mail. Kun den kan komme ind på admin.html.
