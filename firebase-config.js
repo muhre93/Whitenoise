@@ -25,4 +25,4 @@ const firebaseConfig = {
 
 // Din egen e-mail. Kun den kan komme ind på admin.html.
 // Skriv den præcis som du skriver den, når du logger ind med Google.
-const ADMIN_EMAILS = ["muhre93@gmail.com"];
+const ADMIN_EMAILS = ["kronborgnielsen@gmail.com"];
