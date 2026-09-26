@@ -13,6 +13,7 @@
 //    Mangler et anførselstegn, virker HELE appen ikke.
 // ==================================================
 
+const firebaseConfig = {
   apiKey: "AIzaSyAiev2iHG8I31LSe-oBL7yjQMiDtVYEQHM",
   authDomain: "babyro-b320c.firebaseapp.com",
   projectId: "babyro-b320c",
@@ -24,4 +25,4 @@
 
 // Din egen e-mail. Kun den kan komme ind på admin.html.
 // Skriv den præcis som du skriver den, når du logger ind med Google.
-const ADMIN_EMAILS = ["kronborgnielsen@gmail.com"];
+const ADMIN_EMAILS = ["muhre93@gmail.com"];
