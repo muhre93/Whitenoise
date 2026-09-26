@@ -77,14 +77,19 @@
 </div>
 
 <!-- NAVIGATION -->
-<nav class="app-nav" id="app-nav">
-    <button id="nav-player" class="nav-item active"><span class="ni">⏱️</span><em data-i18n="navPlayerShort">Ur</em></button>
-    <button id="nav-care" class="nav-item"><span class="ni">🍼</span><em data-i18n="navCareShort">Pleje</em></button>
-    <button id="nav-history" class="nav-item"><span class="ni">🌙</span><em data-i18n="navHistoryShort">Søvn</em></button>
-    <button id="nav-growth" class="nav-item"><span class="ni">📈</span><em data-i18n="navGrowthShort">Vækst</em></button>
-    <button id="nav-milestones" class="nav-item"><span class="ni">⭐</span><em data-i18n="navMilestonesShort">Milepæle</em></button>
-    <button id="nav-know" class="nav-item"><span class="ni">📖</span><em data-i18n="navKnowShort">Viden</em></button>
-</nav>
+<div class="nav-holder">
+    <nav class="app-nav" id="app-nav">
+        <button id="nav-player" class="nav-item active"><span class="ni">⏱️</span><em data-i18n="navPlayerShort">Søvnur</em></button>
+        <button id="nav-care" class="nav-item"><span class="ni">🍼</span><em data-i18n="navCareShort">Mad &amp; bleer</em></button>
+        <button id="nav-history" class="nav-item"><span class="ni">🌙</span><em data-i18n="navHistoryShort">Søvnlog</em></button>
+        <button id="nav-growth" class="nav-item"><span class="ni">📈</span><em data-i18n="navGrowthShort">Vækst</em></button>
+        <button id="nav-milestones" class="nav-item"><span class="ni">⭐</span><em data-i18n="navMilestonesShort">Milepæle</em></button>
+        <button id="nav-know" class="nav-item"><span class="ni">📖</span><em data-i18n="navKnowShort">Viden</em></button>
+    </nav>
+</div>
+
+<!-- Sover et andet barn samtidig, står det her -->
+<div id="soeskende-bjaelke" class="soeskende-bjaelke" style="display:none;"></div>
 
 <div id="guest-banner" class="guest-banner" style="display:none;">
     <span data-i18n="guestHint">Du bruger BabyBasen som gæst.</span>
@@ -103,8 +108,15 @@
             <button id="btn-reset-time" class="action-btn reset-btn" data-i18n="btnReset">Nulstil</button>
         </div>
         <p class="mini-help" data-i18n="timerHelp"></p>
-        <button id="btn-lock-toggle" class="action-btn reset-btn full-btn lock-btn" data-i18n="lockOn">🔒 Vis på låseskærm</button>
-        <p class="mini-help" id="lock-status"></p>
+
+        <details class="foldud">
+            <summary data-i18n="timerSettings">Indstillinger for uret</summary>
+            <div class="foldud-indhold">
+                <button id="btn-lock-toggle" class="action-btn reset-btn full-btn lock-btn" data-i18n="lockOn">🔒 Vis på låseskærm</button>
+                <p class="mini-help" id="lock-status"></p>
+                <button id="btn-enable-notif" class="action-btn reset-btn full-btn" style="margin-top:10px;" data-i18n="enableNotif">🔔 Slå påmindelser til</button>
+            </div>
+        </details>
     </section>
 
     <section class="panel plan-card" id="plan-card">
@@ -128,27 +140,23 @@
             <div class="plan-stat"><span id="plan-feed">–</span><small data-i18n="planSinceFeed">Siden mad</small></div>
         </div>
         <div class="plan-bar"><div class="plan-bar-fill" id="plan-bar-fill"></div></div>
-        <button id="btn-enable-notif" class="action-btn save-btn full-btn" style="display:none;" data-i18n="enableNotif">🔔 Slå påmindelser til</button>
         <p class="plan-note" id="plan-note"></p>
     </section>
 
     <div class="sub-tabs" data-group="player">
-        <button class="sub-tab active" data-sub="sub-sounds">🎵 <span data-i18n="navPlayerSounds">Lyde</span></button>
-        <button class="sub-tab" data-sub="sub-today">📋 <span data-i18n="today">I dag</span></button>
-        <button class="sub-tab" data-sub="sub-smart">🎙️ <span data-i18n="smartShort">Smart-lyt</span></button>
+        <button class="sub-tab active" data-sub="sub-sounds"><span data-i18n="tabSounds">🎵 Lyde</span></button>
+        <button class="sub-tab" data-sub="sub-today"><span data-i18n="tabNapsToday">🌙 Dagens lure</span></button>
+        <button class="sub-tab" data-sub="sub-smart"><span data-i18n="tabMonitor">🎙️ Babyalarm</span></button>
     </div>
 
     <div id="sub-sounds" class="sub-panel active">
-        <div class="autostop">
-            <div class="autostop-head">
+        <details class="foldud autostop">
+            <summary>
                 <span class="autostop-icon">🌙</span>
-                <div>
-                    <strong id="txt-autostop-label" data-i18n="autoStopTitle">Sluk lyden blødt efter</strong>
-                    <small data-i18n="autoStopSub"></small>
-                </div>
-                <span class="hint" data-i18n-tip="autoStopTip" data-tip="">?</span>
-            </div>
-            <div class="autostop-choices" id="autostop-choices">
+                <strong id="txt-autostop-label" data-i18n="autoStopTitle">Sluk lyden blødt efter</strong>
+                <span class="autostop-nu" id="autostop-nu"></span>
+            </summary>
+            <div class="autostop-choices foldud-indhold" id="autostop-choices">
                 <button class="as-btn active" data-min="0" data-i18n="asAlways">Hele tiden</button>
                 <button class="as-btn" data-min="30" data-i18n="as30">30 min</button>
                 <button class="as-btn" data-min="60" data-i18n="as60">1 time</button>
@@ -160,7 +168,7 @@
                 <option value="0">0</option><option value="30">30</option><option value="60">60</option>
                 <option value="120">120</option><option value="240">240</option><option value="720">720</option>
             </select>
-        </div>
+        </details>
         <section class="sound-grid" id="sound-grid"></section>
         <div class="global-stop-wrapper"><button id="stop-all" class="stop-btn" data-i18n="stopAll">Sluk alt lyd</button></div>
     </div>
@@ -234,8 +242,8 @@
         </section>
 
         <div class="sub-tabs" data-group="care">
-            <button class="sub-tab active" data-sub="sub-quick" data-i18n="tabDiary">📅 Dagbog</button>
-            <button class="sub-tab" data-sub="sub-carestats" data-i18n="tabOverview">📊 Overblik</button>
+            <button class="sub-tab active" data-sub="sub-quick" data-i18n="tabDayByDay">📅 Dag for dag</button>
+            <button class="sub-tab" data-sub="sub-carestats" data-i18n="tabNumbers">📊 Tal &amp; grafer</button>
         </div>
 
         <div id="sub-quick" class="sub-panel active">
@@ -288,12 +296,15 @@
                     <button class="crange-btn" data-cdays="21" data-i18n="days21">21 dage</button>
                     <button class="crange-btn" data-cdays="28" data-i18n="days28">28 dage</button>
                 </div>
-                <div class="date-range">
-                    <label class="field"><span data-i18n="from">Fra</span><input type="date" id="crange-from"></label>
-                    <label class="field"><span data-i18n="to">Til</span><input type="date" id="crange-to"></label>
-                    <button id="btn-apply-crange" class="action-btn save-btn" data-i18n="showPeriod">Vis periode</button>
-                </div>
                 <p class="range-info" id="crange-info"></p>
+                <details class="foldud">
+                    <summary data-i18n="ownPeriod">Vælg dine egne datoer</summary>
+                    <div class="date-range foldud-indhold">
+                        <label class="field"><span data-i18n="from">Fra</span><input type="date" id="crange-from"></label>
+                        <label class="field"><span data-i18n="to">Til</span><input type="date" id="crange-to"></label>
+                        <button id="btn-apply-crange" class="action-btn save-btn" data-i18n="showPeriod">Vis periode</button>
+                    </div>
+                </details>
             </section>
             <section class="stat-grid" id="care-stats"></section>
             <section class="panel">
@@ -320,6 +331,11 @@
     <div class="laas" data-laas="sleep"></div>
 
     <div class="laas-indhold" data-for="sleep">
+        <div class="sub-tabs" data-group="history">
+            <button class="sub-tab active" data-sub="sub-diary" data-i18n="tabDayByDay">📅 Dag for dag</button>
+            <button class="sub-tab" data-sub="sub-overview" data-i18n="tabNumbers">📊 Tal &amp; grafer</button>
+        </div>
+
         <section class="panel period-card">
             <div class="quick-range">
                 <button class="range-btn active" data-days="7" data-i18n="days7">7 dage</button>
@@ -327,20 +343,18 @@
                 <button class="range-btn" data-days="21" data-i18n="days21">21 dage</button>
                 <button class="range-btn" data-days="28" data-i18n="days28">28 dage</button>
             </div>
-            <div class="date-range">
-                <label class="field"><span data-i18n="from">Fra</span><input type="date" id="range-from"></label>
-                <label class="field"><span data-i18n="to">Til</span><input type="date" id="range-to"></label>
-                <button id="btn-apply-range" class="action-btn save-btn" data-i18n="showPeriod">Vis periode</button>
-            </div>
             <p class="range-info" id="range-info"></p>
+            <details class="foldud">
+                <summary data-i18n="ownPeriod">Vælg dine egne datoer</summary>
+                <div class="date-range foldud-indhold">
+                    <label class="field"><span data-i18n="from">Fra</span><input type="date" id="range-from"></label>
+                    <label class="field"><span data-i18n="to">Til</span><input type="date" id="range-to"></label>
+                    <button id="btn-apply-range" class="action-btn save-btn" data-i18n="showPeriod">Vis periode</button>
+                </div>
+            </details>
         </section>
 
-        <div class="sub-tabs" data-group="history">
-            <button class="sub-tab active" data-sub="sub-overview" data-i18n="tabOverview">📊 Overblik</button>
-            <button class="sub-tab" data-sub="sub-diary" data-i18n="tabDiary">📅 Dagbog</button>
-        </div>
-
-        <div id="sub-overview" class="sub-panel active">
+        <div id="sub-overview" class="sub-panel" style="display:none;">
             <section class="stat-grid" id="stat-grid"></section>
             <section class="panel">
                 <div class="chart-tabs">
@@ -356,7 +370,7 @@
             <div class="print-row"><button class="action-btn save-btn genvej-rapport" data-i18n="reportMake">📄 Lav rapporten</button></div>
         </div>
 
-        <div id="sub-diary" class="sub-panel" style="display:none;">
+        <div id="sub-diary" class="sub-panel active">
             <button id="btn-add-sleep" class="action-btn save-btn full-btn" style="margin-bottom:20px;" data-i18n="addSleep">+ Tilføj søvn manuelt</button>
             <div class="log-container" id="history-container"></div>
         </div>
@@ -374,7 +388,7 @@
 
     <div class="laas-indhold" data-for="growth">
         <div class="sub-tabs" data-group="growth">
-            <button class="sub-tab active" data-sub="sub-curves" data-i18n="tabCurves">📈 Mål &amp; kurver</button>
+            <button class="sub-tab active" data-sub="sub-curves" data-i18n="tabCurves">📈 Ny måling &amp; kurve</button>
             <button class="sub-tab" data-sub="sub-measures" data-i18n="tabMeasures">📋 Alle målinger</button>
         </div>
 

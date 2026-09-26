@@ -169,6 +169,56 @@ function opdaterLaase() {
     if (banner) banner.style.display = gaest ? 'flex' : 'none';
 }
 
+// ==========================================
+// SOVER EN SØSKENDE SAMTIDIG?
+//
+// Hvert barn har sit eget ur i localStorage. De kører alle videre,
+// uanset hvilket barn der er valgt — men man kunne ikke se det.
+// Denne bjælke viser de andre børn, der sover lige nu.
+// ==========================================
+function andreSovendeBoern() {
+    if (typeof childList === 'undefined' || typeof childId === 'undefined') return [];
+    const ud = [];
+    childList.filter(c => !c.archived && c.id !== childId).forEach(c => {
+        let d = null;
+        try { d = JSON.parse(localStorage.getItem('babyRoUr_' + c.id)); } catch (e) {}
+        if (!d || !d.urKoerer || !d.urStart) return;
+        const sek = Math.floor((d.urOpsparet || 0) + (Date.now() - d.urStart) / 1000);
+        if (sek <= 0 || sek > 86400) return;      // glemt at blive stoppet
+        ud.push({ id: c.id, navn: c.name || T('childNoName'), sek });
+    });
+    return ud;
+}
+
+function opdaterSoeskendeBjaelke() {
+    const el = document.getElementById('soeskende-bjaelke');
+    if (!el) return;
+    const sovende = andreSovendeBoern();
+    if (!sovende.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = 'flex';
+    el.innerHTML = sovende.map(b => `
+        <button class="soesken" data-soesken="${b.id}">
+            <span class="zz">💤</span>
+            <span><span class="navn">${esc(b.navn)}</span> ${T('sleepsToo')}<br>
+            <span class="tid">${formatShort(b.sek)}</span></span>
+            <span class="skift">${T('tapToSwitch')}</span>
+        </button>`).join('');
+}
+
+document.addEventListener('click', (e) => {
+    const knap = e.target.closest('[data-soesken]');
+    if (!knap) return;
+    if (typeof skiftBarn === 'function') skiftBarn(knap.dataset.soesken);
+});
+
+// Tiden på bjælken skal være levende, ellers tror man den står stille
+setInterval(() => {
+    if (document.visibilityState === 'visible') opdaterSoeskendeBjaelke();
+}, 20000);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') opdaterSoeskendeBjaelke();
+});
+
 document.addEventListener('click', (e) => {
     if (e.target.closest('.laas-login') || e.target.closest('#guest-banner-login')) {
         document.getElementById('btn-google-login')?.click();

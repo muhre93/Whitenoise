@@ -494,6 +494,25 @@ if (auth) {
             opdaterAlt();
         }
     });
+} else {
+    // Firebase kom ikke i gang. Før sad login-knappen bare og gjorde ingenting,
+    // og man kunne ikke se hvorfor. Nu siger den det højt.
+    const forklar = () => {
+        const n = (typeof firebaseFejl !== 'undefined' && firebaseFejl) ? firebaseFejl : 'firebaseStartFejl';
+        alert(T(n));
+        console.log('BabyBasen: login virker ikke, fordi →', n);
+    };
+    document.getElementById('btn-google-login')?.addEventListener('click', forklar);
+    document.getElementById('btn-logout')?.addEventListener('click', forklar);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const note = document.getElementById('profile-locked-note');
+        if (note) {
+            const n = (typeof firebaseFejl !== 'undefined' && firebaseFejl) ? firebaseFejl : 'firebaseStartFejl';
+            note.textContent = T(n);
+            note.classList.add('notif-error');
+        }
+    });
 }
 
 // Gæstetilstand med det samme, så siden aldrig står tom

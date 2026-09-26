@@ -9,14 +9,47 @@ if (SPROG !== 'en' && SPROG !== 'da') SPROG = 'da';   // dansk som standard
 
 const ORD = {
 
-    // ---------- NAVIGATION (korte navne i bunden) ----------
-    navPlayerShort:     { da: "Ur",            en: "Timer" },
-    navCareShort:       { da: "Pleje",         en: "Care" },
-    navHistoryShort:    { da: "Søvn",          en: "Sleep" },
-    navGrowthShort:     { da: "Vækst",         en: "Growth" },
-    navMilestonesShort: { da: "Milepæle",      en: "Milestones" },
-    navKnowShort:       { da: "Viden",         en: "Learn" },
+    urSover: { da: "💤 {navn} sover",           en: "💤 {navn} is asleep" },
+    urPause: { da: "⏸ Luren er sat på pause",   en: "⏸ The nap is paused" },
+    urKlar:  { da: "{navn} er vågen",           en: "{navn} is awake" },
 
+
+    ownPeriod: { da: "Vælg dine egne datoer", en: "Pick your own dates" },
+
+
+    timerSettings: { da: "Indstillinger for uret", en: "Timer settings" },
+
+
+    // ---------- SOVENDE SØSKENDE ----------
+    sleepsToo:    { da: "sover også",       en: "is asleep too" },
+    tapToSwitch:  { da: "tryk for at skifte", en: "tap to switch" },
+
+    // ---------- FANER MED KLARERE NAVNE ----------
+    tabSounds:    { da: "🎵 Lyde",          en: "🎵 Sounds" },
+    tabNapsToday: { da: "🌙 Dagens lure",   en: "🌙 Today's naps" },
+    tabMonitor:   { da: "🎙️ Babyalarm",    en: "🎙️ Baby monitor" },
+    tabDayByDay:  { da: "📅 Dag for dag",   en: "📅 Day by day" },
+    tabNumbers:   { da: "📊 Tal & grafer",  en: "📊 Numbers & charts" },
+
+
+    // ---------- NÅR FIREBASE IKKE VIRKER ----------
+    firebaseManglerSdk:  { da: "Firebase kunne ikke hentes. Tjek din internetforbindelse, og prøv igen.",
+                           en: "Firebase couldn't load. Check your internet connection and try again." },
+    firebaseManglerFil:  { da: "Filen firebase-config.js mangler. Læg den op på GitHub ved siden af index.html.",
+                           en: "The file firebase-config.js is missing. Upload it to GitHub next to index.html." },
+    firebaseIkkeUdfyldt: { da: "Dine Firebase-nøgler er ikke skrevet ind endnu. Åbn firebase-config.js på GitHub og sæt dine egne værdier ind — husk anførselstegn om hver af dem.",
+                           en: "Your Firebase keys haven't been filled in yet. Open firebase-config.js on GitHub and put your own values in — remember the quote marks around each one." },
+    firebaseStartFejl:   { da: "Firebase kunne ikke starte. Det skyldes næsten altid en fejl i firebase-config.js — tjek at hver værdi står mellem to anførselstegn.",
+                           en: "Firebase couldn't start. This is nearly always a mistake in firebase-config.js — check that every value sits between two quote marks." },
+
+
+    // ---------- NAVIGATION (korte navne i bunden) ----------
+    navPlayerShort:     { da: "Søvnur", en: "Sleep timer" },
+    navCareShort:       { da: "Mad & bleer", en: "Food & nappies" },
+    navHistoryShort:    { da: "Søvnlog", en: "Sleep log" },
+    navGrowthShort:     { da: "Vækst", en: "Growth" },
+    navMilestonesShort: { da: "Milepæle", en: "Milestones" },
+    navKnowShort:       { da: "Viden", en: "Learn" },
     // ---------- PROFILMENU ----------
     tabReport:      { da: "📄 Rapport",     en: "📄 Report" },
     tabFeedback:    { da: "💬 Godt og skidt", en: "💬 Good and bad" },
@@ -147,7 +180,7 @@ const ORD = {
     timerZero:      { da: "Søvnuret er på nul. Tryk 'Start lur' eller afspil en lyd først.", en: "The timer is at zero. Press 'Start nap' or play a sound first." },
     autoStopTitle:  { da: "Sluk lyden blødt efter", en: "Fade out sound after" },
     autoStopSub:    { da: "Tones ned over 5 minutter, så barnet ikke vågner af stilheden", en: "Fades over 5 minutes so silence doesn't wake the baby" },
-    autoStopTip:    { da: "I stedet for at stoppe brat skruer BabyRo langsomt ned over de sidste 5 minutter. Et brat lydskift er en af de hyppigste grunde til, at en baby vågner.", en: "Instead of stopping abruptly, BabyRo fades down over the last 5 minutes. A sudden change in sound is one of the most common reasons a baby wakes." },
+    autoStopTip:    { da: "I stedet for at stoppe brat skruer BabyBasen langsomt ned over de sidste 5 minutter. Et brat lydskift er en af de hyppigste grunde til, at en baby vågner.", en: "Instead of stopping abruptly, BabyBase fades down over the last 5 minutes. A sudden change in sound is one of the most common reasons a baby wakes." },
     asAlways:       { da: "Hele tiden",   en: "Keep playing" },
     as30:           { da: "30 min",       en: "30 min" },
     as60:           { da: "1 time",       en: "1 hour" },
@@ -160,19 +193,19 @@ const ORD = {
 
     // ---------- DAGENS PLAN ----------
     planTitle:      { da: "Dagens plan",       en: "Today's plan" },
-    planTip:        { da: "BabyRo regner næste sovetid ud fra, hvornår sidste lur sluttede, plus den vågetid der passer til barnets alder. Kræver at fødselsdatoen er udfyldt under Profil.", en: "BabyRo works out the next sleep from when the last nap ended plus the wake window for your baby's age. Requires a date of birth under Profile." },
+    planTip:        { da: "BabyBasen regner næste sovetid ud fra, hvornår sidste lur sluttede, plus den vågetid der passer til barnets alder. Kræver at fødselsdatoen er udfyldt under Profil.", en: "BabyBase works out the next sleep from when the last nap ended plus the wake window for your baby's age. Requires a date of birth under Profile." },
     planNext:       { da: "Næste søvn",        en: "Next sleep" },
     planOpens:      { da: "Næste søvnvindue åbner", en: "Next sleep window opens" },
     planOpensIn:    { da: "Næste søvnvindue åbner om", en: "Next sleep window opens in" },
     atClockWord:    { da: "Klokken", en: "At" },
     planOpenNow:    { da: "Søvnvinduet er åbent — luk inden for", en: "Sleep window is open — settle within" },
     planClosed:     { da: "Vinduet er lukket", en: "The window has closed" },
-    planNoData:     { da: "Gem en lur, så regner BabyRo næste sovetid ud.", en: "Save a nap and BabyRo will work out the next sleep time." },
+    planNoData:     { da: "Gem en lur, så regner BabyBasen næste sovetid ud.", en: "Save a nap and BabyBase will work out the next sleep time." },
     planSleepToday: { da: "Søvn i dag",        en: "Sleep today" },
     planTarget:     { da: "Anbefalet",         en: "Recommended" },
     planNaps:       { da: "Lure i dag",        en: "Naps today" },
     planSinceFeed:  { da: "Siden mad",         en: "Since feed" },
-    planNoBirth:    { da: "Indtast <strong>fødselsdato</strong> under Profil, så regner BabyRo vågetider og næste sovetid ud.", en: "Enter a <strong>date of birth</strong> under Profile and BabyRo will work out wake windows and next sleep." },
+    planNoBirth:    { da: "Indtast <strong>fødselsdato</strong> under Profil, så regner BabyBasen vågetider og næste sovetid ud.", en: "Enter a <strong>date of birth</strong> under Profile and BabyBase will work out wake windows and next sleep." },
     planCloseBy:    { da: "Luk senest",        en: "Down by" },
     sleepingNow:    { da: "{navn} sover nu 😴",  en: "{navn} is asleep 😴" },
     napPaused:      { da: "Luren er på pause",   en: "Nap is paused" },
@@ -219,7 +252,7 @@ const ORD = {
 
     // ---------- SØVNLOG ----------
     historyTitle:   { da: "Søvnlog",          en: "Sleep log" },
-    historySub:     { da: "Her samles alt {navn}s søvn, dag for dag.", en: "All of {navn}'s sleep, day by day." },
+    historySub:     { da: "Her samles alt {navns} søvn, dag for dag.", en: "All of {navns} sleep, day by day." },
     tabOverview:    { da: "📊 Overblik",      en: "📊 Overview" },
     tabDiary:       { da: "📅 Dagbog",        en: "📅 Diary" },
     showPeriod:     { da: "Vis periode",      en: "Show period" },
@@ -258,7 +291,7 @@ const ORD = {
 
     // ---------- PLEJE ----------
     careTitle:      { da: "Mad & bleer",  en: "Feeding & nappies" },
-    careSub:        { da: "Ét tryk, når det sker — så husker BabyRo resten.", en: "One tap when it happens — BabyRo remembers the rest." },
+    careSub:        { da: "Ét tryk, når det sker — så husker BabyBasen resten.", en: "One tap when it happens — BabyBase remembers the rest." },
     careRegister:   { da: "Registrér nu", en: "Log it now" },
     careRegHelp:    { da: "Tryk, når det sker. Tidspunktet sættes automatisk — du kan rette det bagefter.", en: "Tap when it happens. The time is set automatically — you can correct it afterwards." },
     careHeroTip:    { da: "Tallene tæller kun i dag og nulstilles ved midnat. 'Siden' viser, hvor længe der er gået, siden det sidst skete — også hvis det var i går.", en: "The counts cover today only and reset at midnight. 'Since' shows how long ago it last happened — even if that was yesterday." },
@@ -309,7 +342,7 @@ const ORD = {
     helpNaps:       { da: "Antal gemte lure pr. dag.", en: "Number of saved naps per day." },
     helpNapLength:  { da: "Gennemsnitlig længde pr. lur i minutter. Korte lure under 45 min. kan betyde, at barnet vågner mellem søvncyklusserne.", en: "Average nap length in minutes. Naps under 45 min can mean your baby wakes between sleep cycles." },
     helpSleepClock: { da: "Hvornår på døgnet der blev sovet. Her ser du hurtigt, om rytmen er ved at falde på plads.", en: "When during the day sleep happened. A quick way to see whether a rhythm is settling." },
-    napsTypical:    { da: "I {navn}s alder er {antal} lure typisk.", en: "At {navn}'s age, {antal} naps is typical." },
+    napsTypical:    { da: "I {navns} alder er {antal} lure typisk.", en: "At {navns} age, {antal} naps is typical." },
     addSleepTitle:  { da: "Tilføj søvn", en: "Add sleep" },
     fillBothTimes:  { da: "Udfyld både dato og klokkeslæt for begge tidspunkter.", en: "Fill in both the date and time for each moment." },
     atClock:        { da: "Kl.", en: "At" },
@@ -321,7 +354,7 @@ const ORD = {
 
     // ---------- VÆKST ----------
     growthTitle:    { da: "Vækst",  en: "Growth" },
-    growthSub:      { da: "Følg {navn}s kurver mellem besøgene.", en: "Follow {navn}'s curves between check-ups." },
+    growthSub:      { da: "Følg {navns} kurver mellem besøgene.", en: "Follow {navns} curves between check-ups." },
     tabCurves:      { da: "📈 Mål & kurver", en: "📈 Measure & curves" },
     tabMeasures:    { da: "📋 Alle målinger", en: "📋 All measurements" },
     addMeasure:     { da: "Tilføj måling", en: "Add measurement" },
@@ -349,7 +382,7 @@ const ORD = {
     longerThanHeavy:{ da: "Længden ligger et stykke over vægten — altså et langt, slankt barn. Nævn det gerne ved næste besøg, hvis afstanden vokser.", en: "Length sits some way above weight — a long, slender baby. Worth mentioning at the next check-up if the gap widens." },
     sameLevelMatters:{ da: "Det vigtigste er, at begge kurver holder <em>samme</em> niveau over tid.", en: "What matters most is that both curves hold the <em>same</em> level over time." },
     needBoth:       { da: "Tilføj både vægt og længde på samme dato for at kunne sammenligne dem.", en: "Add both weight and length on the same date to compare them." },
-    disclaimer:     { da: "BabyRo erstatter ikke sundhedsplejersken eller lægen. Er du i tvivl om dit barns vækst eller trivsel, så tag altid kontakt.", en: "BabyRo does not replace your health visitor or doctor. If you have any concerns about your child's growth or wellbeing, always get in touch." },
+    disclaimer:     { da: "BabyBasen erstatter ikke sundhedsplejersken eller lægen. Er du i tvivl om dit barns vækst eller trivsel, så tag altid kontakt.", en: "BabyBase does not replace your health visitor or doctor. If you have any concerns about your child's growth or wellbeing, always get in touch." },
 
     // ---------- MILEPÆLE ----------
     msTitle:        { da: "Milepæle", en: "Milestones" },
@@ -380,7 +413,7 @@ const ORD = {
     girl:           { da: "👧 Pige", en: "👧 Girl" },
     neutral:        { da: "🌿 Neutral", en: "🌿 Neutral" },
     birthDate:      { da: "Fødselsdato", en: "Date of birth" },
-    birthDateTip:   { da: "Bruges til vågetider, søvnplan, vækstkurver og barnets alder. Uden den kan BabyRo ikke regne næste sovetid ud.", en: "Used for wake windows, the sleep plan, growth curves and your baby's age. Without it BabyRo can't work out the next sleep." },
+    birthDateTip:   { da: "Bruges til vågetider, søvnplan, vækstkurver og barnets alder. Uden den kan BabyBasen ikke regne næste sovetid ud.", en: "Used for wake windows, the sleep plan, growth curves and your baby's age. Without it BabyBase can't work out the next sleep." },
     dueDate:        { da: "Terminsdato", en: "Due date" },
     dueDateTip:     { da: "Tigerspring regnes altid fra terminsdatoen, ikke fødselsdagen. Et barn født før tid rammer springene tilsvarende senere.", en: "Leaps are always counted from the due date, not the birthday. A baby born early reaches them correspondingly later." },
     saveDetails:    { da: "Gem oplysninger", en: "Save details" },
@@ -427,22 +460,22 @@ const ORD = {
 
     // ---------- PÅMINDELSER ----------
     notifTitle:     { da: "Påmindelser", en: "Reminders" },
-    notifTip:       { da: "BabyRo sender en besked, inden søvnvinduet åbner, så barnet når at falde til ro. På iPhone kræver det, at appen er lagt på hjemmeskærmen fra Safari.", en: "BabyRo sends a message before the sleep window opens so your baby has time to settle. On iPhone the app must be added to the home screen from Safari." },
+    notifTip:       { da: "BabyBasen sender en besked, inden søvnvinduet åbner, så barnet når at falde til ro. På iPhone kræver det, at appen er lagt på hjemmeskærmen fra Safari.", en: "BabyBase sends a message before the sleep window opens so your baby has time to settle. On iPhone the app must be added to the home screen from Safari." },
     notifSub:       { da: "Du får besked, inden det er tid til næste lur.", en: "You'll be notified before it's time for the next nap." },
     notifLead:      { da: "Varsel før sovetid (minutter)", en: "Warning before sleep time (minutes)" },
     notifTest:      { da: "Send en testbesked", en: "Send a test message" },
     notifOff:       { da: "Påmindelser er slået fra.", en: "Reminders are off." },
 
     // ---------- APP & KONTO ----------
-    installTitle:   { da: "📱 Installér BabyRo", en: "📱 Install BabyRo" },
-    installText:    { da: "Læg BabyRo på hjemmeskærmen, så den åbner som en rigtig app — og så påmindelserne virker.", en: "Add BabyRo to your home screen so it opens like a real app — and so reminders work." },
+    installTitle:   { da: "📱 Installér BabyBasen", en: "📱 Install BabyBase" },
+    installText:    { da: "Læg BabyBasen på hjemmeskærmen, så den åbner som en rigtig app — og så påmindelserne virker.", en: "Add BabyBase to your home screen so it opens like a real app — and so reminders work." },
     installBtn:     { da: "Installér appen", en: "Install the app" },
-    installed:      { da: "BabyRo er installeret på denne enhed. ✅", en: "BabyRo is installed on this device. ✅" },
+    installed:      { da: "BabyBasen er installeret på denne enhed. ✅", en: "BabyBase is installed on this device. ✅" },
     loginTitle:     { da: "Log ind for at gemme", en: "Sign in to save" },
     loginSub:       { da: "Du kan bruge alle lyde, søvnuret og loggen med det samme. Log ind, hvis du vil gemme det sikkert, dele med den anden forælder og have det med på tværs af telefoner.", en: "You can use all the sounds, the timer and the log right away. Sign in to save it safely, share with the other parent and keep it across phones." },
     loginGoogle:    { da: "Log ind med Google", en: "Sign in with Google" },
     yourAccount:    { da: "Din konto", en: "Your account" },
-    logout:         { da: "Log ud af BabyRo", en: "Sign out of BabyRo" },
+    logout:         { da: "Log ud af BabyBasen", en: "Sign out of BabyBase" },
     logoutConfirm:  { da: "Er du sikker på, at du vil logge ud?", en: "Are you sure you want to sign out?" },
     themeTitle:     { da: "Tema & Design", en: "Theme & design" },
     themeSub:       { da: "Skån øjnene om natten.", en: "Easier on the eyes at night." },
@@ -457,9 +490,9 @@ const ORD = {
 
     // ---------- SÅDAN VIRKER PLANEN ----------
     peTitle:        { da: "Sådan virker Dagens plan", en: "How Today's plan works" },
-    peSub:          { da: "Hvorfor BabyRo tror, den ved hvornår {navn} skal sove.", en: "Why BabyRo thinks it knows when {navn} needs to sleep." },
+    peSub:          { da: "Hvorfor BabyBasen tror, den ved hvornår {navn} skal sove.", en: "Why BabyBase thinks it knows when {navn} needs to sleep." },
     peShortTitle:   { da: "Den korte version", en: "The short version" },
-    peShortBody:    { da: "BabyRo gætter ikke. Den regner sådan her:", en: "BabyRo isn't guessing. Here's the maths:" },
+    peShortBody:    { da: "BabyBasen gætter ikke. Den regner sådan her:", en: "BabyBase isn't guessing. Here's the maths:" },
     peF1:           { da: "Sidste lur sluttede", en: "Last nap ended" },
     peF2:           { da: "Vågetid for alderen", en: "Wake window for the age" },
     peF3:           { da: "Næste søvnvindue", en: "Next sleep window" },
@@ -470,7 +503,7 @@ const ORD = {
     peTiredTitle:   { da: "Derfor er det svært at putte et overtræt barn", en: "Why an overtired baby is hard to settle" },
     peTiredBody1:   { da: "Det virker bagvendt, men et barn, der har været vågent for længe, sover <em>dårligere</em> — ikke bedre. Når vinduet lukker, udskiller kroppen stresshormonerne kortisol og adrenalin for at holde barnet i gang. De hormoner er stik modsatte af det, der skal til for at falde i søvn.", en: "It seems backwards, but a baby who has been awake too long sleeps <em>worse</em>, not better. Once the window closes, the body releases the stress hormones cortisol and adrenaline to keep going. Those hormones are the opposite of what's needed to fall asleep." },
     peTiredBody2:   { da: "Resultatet kender de fleste forældre: et barn der er hektisk, buer ryggen, griner skingert — og så pludselig græder utrøsteligt.", en: "Most parents know the result: a baby who's hectic, arches their back, laughs shrilly — and then suddenly cries inconsolably." },
-    peNumbersTitle: { da: "Tallene BabyRo bruger", en: "The numbers BabyRo uses" },
+    peNumbersTitle: { da: "Tallene BabyBasen bruger", en: "The numbers BabyBase uses" },
     peNumbersBody:  { da: "Vågetiderne følger de gængse anbefalinger fra bl.a. Sundhedsstyrelsen og American Academy of Sleep Medicine. Den række, der gælder for {navn} lige nu, er markeret.", en: "The wake windows follow common guidance from bodies such as the Danish Health Authority and the American Academy of Sleep Medicine. The row that applies to {navn} right now is highlighted." },
     peNumbersNote:  { da: "Alle tal er vejledende. Nogle børn kan mere, andre mindre — se dem som et udgangspunkt, ikke en facitliste.", en: "All figures are guidelines. Some children manage more, some less — treat them as a starting point, not a rulebook." },
     peCardTitle:    { da: "Sådan læser du kortet på forsiden", en: "How to read the card on the front page" },
@@ -487,7 +520,7 @@ const ORD = {
     peSign3:        { da: "For sent (overtræt)", en: "Too late (overtired)" },
     peSign3b:       { da: "Hektisk · buer ryggen · skingert grin · utrøstelig gråd", en: "Hectic · arching the back · shrill laughter · inconsolable crying" },
     peNotifTitle:   { da: "Hvad påmindelsen gør", en: "What the reminder does" },
-    peNotifBody:    { da: "Slår du påmindelser til, sender BabyRo en besked <strong>15 minutter før</strong> vinduet åbner (du kan selv ændre varslet). Kvarteret er ikke tilfældigt: det er nogenlunde den tid, det tager at afslutte legen, skifte ble, dæmpe lyset og få barnet ned uden hastværk.", en: "With reminders on, BabyRo sends a message <strong>15 minutes before</strong> the window opens (you can change the lead time). That quarter of an hour isn't random: it's roughly what it takes to finish playing, change a nappy, dim the lights and settle your baby without rushing." },
+    peNotifBody:    { da: "Slår du påmindelser til, sender BabyBasen en besked <strong>15 minutter før</strong> vinduet åbner (du kan selv ændre varslet). Kvarteret er ikke tilfældigt: det er nogenlunde den tid, det tager at afslutte legen, skifte ble, dæmpe lyset og få barnet ned uden hastværk.", en: "With reminders on, BabyBase sends a message <strong>15 minutes before</strong> the window opens (you can change the lead time). That quarter of an hour isn't random: it's roughly what it takes to finish playing, change a nappy, dim the lights and settle your baby without rushing." },
     peNotifNote:    { da: "Beskeden sendes fra en server, så den kommer, selv når telefonen er lukket — hvis appen er lagt på hjemmeskærmen.", en: "The message is sent from a server, so it arrives even when your phone is locked — as long as the app is on your home screen." },
     peWrongTitle:   { da: "Når planen ikke passer", en: "When the plan doesn't fit" },
     peWrongBody:    { da: "Er der noget, der ikke stemmer, er det næsten altid én af disse:", en: "If something looks wrong, it's almost always one of these:" },
@@ -521,7 +554,7 @@ const ORD = {
     tabLeaps:       { da: "🐯 Tigerspring", en: "🐯 Leaps" },
     leapWord:       { da: "Spring", en: "Leap" },
     weekWord:       { da: "Uge", en: "Week" },
-    leapNoDue:      { da: "Indtast terminsdatoen under <strong>Profil</strong>, så viser BabyRo automatisk, hvilket spring {navn} er i.", en: "Enter the due date under <strong>Profile</strong> and BabyRo will show which leap {navn} is in." },
+    leapNoDue:      { da: "Indtast terminsdatoen under <strong>Profil</strong>, så viser BabyBasen automatisk, hvilket spring {navn} er i.", en: "Enter the due date under <strong>Profile</strong> and BabyBase will show which leap {navn} is in." },
     leapBeforeDue:  { da: "Der er ca. {uger} uger til termin. Det første spring kommer omkring uge {foerste}. 💛", en: "About {uger} weeks until the due date. The first leap arrives around week {foerste}. 💛" },
     leapAge:        { da: "{navn} er ca. <strong>{uger} uger</strong> (fra termin).", en: "{navn} is about <strong>{uger} weeks</strong> (from the due date)." },
     leapInNow:      { da: "I er sandsynligvis midt i <strong>Spring {nr}</strong> (uge {fra}-{til}). Hold ud — der er en solskinsperiode på vej! ⭐", en: "You're most likely in the middle of <strong>Leap {nr}</strong> (weeks {fra}-{til}). Hang in there — a sunny period is on its way! ⭐" },
@@ -601,8 +634,8 @@ const ORD = {
     menuLogin:      { da: "Log ind", en: "Sign in" },
     menuLogout:     { da: "Log ud", en: "Sign out" },
     resetDone:      { da: "Alt er nulstillet. Du starter forfra. 👶", en: "Everything has been reset. You're starting fresh. 👶" },
-    resetAsk:       { da: "Slet alt i BabyRo på denne telefon?\n\nSøvnlog, pleje, vækst og milepæle forsvinder. Det kan ikke fortrydes.", en: "Delete everything in BabyRo on this phone?\n\nSleep log, care, growth and milestones will be gone. This cannot be undone." },
-    loginForChildren:{ da: "Log ind for at have flere børn i BabyRo.", en: "Sign in to have more than one child in BabyRo." },
+    resetAsk:       { da: "Slet alt i BabyBasen på denne telefon?\n\nSøvnlog, pleje, vækst og milepæle forsvinder. Det kan ikke fortrydes.", en: "Delete everything in BabyBase on this phone?\n\nSleep log, care, growth and milestones will be gone. This cannot be undone." },
+    loginForChildren:{ da: "Log ind for at have flere børn i BabyBasen.", en: "Sign in to have more than one child in BabyBase." },
     askChildName:   { da: "Hvad hedder barnet?", en: "What's the child's name?" },
     childAdded:     { da: "{navn} er tilføjet. Udfyld fødselsdato under Profil, så virker søvnplan og vækstkurver.", en: "{navn} has been added. Fill in the date of birth under Profile so the sleep plan and growth curves work." },
     cantArchiveOnly:{ da: "Du kan ikke gemme dit eneste barn væk. Tilføj et andet først, eller slet barnet i stedet.", en: "You can't archive your only child. Add another first, or delete this one instead." },
@@ -631,11 +664,23 @@ const ORD = {
     popupBlocked:   { da: "Browseren blokerede vinduet. Tillad pop op-vinduer for denne side og prøv igen.", en: "Your browser blocked the window. Allow pop-ups for this page and try again." }
 };
 
+// Ejefald af et navn. "Magnus" må ikke blive til "Magnuss" —
+// navne der ender på s, x eller z får kun en apostrof.
+function ejefald(navn) {
+    const n = String(navn || "").trim();
+    if (!n) return "";
+    if (/[sxzSXZ]$/.test(n)) return n + "'";
+    return n + "s";
+}
+
 function T(key, vars) {
     const e = ORD[key];
     let s = e ? (e[SPROG] || e.da) : key;
     if (vars) Object.keys(vars).forEach(k => { s = s.replaceAll('{' + k + '}', vars[k]); });
-    if (typeof babyName !== 'undefined') s = s.replaceAll('{navn}', babyName);
+    if (typeof babyName !== 'undefined') {
+        s = s.replaceAll('{navns}', ejefald(babyName));
+        s = s.replaceAll('{navn}', babyName);
+    }
     return s;
 }
 
@@ -657,6 +702,12 @@ function anvendSprog() {
         knap.textContent = SPROG === 'da' ? 'EN' : 'DA';
         knap.title = SPROG === 'da' ? 'Switch to English' : 'Skift til dansk';
     }
+    opdaterEfterSprog();
+}
+
+function opdaterEfterSprog() {
+    if (typeof visAutoStopValg === 'function') visAutoStopValg();
+    if (typeof opdaterSoeskendeBjaelke === 'function') opdaterSoeskendeBjaelke();
 }
 
 function skiftSprog() {

@@ -306,17 +306,6 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
 
 .mini-help { font-size: .84rem; color: var(--text-light); margin-top: 12px; text-align: center; }
 
-/* UNDERFANER — bruges nu på alle sider */
-.sub-tabs {
-    display: flex; gap: 8px; justify-content: center; margin-bottom: 22px;
-    flex-wrap: wrap; position: sticky; top: 0; z-index: 40;
-    background: var(--bg-main); padding: 10px 0; border-radius: 0 0 14px 14px;
-}
-.sub-tab {
-    background: var(--card-bg); border: 2px solid var(--nav-bg); color: var(--text-dark);
-    padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: .88rem; cursor: pointer;
-}
-.sub-tab.active { background: var(--accent-green); border-color: var(--accent-green); color: #fff; }
 .sub-panel { display: none; animation: fadeIn .25s ease; }
 .sub-panel.active { display: block; }
 
@@ -349,15 +338,7 @@ body.dark-theme .tooltip { background: #3a3a3a; color: #ececec; }
     display: flex; align-items: center; justify-content: center;
 }
 .theme-corner:hover { border-color: var(--accent-green); }
-.top-header { padding-right: 58px; padding-left: 58px; }
 
-/* NAV I TO RÆKKER */
-.app-nav {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px; max-width: 640px; margin: 0 auto 26px;
-}
-.nav-item { max-width: none; width: 100%; padding: 13px 10px; }
-@media (min-width: 620px) { .app-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 860px; } }
 
 /* SLUK LYDEN BLØDT EFTER */
 .skjult-felt { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -636,32 +617,101 @@ body.ur-koerer .time-display { color: var(--accent-green); }
 .sheet-item span { font-size: 1.25rem; width: 26px; text-align: center; flex-shrink: 0; }
 .sheet-item em { font-style: normal; font-size: .98rem; font-weight: 600; }
 
-/* ---------- 3. NAVIGATION ---------- */
-.app-nav { gap: 5px; margin-bottom: 20px; }
-.nav-item {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    padding: 10px 6px; max-width: none; font-size: .74rem; line-height: 1.2;
+/* ---------- 3b. NAVIGATION SOM ET GITTER, DER BLIVER HÆNGENDE ----------
+   Ingen bundmenu. Navigationen sidder øverst — men følger med ned, når
+   man scroller, så man altid kan skifte side med ét tryk. */
+.nav-holder {
+    position: sticky; top: 0; z-index: 700;
+    background: var(--bg-main);
+    margin: 0 -15px 20px; padding: 8px 15px 10px;
+    box-shadow: 0 6px 14px -8px rgba(0,0,0,.14);
 }
-.nav-item .ni { font-size: 1.22rem; line-height: 1; }
+.app-nav {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+    max-width: 1000px; margin: 0 auto; flex-wrap: nowrap;
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: var(--card-bg); border: 1px solid var(--nav-bg); color: var(--text-light);
+    border-radius: 14px; padding: 10px 4px; max-width: none;
+    font-size: .74rem; font-weight: 700; line-height: 1.15; cursor: pointer; transition: .15s;
+}
+.nav-item .ni { font-size: 1.3rem; line-height: 1; }
 .nav-item em { font-style: normal; font-weight: 700; }
+.nav-item:hover { border-color: var(--accent-green); color: var(--text-dark); }
+.nav-item.active {
+    background: var(--accent-green); border-color: var(--accent-green); color: #fff;
+    box-shadow: 0 3px 10px -3px var(--accent-green);
+}
 
-/* Under 620 px sidder navigationen fast i bunden, som i en rigtig app */
 @media (max-width: 620px) {
-    body { padding-left: 12px; padding-right: 12px; padding-bottom: 82px; }
-    .app-nav {
-        position: fixed; bottom: 0; left: 0; right: 0; z-index: 800;
-        background: var(--card-bg); border-top: 1px solid var(--nav-bg);
-        margin: 0; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-        gap: 0; border-radius: 0; box-shadow: 0 -3px 16px rgba(0,0,0,.06);
-    }
-    .nav-item { background: none; border-radius: 12px; flex: 1; padding: 7px 2px; font-size: .67rem; }
-    .nav-item.active { background: none; color: var(--accent-green); }
-    .nav-item.active .ni { transform: scale(1.12); }
-    .top-header { padding: 14px 0 10px; }
-    .top-header h1 { font-size: 1.5rem; }
-    .subtitle { font-size: .85rem; }
+    body { padding-left: 12px; padding-right: 12px; padding-bottom: 30px; }
+    .nav-holder { margin: 0 -12px 16px; padding: 6px 12px 8px; }
+    /* To rækker med tre. Alle seks sider kan ses på én gang. */
+    .app-nav { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .nav-item { padding: 9px 3px; font-size: .7rem; border-radius: 12px; }
+    .nav-item .ni { font-size: 1.22rem; }
+    .top-header { padding: 12px 0 8px; }
+    .top-header h1 { font-size: 1.45rem; }
+    .subtitle { font-size: .82rem; }
     .corner-btn { width: 37px; height: 37px; font-size: .98rem; }
 }
+@media (max-width: 400px) {
+    .nav-item { font-size: .64rem; }
+    .nav-item .ni { font-size: 1.1rem; }
+}
+
+/* ---------- 3c. FANERNE: tydeligt et lag under hovednavigationen ----------
+   De sidder i én sammenhængende ramme, som en kontakt man skubber,
+   så de ikke kan forveksles med siderne ovenfor. */
+.sub-tabs {
+    display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto;
+    background: var(--nav-bg); border-radius: 14px; padding: 4px;
+    margin: 0 auto 18px; max-width: 1000px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.sub-tabs::-webkit-scrollbar { height: 0; }
+.sub-tab {
+    flex: 1 0 auto; background: none; border: none; color: var(--text-light);
+    font-family: inherit; font-size: .84rem; font-weight: 700;
+    padding: 10px 14px; border-radius: 11px; cursor: pointer; white-space: nowrap; transition: .15s;
+}
+.sub-tab:hover { color: var(--text-dark); }
+.sub-tab.active { background: var(--card-bg); color: var(--accent-green); box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+@media (max-width: 620px) {
+    .sub-tabs { padding: 3px; border-radius: 12px; }
+    .sub-tab { font-size: .78rem; padding: 9px 11px; }
+}
+
+/* ---------- 3d. BJÆLKE NÅR EN SØSKENDE OGSÅ SOVER ---------- */
+.soeskende-bjaelke {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    max-width: 1000px; margin: 0 auto 16px;
+}
+.soesken {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card-bg); border: 1px solid var(--nav-bg); border-left: 4px solid var(--btn-save);
+    border-radius: 13px; padding: 11px 15px; cursor: pointer;
+    font-family: inherit; font-size: .9rem; color: var(--text-dark);
+    flex: 1 1 240px; text-align: left; transition: .15s;
+}
+.soesken:hover { border-color: var(--accent-green); }
+.soesken:active { transform: scale(.99); }
+.soesken .zz { font-size: 1.25rem; flex-shrink: 0; }
+.soesken .navn { font-weight: 700; }
+.soesken .tid { color: var(--accent-green); font-weight: 700; font-variant-numeric: tabular-nums; }
+.soesken .skift { margin-left: auto; color: var(--text-light); font-size: .78rem; flex-shrink: 0; }
+
+/* ---------- 3e. FOLD-UD: det man sjældent bruger ---------- */
+.foldud > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    padding: 12px 4px; color: var(--text-light); font-size: .88rem; font-weight: 700;
+}
+.foldud > summary::-webkit-details-marker { display: none; }
+.foldud > summary::after { content: '▾'; margin-left: auto; transition: transform .2s; }
+.foldud[open] > summary::after { transform: rotate(180deg); }
+.foldud > summary:hover { color: var(--text-dark); }
+.foldud-indhold { padding: 4px 0 8px; border-top: 1px dashed var(--nav-bg); }
 
 /* ---------- 4. GÆSTELÅS ---------- */
 .guest-banner {
@@ -818,4 +868,62 @@ body.dark-theme[data-farve="clay"]     { --accent-green: #9C6E66; --btn-save: #8
     .sound-grid { gap: 11px; }
     .page-header h2 { font-size: 1.45rem; }
     input, select, textarea { font-size: 16px; }   /* forhindrer at iPhone zoomer ind */
+}
+
+/* ---------- 3f. BLØD SLUKNING SOM FOLD-UD ---------- */
+.autostop { background: var(--card-bg); border-radius: 18px; padding: 4px 18px; margin-bottom: 18px; box-shadow: 0 3px 14px rgba(0,0,0,.035); }
+.autostop > summary { padding: 15px 0; color: var(--text-dark); }
+.autostop-icon { font-size: 1.2rem; }
+.autostop-nu { color: var(--accent-green); font-weight: 700; font-size: .86rem; margin-left: auto; padding-right: 10px; }
+.autostop-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-top: 12px; }
+.as-btn {
+    background: var(--bg-main); border: 2px solid var(--bg-main); color: var(--text-dark);
+    padding: 11px 6px; border-radius: 11px; font-family: inherit;
+    font-size: .84rem; font-weight: 700; cursor: pointer; transition: .15s;
+}
+.as-btn.active { border-color: var(--accent-green); color: var(--accent-green); background: var(--card-bg); }
+.skjult-felt { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* Fold-ud inde i et kort skal ikke have dobbelt ramme */
+.control-center .foldud { text-align: left; margin-top: 6px; }
+.control-center .foldud > summary { justify-content: center; }
+.control-center .foldud > summary::after { margin-left: 8px; }
+
+/* ---------- 3g. URKORTET ---------- */
+/* Linjen over uret fortæller hvad der sker — den skal kunne læses på afstand */
+.timer-label { text-transform: none; letter-spacing: 0; font-size: 1.05rem; margin-bottom: 8px; }
+.timer-label.sover { color: var(--accent-green); }
+
+/* Tre knapper i træk bliver for smalle på en telefon. Start fylder hele
+   bredden, Gem og Nulstil deler linjen under. */
+@media (max-width: 620px) {
+    .time-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .time-actions .pause-btn { grid-column: 1 / -1; max-width: none; font-size: 1.05rem; padding: 17px 16px; }
+    .time-actions .save-btn, .time-actions .reset-btn { max-width: none; }
+    .time-display { font-size: 3.1rem; }
+    .timer-label { font-size: 1rem; }
+    /* Den lange forklaring behøver ikke fylde tre linjer ved uret */
+    .control-center .mini-help { font-size: .8rem; margin-top: 10px; }
+}
+
+/* Periodekortet fylder mindre nu, hvor datofelterne er foldet væk */
+.period-card .quick-range { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.range-btn, .crange-btn, .rep-btn {
+    background: var(--bg-main); border: 2px solid var(--bg-main); color: var(--text-dark);
+    padding: 11px 6px; border-radius: 11px; font-family: inherit;
+    font-size: .85rem; font-weight: 700; cursor: pointer; transition: .15s;
+}
+.range-btn.active, .crange-btn.active, .rep-btn.active {
+    background: var(--accent-green); border-color: var(--accent-green); color: #fff;
+}
+.period-card .foldud > summary { padding: 10px 0 4px; font-size: .84rem; }
+.period-card .date-range { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; padding-top: 12px; }
+.period-card .date-range .field { flex: 1 1 130px; margin-bottom: 0; }
+
+/* Fire tal skal stå to og to på en telefon — ellers hænger det sidste alene */
+@media (max-width: 620px) {
+    .plan-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 8px; }
+    .plan-stat { padding: 4px 2px; }
+    .plan-time { font-size: 2.5rem; }
+    .plan-head h2 { font-size: 1.25rem; }
 }

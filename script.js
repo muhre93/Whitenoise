@@ -31,13 +31,39 @@ let milestones = [];
 // FIREBASE
 // ==========================================
 let auth = null, db = null;
-if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
+let firebaseFejl = "";      // grunden til at login ikke virker, på almindeligt dansk
+
+(function startFirebase() {
+    // Konfigurationen må gerne hedde FIREBASE_CONFIG (den nye fil)
+    // eller firebaseConfig (som den hed i den gamle script.js).
+    const cfg = (typeof FIREBASE_CONFIG !== 'undefined') ? FIREBASE_CONFIG
+              : (typeof firebaseConfig !== 'undefined') ? firebaseConfig : null;
+
+    if (typeof firebase === 'undefined') {
+        firebaseFejl = "firebaseManglerSdk";
+        return;
+    }
+    if (!cfg) {
+        firebaseFejl = "firebaseManglerFil";
+        return;
+    }
+    // Er pladsholderne ikke skiftet ud, siger vi det tydeligt i stedet for
+    // at lade login-knappen sidde og se død ud.
+    const uudfyldt = !cfg.apiKey || /SKRIV_DIN|DIN_API|xxxxx/i.test(String(cfg.apiKey))
+                  || !cfg.projectId || /dit-projekt/i.test(String(cfg.projectId));
+    if (uudfyldt) {
+        firebaseFejl = "firebaseIkkeUdfyldt";
+        return;
+    }
     try {
-        firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(cfg);
         auth = firebase.auth();
         db = firebase.firestore();
-    } catch (e) { console.log("Firebase kunne ikke starte:", e); }
-}
+    } catch (e) {
+        firebaseFejl = "firebaseStartFejl";
+        console.log("Firebase kunne ikke starte:", e);
+    }
+})();
 
 // ==========================================
 // DATO-HJÆLPERE
@@ -163,12 +189,16 @@ function indhold(key) {
     return kilde;
 }
 function indholdTekst(key) {
-    return String(lokal(indhold(key)) || '').replaceAll('{navn}', babyName);
+    return String(lokal(indhold(key)) || '')
+        .replaceAll('{navns}', (typeof ejefald === 'function') ? ejefald(babyName) : babyName + 's')
+        .replaceAll('{navn}', babyName);
 }
 
 function t(key) {
     const raw = TEXTS[key];
-    return typeof raw === 'string' ? raw.replaceAll('{navn}', babyName) : '';
+    if (typeof raw !== 'string') return '';
+    return raw.replaceAll('{navns}', (typeof ejefald === 'function') ? ejefald(babyName) : babyName + 's')
+              .replaceAll('{navn}', babyName);
 }
 function fill(id, key) { const el = document.getElementById(id); if (el) el.innerHTML = t(key); }
 
@@ -340,6 +370,19 @@ function opdaterUrKnap() {
     if (urKoerer) { btnPauseTime.textContent = T('btnPause'); btnPauseTime.classList.remove('running'); }
     else { btnPauseTime.textContent = forloebetSek() > 0 ? T('btnResume') : T('btnStart'); btnPauseTime.classList.add('running'); }
     document.body.classList.toggle('ur-koerer', urKoerer);
+    visUrStatus();
+}
+
+// Linjen over uret siger, hvad der foregår lige nu — i stedet for
+// bare at gentage "Søvnur", som allerede står i navigationen.
+function visUrStatus() {
+    const el = document.getElementById('txt-timer-label');
+    if (!el) return;
+    const sek = forloebetSek();
+    if (urKoerer) el.textContent = T('urSover', { navn: babyName });
+    else if (sek > 0) el.textContent = T('urPause', { navn: babyName });
+    else el.textContent = T('urKlar', { navn: babyName });
+    el.classList.toggle('sover', urKoerer);
 }
 
 function startStopwatch() {
@@ -472,7 +515,14 @@ function clearTimer() {
 }
 if (timerSelect) timerSelect.addEventListener('change', () => { if (currentlyPlayingId) setupTimer(); });
 
-// Pæne knapper i stedet for en rullemenu
+// Pæne knapper i stedet for en rullemenu.
+// Valget står i overskriften, så man kan se det uden at folde ud.
+function visAutoStopValg() {
+    const valgt = document.querySelector('.as-btn.active');
+    const el = document.getElementById('autostop-nu');
+    if (el) el.textContent = valgt ? valgt.textContent.trim() : '';
+}
+
 document.querySelectorAll('.as-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.as-btn').forEach(b => b.classList.remove('active'));
@@ -480,16 +530,20 @@ document.querySelectorAll('.as-btn').forEach(btn => {
         if (timerSelect) timerSelect.value = btn.dataset.min;
         localStorage.setItem('babyRoAutoStop', btn.dataset.min);
         if (currentlyPlayingId) setupTimer();
+        visAutoStopValg();
+        // Foldes sammen igen, når man har valgt — så er skærmen ryddet
+        btn.closest('details')?.removeAttribute('open');
     });
 });
 (function gendanAutoStop() {
     const gemt = localStorage.getItem('babyRoAutoStop');
-    if (!gemt) return;
-    const knap = document.querySelector(`.as-btn[data-min="${gemt}"]`);
-    if (!knap) return;
-    document.querySelectorAll('.as-btn').forEach(b => b.classList.remove('active'));
-    knap.classList.add('active');
-    if (timerSelect) timerSelect.value = gemt;
+    const knap = gemt ? document.querySelector(`.as-btn[data-min="${gemt}"]`) : null;
+    if (knap) {
+        document.querySelectorAll('.as-btn').forEach(b => b.classList.remove('active'));
+        knap.classList.add('active');
+        if (timerSelect) timerSelect.value = gemt;
+    }
+    visAutoStopValg();
 })();
 
 // ==========================================
@@ -867,6 +921,7 @@ function opdaterAlt() {
     if (typeof opdaterLaase === 'function') opdaterLaase();
     if (typeof opdaterProfilMenu === 'function') opdaterProfilMenu();
     if (typeof gendanUr === 'function') gendanUr();
+    if (typeof opdaterSoeskendeBjaelke === 'function') opdaterSoeskendeBjaelke();
     if (typeof refreshProfileInputs === 'function') refreshProfileInputs();
     renderTexts();
     renderTodayLog();
